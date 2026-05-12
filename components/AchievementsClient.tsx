@@ -1,0 +1,428 @@
+"use client";
+
+import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
+import { FilterMultiDropdown } from "@/components/FilterMultiDropdown";
+import { StatusBadge } from "@/components/StatusBadge";
+import { TaskTypeBadge } from "@/components/TaskMetaBadges";
+import {
+  buildAchievementsHtmlDocument,
+  defaultAchievementsDateRange,
+  enrichBragRows,
+  filterTasksForAchievements,
+  groupBragRows,
+  normalizeDateRange,
+  type AchievementsFilters,
+  type BragGroupBy,
+  type BragTaskRow,
+} from "@/lib/achievements";
+import { isArchived } from "@/lib/archive";
+import { markdownExcerpt } from "@/lib/markdownExcerpt";
+import { tagOptionsFromEntries } from "@/lib/noteTags";
+import type { Owner, Project, Task, TaskGroup } from "@/lib/schemas";
+import { TASK_FORM_PRIORITIES, TASK_FORM_TYPES } from "@/lib/taskFormOptions";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+function BragTaskCard({ row }: { row: BragTaskRow }) {
+  const { task, ownerName, projectName, epicName } = row;
+  const excerpt = markdownExcerpt(task.description ?? "", 220);
+  const meta = [ownerName, projectName, epicName, task.date].filter(Boolean).join(" · ");
+  return (
+    <article className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+      <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">{task.name}</h3>
+      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{meta}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <TaskTypeBadge type={task.type} />
+        <StatusBadge status={task.status} variant="task" />
+        <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+          {task.priority}
+        </span>
+      </div>
+      {excerpt ? (
+        <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">{excerpt}</p>
+      ) : null}
+      {(task.tags ?? []).length > 0 ? (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {(task.tags ?? []).map((tg) => (
+            <span
+              key={tg}
+              className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+            >
+              {tg}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+export function AchievementsClient() {
+  const { settings, statusMap, statusKeys } = useDashboardConfig();
+  const types = useMemo(
+    () =>
+      settings?.taskTypes?.length
+        ? settings.taskTypes.map((r) => r.label)
+        : [...TASK_FORM_TYPES],
+    [settings],
+  );
+  const priorities = useMemo(
+    () =>
+      settings?.taskPriorities?.length
+        ? settings.taskPriorities.map((r) => r.label)
+        : [...TASK_FORM_PRIORITIES],
+    [settings],
+  );
+
+  const range0 = defaultAchievementsDateRange();
+  const [from, setFrom] = useState(range0.from);
+  const [to, setTo] = useState(range0.to);
+  const [ownerIds, setOwnerIds] = useState<string[]>([]);
+  const [projectIds, setProjectIds] = useState<string[]>([]);
+  const [epicIds, setEpicIds] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
+  const [selectedTagKeys, setSelectedTagKeys] = useState<string[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
+  const [groupBy, setGroupBy] = useState<BragGroupBy>("owner");
+
+  const [owners, setOwners] = useState<Owner[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [groups, setGroups] = useState<TaskGroup[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const [pr, pj, gr, tk] = await Promise.all([
+        fetch("/api/owners").then((r) => r.json()),
+        fetch("/api/projects").then((r) => r.json()),
+        fetch("/api/groups").then((r) => r.json()),
+        fetch("/api/tasks").then((r) => r.json()),
+      ]);
+      if (!Array.isArray(pr) || !Array.isArray(pj) || !Array.isArray(gr) || !Array.isArray(tk)) {
+        throw new Error("Bad response");
+      }
+      setOwners(pr);
+      setProjects(pj);
+      setGroups(gr);
+      setTasks(tk);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void load();
+    });
+  }, [load]);
+
+  const filters: AchievementsFilters = useMemo(
+    () => ({
+      from,
+      to,
+      ownerIds,
+      projectIds,
+      epicIds,
+      types: selectedTypes,
+      priorities: selectedPriorities,
+      statuses: selectedStatuses,
+      tagKeys: selectedTagKeys,
+      showArchived,
+    }),
+    [
+      from,
+      to,
+      ownerIds,
+      projectIds,
+      epicIds,
+      selectedTypes,
+      selectedPriorities,
+      selectedStatuses,
+      selectedTagKeys,
+      showArchived,
+    ],
+  );
+
+  const filteredTasksAll = useMemo(
+    () => filterTasksForAchievements(tasks, groups, projects, filters, statusMap, false),
+    [tasks, groups, projects, filters, statusMap],
+  );
+  const filteredTasksTerminal = useMemo(
+    () => filterTasksForAchievements(tasks, groups, projects, filters, statusMap, true),
+    [tasks, groups, projects, filters, statusMap],
+  );
+
+  const bragRows = useMemo(
+    () => enrichBragRows(filteredTasksAll, owners, groups, projects),
+    [filteredTasksAll, owners, groups, projects],
+  );
+  const bragRowsTerminal = useMemo(
+    () => enrichBragRows(filteredTasksTerminal, owners, groups, projects),
+    [filteredTasksTerminal, owners, groups, projects],
+  );
+
+  const sections = useMemo(() => groupBragRows(bragRows, groupBy), [bragRows, groupBy]);
+  const sectionsTerminal = useMemo(
+    () => groupBragRows(bragRowsTerminal, groupBy),
+    [bragRowsTerminal, groupBy],
+  );
+
+  const ownerFilterOptions = useMemo(
+    () =>
+      owners
+        .filter((p) => showArchived || !isArchived(p))
+        .map((p) => ({ value: p.id, label: p.name })),
+    [owners, showArchived],
+  );
+
+  const projectFilterOptions = useMemo(() => {
+    return [
+      { value: "__no_project__", label: "No project" },
+      ...[...projects]
+        .filter((p) => showArchived || !isArchived(p))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((p) => ({ value: p.id, label: p.name })),
+    ];
+  }, [projects, showArchived]);
+
+  const groupFilterOptions = useMemo(() => {
+    const base = groups.filter((g) => {
+      if (!showArchived && isArchived(g)) return false;
+      return ownerIds.length === 0 || ownerIds.includes(g.ownerId);
+    });
+    return [
+      { value: "__ungrouped__", label: "Ungrouped" },
+      ...[...base]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((g) => ({ value: g.id, label: g.name })),
+    ];
+  }, [groups, ownerIds, showArchived]);
+
+  const typeFilterOptions = useMemo(() => types.map((t) => ({ value: t, label: t })), [types]);
+
+  const statusFilterOptions = useMemo(
+    () => statusKeys.map((k) => ({ value: k, label: statusMap[k]?.label ?? k })),
+    [statusKeys, statusMap],
+  );
+
+  const priorityFilterOptions = useMemo(
+    () => priorities.map((p) => ({ value: p, label: p })),
+    [priorities],
+  );
+
+  const tagFilterOptions = useMemo(
+    () =>
+      tagOptionsFromEntries(
+        showArchived ? tasks : tasks.filter((t) => !isArchived(t)),
+      ),
+    [tasks, showArchived],
+  );
+
+  const { from: rf, to: rt } = normalizeDateRange(from, to);
+
+  const downloadHtml = () => {
+    const title = "Achievements";
+    const subtitle =
+      rf && rt
+        ? `Task dates ${rf} through ${rt}`
+        : "Tasks matching your filters (date range optional)";
+    const html = buildAchievementsHtmlDocument({
+      title,
+      subtitle,
+      generatedAtIso: new Date().toISOString(),
+      sections: sectionsTerminal,
+      statusMap,
+      taskTypeLabels: types,
+      taskPriorityLabels: priorities,
+      sectionsAllStatuses: sections,
+    });
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `achievements-${rf || "na"}-${rt || "na"}.html`;
+    a.rel = "noopener";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const totalCount = bragRows.length;
+
+  return (
+    <div className="mx-auto max-w-4xl">
+      <div className="print:hidden">
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          Achievements
+        </h1>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          Build a shareable summary of tasks in a date range. Filter by owner, project, epic, type,
+          status, priority, and tags. The exported HTML has two tabs — terminal work and every matching
+          task — plus extra filters inside the file. Print or save from the browser.
+        </p>
+
+        {err ? (
+          <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+            {err}{" "}
+            <button type="button" className="underline" onClick={() => void load()}>
+              Retry
+            </button>
+          </p>
+        ) : null}
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={downloadHtml}
+            disabled={loading}
+            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          >
+            Download HTML
+          </button>
+        </div>
+
+        <section className="mt-8 space-y-4 rounded-xl border border-zinc-200 bg-white/80 p-4 dark:border-zinc-800 dark:bg-zinc-950/60">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Filters</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-zinc-500">From (task date)</span>
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-zinc-500">To (task date)</span>
+              <input
+                type="date"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+              />
+            </label>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <FilterMultiDropdown
+              label="Owner"
+              options={ownerFilterOptions}
+              selected={ownerIds}
+              onChange={setOwnerIds}
+            />
+            <FilterMultiDropdown
+              label="Project"
+              options={projectFilterOptions}
+              selected={projectIds}
+              onChange={setProjectIds}
+            />
+            <FilterMultiDropdown
+              label="Epic"
+              options={groupFilterOptions}
+              selected={epicIds}
+              onChange={setEpicIds}
+            />
+            <FilterMultiDropdown
+              label="Task type"
+              options={typeFilterOptions}
+              selected={selectedTypes}
+              onChange={setSelectedTypes}
+            />
+            <FilterMultiDropdown
+              label="Status"
+              options={statusFilterOptions}
+              selected={selectedStatuses}
+              onChange={setSelectedStatuses}
+            />
+            <FilterMultiDropdown
+              label="Priority"
+              options={priorityFilterOptions}
+              selected={selectedPriorities}
+              onChange={setSelectedPriorities}
+            />
+            <FilterMultiDropdown
+              label="Tags"
+              options={tagFilterOptions}
+              selected={selectedTagKeys}
+              onChange={setSelectedTagKeys}
+            />
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-zinc-500">Group preview and export by</span>
+              <select
+                value={groupBy}
+                onChange={(e) => setGroupBy(e.target.value as BragGroupBy)}
+                className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+              >
+                <option value="owner">Owner</option>
+                <option value="project">Project</option>
+                <option value="epic">Epic</option>
+                <option value="none">None (single list)</option>
+              </select>
+            </label>
+          </div>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+              className="rounded border-zinc-300 dark:border-zinc-600"
+            />
+            Include archived tasks
+          </label>
+        </section>
+      </div>
+
+      <section className="mt-10">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 print:hidden">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Preview</h2>
+          <p className="text-sm text-zinc-500">
+            {loading ? "Loading…" : `${totalCount} task${totalCount === 1 ? "" : "s"} · dates ${rf}–${rt}`}
+          </p>
+        </div>
+
+        <div className="hidden print:block print:mb-4">
+          <h1 className="text-2xl font-bold">Achievements</h1>
+          <p className="text-sm text-zinc-600">
+            {rf && rt ? `Task dates ${rf} through ${rt}` : ""}
+          </p>
+          <p className="text-xs text-zinc-500">{totalCount} tasks</p>
+        </div>
+
+        {loading ? (
+          <p className="rounded-lg border border-zinc-200 px-4 py-8 text-center text-sm text-zinc-500 dark:border-zinc-700">
+            Loading…
+          </p>
+        ) : totalCount === 0 ? (
+          <p className="rounded-lg border border-dashed border-zinc-300 px-4 py-8 text-center text-sm text-zinc-500 dark:border-zinc-700">
+            No tasks match these filters. Try widening the date range or clearing filters.
+          </p>
+        ) : (
+          sections.map((sec) =>
+            sec.rows.length === 0 ? null : (
+              <div key={sec.heading || "__all__"} className="mb-8">
+                {sec.heading ? (
+                  <h3 className="mb-3 border-b border-zinc-200 pb-1 text-base font-semibold text-zinc-800 dark:border-zinc-700 dark:text-zinc-100">
+                    {sec.heading}
+                  </h3>
+                ) : null}
+                <ul className="flex flex-col gap-3">
+                  {sec.rows.map((row) => (
+                    <li key={row.task.id}>
+                      <BragTaskCard row={row} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ),
+          )
+        )}
+      </section>
+    </div>
+  );
+}

@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+/* Theme toggle: cross-fade the whole document (View Transitions API in themeStorage). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 450ms;
+  animation-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 1ms;
+  }
+}
+
+body {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Global theme transition + MUI switch overrides (fancy_lightdarkmode index.css) */
+* {
+  transition:
+    color 700ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    background-color 700ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    background 700ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    border-color 700ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    box-shadow 700ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    fill 700ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    stroke 700ms cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+*[style*="transition-duration"],
+*[style*="animation"],
+.MuiCircularProgress-root,
+.MuiLinearProgress-root,
+.MuiSwitch-switchBase,
+.MuiSwitch-track,
+.MuiSwitch-thumb,
+[class*="MuiSwitch"],
+[class*="animate-"] {
+  transition: none !important;
+}
+
+.MuiSwitch-switchBase {
+  transition:
+    transform 700ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    color 700ms cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.MuiSwitch-track {
+  transition:
+    background 700ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    background-color 700ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    border 700ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    box-shadow 700ms cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.MuiSwitch-thumb {
+  transition: all 700ms cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+/* Markdown body (no @tailwindcss/typography) */
+.md-root {
+  min-width: 0;
+}
+.md-root pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.md-root h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+.md-root h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+}
+.md-root h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0.75rem 0 0.35rem;
+}
+.md-root p {
+  margin: 0.5rem 0;
+}
+.md-root ul,
+.md-root ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+.md-root blockquote {
+  margin: 0.5rem 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid #d4d4d8;
+}
+.md-root table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin: 0.75rem 0;
+}
+.md-root th,
+.md-root td {
+  border: 1px solid #e4e4e7;
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+}
+.md-root th {
+  background: rgba(0, 0, 0, 0.04);
+}
+.dark .md-root th,
+.dark .md-root td {
+  border-color: #3f3f46;
+}
+.dark .md-root th {
+  background: rgba(255, 255, 255, 0.06);
+}
+.dark .md-root blockquote {
+  border-left-color: #52525b;
+}
+.md-root mark.md-highlight,
+.md-root .md-highlight {
+  background: rgba(250, 204, 21, 0.35);
+  color: inherit;
+}
+.dark .md-root mark.md-highlight,
+.dark .md-root .md-highlight {
+  background: rgba(234, 179, 8, 0.28);
+}
+.md-root .footnotes {
+  margin-top: 1.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e4e4e7;
+  font-size: 0.875rem;
+}
+.dark .md-root .footnotes {
+  border-top-color: #3f3f46;
+}
+.md-root .footnotes ol {
+  padding-left: 1.25rem;
+}
+
+/* Dashboard tables: up to 2 lines, then ellipsis (WebKit line-clamp). */
+.pd-clamp-2 {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}

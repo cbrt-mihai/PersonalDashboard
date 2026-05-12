@@ -1,0 +1,365 @@
+{
+  "settings": {},
+  "owners": [
+    {
+      "id": "11111111-1111-4111-8111-111111111101",
+      "name": "Avery Chen",
+      "color": "#2563eb",
+      "archivedAt": null,
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxZDRlZDgiLz48cGF0aCBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOTUiIGQ9Ik0xOCA0MiBMMzIgMjAgTDQ2IDQyIFoiLz48L3N2Zz4="
+    },
+    {
+      "id": "11111111-1111-4111-8111-111111111102",
+      "name": "Jordan Rivera",
+      "color": "#7c3aed",
+      "archivedAt": null,
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiM2ZDI4ZDkiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjUiIG9wYWNpdHk9Ii45NSIvPjwvc3ZnPg=="
+    },
+    {
+      "id": "11111111-1111-4111-8111-111111111103",
+      "name": "Sam Okonkwo",
+      "color": "#0d9488",
+      "archivedAt": null,
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwZjc2NmUiLz48cGF0aCBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOTUiIGQ9Ik0yMCAyMmg4djhoLTh6bTE2IDBoOHY4aC04em0tMTYgMTZoOHY4aC04em0xNiAwaDh2OGgtOHoiLz48L3N2Zz4="
+    },
+    {
+      "id": "11111111-1111-4111-8111-111111111104",
+      "name": "Morgan Blake (archived)",
+      "color": "#64748b",
+      "archivedAt": "2025-11-01T12:00:00.000Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "22222222-2222-4222-8222-222222222201",
+      "name": "Northwind rollout",
+      "archivedAt": null,
+      "color": "#6366f1",
+      "description": "Customer migration, cutover windows, and training materials.",
+      "tags": ["customer", "migration", "Q1"]
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222202",
+      "name": "Atlas mobile refresh",
+      "archivedAt": null,
+      "color": "#ea580c",
+      "description": "Design system alignment and offline-first experiments.",
+      "tags": ["mobile", "design-system"]
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222203",
+      "name": "Internal tools (paused)",
+      "archivedAt": "2025-10-15T09:30:00.000Z",
+      "color": "#94a3b8",
+      "description": "Back-office automation; deprioritized pending vendor review.",
+      "tags": ["internal", "paused"]
+    }
+  ],
+  "taskGroups": [
+    {
+      "id": "33333333-3333-4333-8333-333333333301",
+      "ownerId": "11111111-1111-4111-8111-111111111101",
+      "projectId": "22222222-2222-4222-8222-222222222201",
+      "archivedAt": null,
+      "name": "Cutover checklist",
+      "description": "Week-by-week tasks leading to go-live.",
+      "tags": ["cutover", "checklist"]
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333302",
+      "ownerId": "11111111-1111-4111-8111-111111111101",
+      "projectId": "22222222-2222-4222-8222-222222222201",
+      "archivedAt": null,
+      "name": "Data validation",
+      "description": "Reconciliation scripts and sign-off from finance.",
+      "tags": ["data", "finance"]
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333303",
+      "ownerId": "11111111-1111-4111-8111-111111111102",
+      "projectId": "22222222-2222-4222-8222-222222222202",
+      "archivedAt": null,
+      "name": "Sprint 12 — navigation",
+      "description": "IA updates and deep-link behavior.",
+      "tags": ["sprint-12", "navigation"]
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333304",
+      "ownerId": "11111111-1111-4111-8111-111111111103",
+      "projectId": null,
+      "archivedAt": null,
+      "name": "Personal backlog",
+      "description": "Ungrouped tasks not tied to a project.",
+      "tags": []
+    }
+  ],
+  "tasks": [
+    {
+      "id": "44444444-4444-4444-8444-444444444401",
+      "ownerId": "11111111-1111-4111-8111-111111111101",
+      "groupId": "33333333-3333-4333-8333-333333333301",
+      "archivedAt": null,
+      "name": "Publish runbook to stakeholders",
+      "description": "Include rollback steps and on-call rotation.\n\n**Acceptance:** PDF in shared drive + wiki link.",
+      "type": "Task",
+      "status": "in_progress",
+      "date": "2026-05-14",
+      "priority": "High",
+      "tags": ["runbook", "comms"],
+      "subtasks": [
+        {
+          "id": "55555555-5555-4555-8555-555555555501",
+          "title": "Draft outline",
+          "done": true
+        },
+        {
+          "id": "55555555-5555-4555-8555-555555555502",
+          "title": "Legal review",
+          "done": false
+        },
+        {
+          "id": "55555555-5555-4555-8555-555555555503",
+          "title": "Distribute to pilot cohort",
+          "done": false
+        }
+      ],
+      "createdAt": "2026-05-01T10:00:00.000Z",
+      "updatedAt": "2026-05-11T16:20:00.000Z"
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444402",
+      "ownerId": "11111111-1111-4111-8111-111111111101",
+      "groupId": "33333333-3333-4333-8333-333333333301",
+      "archivedAt": null,
+      "name": "Dry-run failover in staging",
+      "description": "Validate DNS TTL assumptions; capture timings.",
+      "type": "Spike",
+      "status": "open",
+      "date": "2026-05-18",
+      "priority": "Medium",
+      "tags": ["staging", "failover"],
+      "subtasks": [],
+      "createdAt": "2026-05-02T11:30:00.000Z",
+      "updatedAt": "2026-05-02T11:30:00.000Z"
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444403",
+      "ownerId": "11111111-1111-4111-8111-111111111101",
+      "groupId": "33333333-3333-4333-8333-333333333302",
+      "archivedAt": null,
+      "name": "Invoice totals mismatch (tenant 42)",
+      "description": "Rounding drift between legacy CSV and new API.",
+      "type": "Bug",
+      "status": "blocked",
+      "date": "2026-05-09",
+      "priority": "Critical",
+      "tags": ["billing", "tenant-42"],
+      "subtasks": [
+        {
+          "id": "55555555-5555-4555-8555-555555555504",
+          "title": "Reproduce with fixture",
+          "done": true
+        },
+        {
+          "id": "55555555-5555-4555-8555-555555555505",
+          "title": "Waiting on finance spreadsheet",
+          "done": false
+        }
+      ],
+      "createdAt": "2026-05-08T08:15:00.000Z",
+      "updatedAt": "2026-05-10T14:00:00.000Z"
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444404",
+      "ownerId": "11111111-1111-4111-8111-111111111102",
+      "groupId": "33333333-3333-4333-8333-333333333303",
+      "archivedAt": null,
+      "name": "Deep links from push notifications",
+      "description": "Route cold starts to the correct tab; handle expired tokens.",
+      "type": "Task",
+      "status": "done",
+      "date": "2026-05-06",
+      "priority": "High",
+      "tags": ["deeplink", "push"],
+      "subtasks": [
+        {
+          "id": "55555555-5555-4555-8555-555555555506",
+          "title": "iOS",
+          "done": true
+        },
+        {
+          "id": "55555555-5555-4555-8555-555555555507",
+          "title": "Android",
+          "done": true
+        }
+      ],
+      "createdAt": "2026-04-28T09:00:00.000Z",
+      "updatedAt": "2026-05-06T17:45:00.000Z"
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444405",
+      "ownerId": "11111111-1111-4111-8111-111111111102",
+      "groupId": null,
+      "archivedAt": null,
+      "name": "Update App Store screenshots",
+      "description": "Reflect new navigation chrome.",
+      "type": "Task",
+      "status": "open",
+      "date": "",
+      "priority": "Low",
+      "tags": ["app-store"],
+      "subtasks": [],
+      "createdAt": "2026-05-10T13:00:00.000Z",
+      "updatedAt": "2026-05-10T13:00:00.000Z"
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444406",
+      "ownerId": "11111111-1111-4111-8111-111111111103",
+      "groupId": "33333333-3333-4333-8333-333333333304",
+      "archivedAt": null,
+      "name": "Weekly planning",
+      "description": "Block calendar; review metrics deck.",
+      "type": "Task",
+      "status": "closed",
+      "date": "2026-05-05",
+      "priority": "Trivial",
+      "tags": ["ritual"],
+      "subtasks": [],
+      "createdAt": "2026-05-05T07:00:00.000Z",
+      "updatedAt": "2026-05-05T07:30:00.000Z"
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444407",
+      "ownerId": "11111111-1111-4111-8111-111111111101",
+      "groupId": "33333333-3333-4333-8333-333333333301",
+      "archivedAt": "2026-04-20T00:00:00.000Z",
+      "name": "Retired: old VPN steps",
+      "description": "Superseded by zero-trust guide.",
+      "type": "Task",
+      "status": "closed",
+      "date": "2026-03-01",
+      "priority": "Medium",
+      "tags": ["archived-task"],
+      "subtasks": [],
+      "createdAt": "2026-02-10T12:00:00.000Z",
+      "updatedAt": "2026-04-20T00:00:00.000Z"
+    }
+  ],
+  "ownerEntries": [
+    {
+      "id": "66666666-6666-4666-8666-666666666601",
+      "ownerId": "11111111-1111-4111-8111-111111111101",
+      "projectId": "22222222-2222-4222-8222-222222222201",
+      "archivedAt": null,
+      "title": "Cutover weekend — command center",
+      "body": "## Contacts\n\n| Role | Who |\n| --- | --- |\n| IMOC | Avery |\n| DBA | **on-call** |\n\n## Links\n\n- [[project:22222222-2222-4222-8222-222222222201]]\n- [[epic:33333333-3333-4333-8333-333333333301]]\n\n> [!NOTE]\n> Freeze window starts **Friday 18:00** local.\n",
+      "createdAt": "2026-05-07T15:00:00.000Z",
+      "closedAt": null,
+      "status": "in_progress",
+      "type": "Runbook",
+      "priority": "High",
+      "tags": ["cutover", "command-center"]
+    },
+    {
+      "id": "66666666-6666-4666-8666-666666666602",
+      "ownerId": "11111111-1111-4111-8111-111111111102",
+      "projectId": null,
+      "archivedAt": null,
+      "title": "Retro notes — Sprint 12",
+      "body": "- **Went well:** pairing on navigation prototypes\n- **Try next:** earlier design QA on smallest breakpoints\n\n```text\nVelocity: 34 pts (planned 32)\n```\n",
+      "createdAt": "2026-05-09T18:30:00.000Z",
+      "closedAt": null,
+      "status": "todo",
+      "type": "Note",
+      "priority": "Medium",
+      "tags": ["retro", "sprint-12"]
+    },
+    {
+      "id": "66666666-6666-4666-8666-666666666603",
+      "ownerId": null,
+      "projectId": "22222222-2222-4222-8222-222222222202",
+      "archivedAt": null,
+      "title": "Release checklist — v2.4.0",
+      "body": "1. Feature flags\n2. Gradual rollout **10% / 50% / 100%**\n3. Watch error budget in `mobile-api`\n",
+      "createdAt": "2026-05-04T09:00:00.000Z",
+      "closedAt": "2026-05-05T22:00:00.000Z",
+      "status": "done",
+      "type": "Runbook",
+      "priority": "High",
+      "tags": ["release", "mobile"]
+    },
+    {
+      "id": "66666666-6666-4666-8666-666666666604",
+      "ownerId": "11111111-1111-4111-8111-111111111103",
+      "projectId": "22222222-2222-4222-8222-222222222201",
+      "archivedAt": null,
+      "title": "Vendor API credentials (mock)",
+      "body": "These are **fictional** values for screenshots only.\n\n- Client ID: `northwind-demo`\n- Rotate after dry run\n",
+      "createdAt": "2026-04-22T10:00:00.000Z",
+      "closedAt": null,
+      "status": "todo",
+      "type": "Credentials",
+      "priority": "Blocker",
+      "tags": ["secrets", "demo-only"]
+    },
+    {
+      "id": "66666666-6666-4666-8666-666666666605",
+      "ownerId": "11111111-1111-4111-8111-111111111101",
+      "projectId": "22222222-2222-4222-8222-222222222201",
+      "archivedAt": "2026-03-01T00:00:00.000Z",
+      "title": "Superseded onboarding doc",
+      "body": "Replaced by the wiki space; kept for history.",
+      "createdAt": "2026-01-15T12:00:00.000Z",
+      "closedAt": "2026-02-01T00:00:00.000Z",
+      "status": "closed",
+      "type": "Other",
+      "priority": "Low",
+      "tags": ["archived-note"]
+    }
+  ],
+  "auditLog": [
+    {
+      "id": "77777777-7777-4777-8777-777777777701",
+      "at": "2026-05-11T16:20:00.000Z",
+      "action": "update",
+      "entity": "task",
+      "entityId": "44444444-4444-4444-8444-444444444401",
+      "summary": "Updated task “Publish runbook to stakeholders”",
+      "detail": "{\"status\":{\"from\":\"open\",\"to\":\"in_progress\"}}"
+    },
+    {
+      "id": "77777777-7777-4777-8777-777777777702",
+      "at": "2026-05-10T14:00:00.000Z",
+      "action": "update",
+      "entity": "task",
+      "entityId": "44444444-4444-4444-8444-444444444403",
+      "summary": "Marked task blocked pending finance input",
+      "detail": "{\"status\":{\"to\":\"blocked\"}}"
+    },
+    {
+      "id": "77777777-7777-4777-8777-777777777703",
+      "at": "2026-05-06T17:45:00.000Z",
+      "action": "update",
+      "entity": "task",
+      "entityId": "44444444-4444-4444-8444-444444444404",
+      "summary": "Completed “Deep links from push notifications”",
+      "detail": "{\"status\":{\"to\":\"done\"}}"
+    },
+    {
+      "id": "77777777-7777-4777-8777-777777777704",
+      "at": "2026-05-07T15:00:00.000Z",
+      "action": "create",
+      "entity": "owner_entry",
+      "entityId": "66666666-6666-4666-8666-666666666601",
+      "summary": "Created note “Cutover weekend — command center”"
+    },
+    {
+      "id": "77777777-7777-4777-8777-777777777705",
+      "at": "2026-05-01T08:00:00.000Z",
+      "action": "create",
+      "entity": "project",
+      "entityId": "22222222-2222-4222-8222-222222222201",
+      "summary": "Created project “Northwind rollout”"
+    }
+  ]
+}

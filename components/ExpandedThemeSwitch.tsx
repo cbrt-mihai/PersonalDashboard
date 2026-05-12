@@ -1,0 +1,226 @@
+"use client";
+
+import Switch from "@mui/material/Switch";
+import { styled } from "@mui/material/styles";
+
+export const ExpandedThemeSwitch = styled(Switch)(({ theme }) => ({
+  width: 75,
+  height: 35,
+  padding: 0,
+  "& .MuiSwitch-switchBase": {
+    padding: 0,
+    margin: 3,
+    transitionDuration: "700ms",
+    transitionTimingFunction: "cubic-bezier(0.25, 0.8, 0.25, 1)",
+    transitionProperty: "transform, color",
+    "&.Mui-checked": {
+      transform: "translateX(40px)",
+      color: "#fff",
+      "& + .MuiSwitch-track": {
+        backgroundColor: "#81D4FA",
+        background: "linear-gradient(90deg, #B3E5FC 0%, #81D4FA 50%, #29B6F6 100%)",
+        border: "1px solid #0288D1",
+        boxShadow: "inset 0 1px 3px rgba(2, 136, 209, 0.2)",
+        opacity: 1,
+        transition: "all 700ms cubic-bezier(0.25, 0.8, 0.25, 1)",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: "10px",
+          left: "8px",
+          width: "6px",
+          height: "6px",
+          borderRadius: "50%",
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          transition: "all 700ms cubic-bezier(0.25, 0.8, 0.25, 1)",
+          opacity: 1,
+          transform: "scale(1)",
+          boxShadow: `
+                        3px -1px 0 1px rgba(255, 255, 255, 0.85),
+                        -2px -1px 0 1px rgba(255, 255, 255, 0.8),
+                        1px -3px 0 0px rgba(255, 255, 255, 0.75),
+                        5px -3px 0 0px rgba(255, 255, 255, 0.8),
+                        20px 2px 0 -1px rgba(255, 255, 255, 0.7),
+                        23px 1px 0 1px rgba(255, 255, 255, 0.75),
+                        17px 1px 0 1px rgba(255, 255, 255, 0.7),
+                        19px -1px 0 0px rgba(255, 255, 255, 0.65),
+                        25px -1px 0 0px rgba(255, 255, 255, 0.7)
+                    `,
+        },
+        "&::after": {
+          content: '""',
+          position: "absolute",
+          top: "21px",
+          left: "12px",
+          width: "4px",
+          height: "4px",
+          borderRadius: "50%",
+          backgroundColor: "rgba(255, 255, 255, 0.8)",
+          transition: "all 700ms cubic-bezier(0.25, 0.8, 0.25, 1)",
+          opacity: 1,
+          transform: "scale(1)",
+          boxShadow: `
+                        2px -1px 0 1px rgba(255, 255, 255, 0.75),
+                        -1px -1px 0 0px rgba(255, 255, 255, 0.7),
+                        1px -2px 0 0px rgba(255, 255, 255, 0.7),
+                        15px -2px 0 -1px rgba(255, 255, 255, 0.65),
+                        17px -3px 0 1px rgba(255, 255, 255, 0.7),
+                        13px -3px 0 1px rgba(255, 255, 255, 0.6),
+                        15px -5px 0 0px rgba(255, 255, 255, 0.65)
+                    `,
+        },
+      },
+      "& .MuiSwitch-thumb::before": {
+        display: "none",
+      },
+      "& .MuiSwitch-thumb::after": {
+        display: "none",
+      },
+      "&.Mui-disabled + .MuiSwitch-track": {
+        opacity: 0.5,
+      },
+      "& .MuiSwitch-thumb": {
+        background:
+          "radial-gradient(circle at 30% 30%, #FFF59D 0%, #FFEB3B 20%, #FFC107 50%, #FF9800 80%, #F57C00 100%)",
+        border: "1px solid #FF8F00",
+        boxShadow: `
+                    0 0 12px rgba(255, 193, 7, 0.6),
+                    0 0 20px rgba(255, 152, 0, 0.3),
+                    inset 1px 1px 2px rgba(255, 255, 255, 0.3),
+                    inset -1px -1px 1px rgba(255, 111, 0, 0.2)
+                `,
+        transition: "all 700ms cubic-bezier(0.25, 0.8, 0.25, 1)",
+        "&::before": {
+          content: "none",
+          display: "none",
+        },
+        "&::after": {
+          content: "none",
+          display: "none",
+        },
+      },
+    },
+    "&.Mui-focusVisible .MuiSwitch-thumb": {
+      color: "#33cf4d",
+      border: "2px solid #fff",
+    },
+  },
+  "& .MuiSwitch-thumb": {
+    boxSizing: "border-box",
+    background: "linear-gradient(135deg, #37474F 0%, #263238 50%, #1C2833 100%)",
+    width: 29,
+    height: 29,
+    borderRadius: "50%",
+    position: "relative",
+    border: "1px solid #455A64",
+    boxShadow: `
+            0 0 4px rgba(0, 0, 0, 0.3),
+            inset 1px 1px 2px rgba(144, 164, 174, 0.2),
+            inset -1px -1px 1px rgba(28, 40, 51, 0.3)
+        `,
+    transition: "all 700ms cubic-bezier(0.25, 0.8, 0.25, 1)",
+    "&::before": {
+      content: '""',
+      position: "absolute",
+      top: "2px",
+      left: "8px",
+      width: "14px",
+      height: "14px",
+      borderRadius: "50%",
+      background: "linear-gradient(135deg, #90A4AE 0%, #607D8B 100%)",
+      transition: "all 700ms cubic-bezier(0.25, 0.8, 0.25, 1)",
+      opacity: 1,
+      transform: "scale(1)",
+    },
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      top: "6px",
+      left: "5px",
+      width: "2.5px",
+      height: "2.5px",
+      borderRadius: "50%",
+      backgroundColor: "#455A64",
+      transition: "all 700ms cubic-bezier(0.25, 0.8, 0.25, 1)",
+      opacity: 1,
+      transform: "scale(1)",
+      boxShadow: `
+                7px 2px 0 -0.5px #455A64,
+                4px -2px 0 -1px #37474F,
+                9px 7px 0 -1px #37474F,
+                2px 4px 0 -1.5px #263238
+            `,
+    },
+  },
+  "& .MuiSwitch-track": {
+    borderRadius: 35 / 2,
+    background: "linear-gradient(90deg, #263238 0%, #37474F 50%, #455A64 100%)",
+    border: "1px solid #37474F",
+    boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.3)",
+    opacity: 1,
+    position: "relative",
+    transition: theme.transitions.create(
+      ["background", "background-color", "border", "box-shadow"],
+      {
+        duration: 700,
+        easing: "cubic-bezier(0.25, 0.8, 0.25, 1)",
+      },
+    ),
+    "&::before": {
+      content: '""',
+      position: "absolute",
+      top: "9px",
+      left: "36px",
+      width: "3px",
+      height: "3px",
+      backgroundColor: "#FFFFFF",
+      transform: "rotate(45deg)",
+      transition: "all 700ms cubic-bezier(0.25, 0.8, 0.25, 1)",
+      opacity: 1,
+      boxShadow: `
+                0 0 4px rgba(255, 255, 255, 0.9),
+                0 0 8px rgba(255, 255, 255, 0.6),
+                16px 3px 0 -0.5px #E3F2FD,
+                16px 3px 3px -0.5px rgba(227, 242, 253, 0.8)
+            `,
+      "&::before": {
+        content: '""',
+        position: "absolute",
+        top: "-1px",
+        left: "1px",
+        width: "1px",
+        height: "5px",
+        backgroundColor: "rgba(255, 255, 255, 0.8)",
+        transform: "rotate(-45deg)",
+      },
+      "&::after": {
+        content: '""',
+        position: "absolute",
+        top: "1px",
+        left: "-1px",
+        width: "5px",
+        height: "1px",
+        backgroundColor: "rgba(255, 255, 255, 0.8)",
+        transform: "rotate(-45deg)",
+      },
+    },
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      top: "12px",
+      left: "53px",
+      width: "2px",
+      height: "2px",
+      backgroundColor: "#BBDEFB",
+      transform: "rotate(45deg)",
+      transition: "all 700ms cubic-bezier(0.25, 0.8, 0.25, 1)",
+      opacity: 1,
+      boxShadow: `
+                0 0 3px rgba(187, 222, 251, 0.9),
+                0 0 6px rgba(187, 222, 251, 0.5),
+                14px 5px 0 0px #FFFFFF,
+                14px 7px 4px 0px rgba(255, 255, 255, 0.8)
+            `,
+    },
+  },
+}));
