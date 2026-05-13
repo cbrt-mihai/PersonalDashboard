@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { Owner, OwnerEntry, Project, Task, TaskGroup, TaskSubtask } from "@/lib/schemas";
+import { dashboardIconBtnPrimaryClass } from "@/lib/dashboardTableActionClasses";
 import { isArchived } from "@/lib/archive";
 import { DetailCollapsibleSection } from "./DetailCollapsibleSection";
 import { WorklogSection } from "./WorklogSection";
@@ -13,7 +14,7 @@ import { TaskDetailsMarkdown } from "./TaskDetailsMarkdown";
 import { normalizeTagKey } from "@/lib/noteTags";
 import { TaskPriorityBadge, TaskTypeBadge } from "./TaskMetaBadges";
 import { OwnerSwatch } from "./OwnerSwatch";
-import { TrashIcon } from "./icons";
+import { PencilIcon, TrashIcon } from "./icons";
 import { noteEntryEditHref, noteEntryViewHref } from "@/lib/noteEntryPaths";
 import { SubtaskProgressBar } from "./SubtaskProgressBar";
 
@@ -225,8 +226,9 @@ export function TaskViewClient({ taskId }: { taskId: string }) {
         <div className="flex flex-wrap gap-2">
           <Link
             href={`/tasks/${task.id}/edit`}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
+            <PencilIcon className="h-4 w-4 shrink-0" />
             Edit
           </Link>
           <button
@@ -445,9 +447,11 @@ export function TaskViewClient({ taskId }: { taskId: string }) {
               </div>
               <Link
                 href={noteEntryEditHref(n)}
-                className="shrink-0 text-blue-600 hover:underline dark:text-blue-400"
+                className={`shrink-0 ${dashboardIconBtnPrimaryClass}`}
+                aria-label="Edit note"
+                title="Edit note"
               >
-                Edit
+                <PencilIcon />
               </Link>
             </li>
           ))}

@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  dashboardIconBtnNeutralClass,
+  dashboardIconBtnPrimaryClass,
+} from "@/lib/dashboardTableActionClasses";
 import { isArchived } from "@/lib/archive";
 import type { Owner, OwnerEntry, Project, Task, TaskGroup } from "@/lib/schemas";
 import { DetailCollapsibleSection } from "./DetailCollapsibleSection";
@@ -19,7 +23,7 @@ import { MarkdownView } from "./MarkdownView";
 import { normalizeStatusKey, statusDef } from "@/lib/statusConfig";
 import { OwnerSwatch } from "./OwnerSwatch";
 import { CreateTaskDialog } from "./CreateTaskDialog";
-import { TrashIcon } from "./icons";
+import { ArrowTopRightOnSquareIcon, PencilIcon, TrashIcon } from "./icons";
 import { noteEntryEditHref, noteEntryViewHref } from "@/lib/noteEntryPaths";
 
 export function EpicViewClient({ epicId }: { epicId: string }) {
@@ -330,8 +334,9 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
         <div className="flex flex-wrap gap-2">
           <Link
             href={`/epics/${epic.id}/edit`}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
+            <PencilIcon className="h-4 w-4 shrink-0" />
             Edit
           </Link>
           <button
@@ -530,18 +535,22 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
                     <span className="text-xs text-zinc-500">{t.date}</span>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 text-sm">
+                <div className="flex flex-wrap gap-1 text-sm">
                   <Link
                     href={`/tasks/${t.id}`}
-                    className="text-zinc-600 hover:underline dark:text-zinc-400"
+                    className={dashboardIconBtnNeutralClass}
+                    aria-label="View task"
+                    title="View task"
                   >
-                    View
+                    <ArrowTopRightOnSquareIcon />
                   </Link>
                   <Link
                     href={`/tasks/${t.id}/edit`}
-                    className="text-blue-600 hover:underline dark:text-blue-400"
+                    className={dashboardIconBtnPrimaryClass}
+                    aria-label="Edit task"
+                    title="Edit task"
                   >
-                    Edit
+                    <PencilIcon />
                   </Link>
                 </div>
               </li>
@@ -604,9 +613,11 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
               </div>
               <Link
                 href={noteEntryEditHref(n)}
-                className="shrink-0 text-blue-600 hover:underline dark:text-blue-400"
+                className={`shrink-0 ${dashboardIconBtnPrimaryClass}`}
+                aria-label="Edit note"
+                title="Edit note"
               >
-                Edit
+                <PencilIcon />
               </Link>
             </li>
           ))}

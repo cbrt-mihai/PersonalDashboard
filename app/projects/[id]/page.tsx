@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ProjectViewClient } from "@/components/ProjectViewClient";
+import { getServerTranslator } from "@/lib/i18n/server";
 import { metadataTitleForProject } from "@/lib/pageMetadata";
 
 export async function generateMetadata({
@@ -8,7 +9,8 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  return { title: metadataTitleForProject(id) };
+  const t = await getServerTranslator();
+  return { title: metadataTitleForProject(id, t("common.project")) };
 }
 
 export default async function ProjectPage({

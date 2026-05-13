@@ -2,52 +2,24 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
-import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import { DashboardPager } from "@/components/DashboardPager";
+import { WorklogDialog } from "@/components/WorklogDialog";
+import { WorklogListTargetRichCell } from "@/components/WorklogListTargetRichCell";
+import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
+import { useI18n } from "@/components/LocaleProvider";
 import { normalizeDateRange } from "@/lib/achievements";
 import { API_PAGE_SIZE_DEFAULT } from "@/lib/apiPagination";
 import { formatJiraDuration } from "@/lib/jiraDuration";
-import type { Owner, OwnerEntry, Task, TaskGroup, Worklog } from "@/lib/schemas";
+import type { Owner, OwnerEntry, Project, Task, TaskGroup, Worklog } from "@/lib/schemas";
+import { dashboardIconBtnPrimaryClass } from "@/lib/dashboardTableActionClasses";
+import { PencilIcon } from "@/components/icons";
+import { buildWorklogEntityMaps, resolveWorklogTargetDisplay } from "@/lib/worklogTargetDisplay";
 
 const VIEW_STORAGE_KEY = "pd-worklogs-view";
 const TABLE_RANGE_STORAGE_KEY = "pd-worklogs-table-range";
 const LIST_RANGE_STORAGE_KEY = "pd-worklogs-list-range";
 const MAX_TABLE_RANGE_DAYS = 400;
 const YMD_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-function targetHref(w: Worklog): string {
-  switch (w.target.kind) {
-    case "task":
-      return `/tasks/${w.target.taskId}`;
-    case "epic":
-      return `/epics/${w.target.groupId}`;
-    case "note":
-      return `/notes/${w.target.entryId}`;
-    case "project":
-      return `/projects/${w.target.projectId}`;
-    case "owner":
-      return `/owners/${w.target.ownerId}`;
-    default:
-      return "/";
-  }
-}
-
-function targetLabel(w: Worklog): string {
-  switch (w.target.kind) {
-    case "task":
-      return "Task";
-    case "epic":
-      return "Epic";
-    case "note":
-      return "Note";
-    case "project":
-      return "Project";
-    case "owner":
-      return "Owner";
-    default:
-      return "?";
-  }
-}
 
 type PagedWorklogs = { items: Worklog[]; total: number; page: number; pageSize: number };
 
@@ -116,6 +88,10 @@ function buildTableRangeSpec(
   tableMonth: { y: number; m: number },
   customFrom: string,
   customTo: string,
+  messages: {
+    chooseCustomRange: string;
+    rangeTooLong: (days: number) => string;
+  },
 ): TableRangeSpec {
   if (mode === "month") {
     const { from, to, days } = monthBoundsUTC(tableMonth.y, tableMonth.m);
@@ -127,13 +103,13 @@ function buildTableRangeSpec(
   }
   const { from, to } = normalizeDateRange(customFrom, customTo);
   if (!YMD_RE.test(from) || !YMD_RE.test(to)) {
-    return { kind: "invalid", message: "Choose a start and end date for the custom range." };
+    return { kind: "invalid", message: messages.chooseCustomRange };
   }
   const days = daySequenceYmd(from, to);
   if (days.length > MAX_TABLE_RANGE_DAYS) {
     return {
       kind: "too_long",
-      message: `This range is ${days.length} days. The table supports at most ${MAX_TABLE_RANGE_DAYS} days (use a shorter range or the List view).`,
+      message: messages.rangeTooLong(days.length),
     };
   }
   return { kind: "ok", from, to, days, heading: `${from} – ${to}` };
@@ -150,6 +126,7 @@ type RowModel = {
   rowKey: string;
   label: string;
   href: string;
+  deleted: boolean;
   minutesByDay: Record<string, number>;
   totalM: number;
 };
@@ -182,14 +159,11 @@ function readStoredTableRange(): {
   customFrom: string;
   customTo: string;
 } {
-  const n = new Date();
-  const defaultMonth = { y: n.getFullYear(), m: n.getMonth() };
-  if (typeof window === "undefined") {
-    return { mode: "month", month: defaultMonth, customFrom: "", customTo: "" };
-  }
+  const fallback = defaultTableRange();
+  if (typeof window === "undefined") return fallback;
   try {
     const tr = localStorage.getItem(TABLE_RANGE_STORAGE_KEY);
-    if (!tr) return { mode: "month", month: defaultMonth, customFrom: "", customTo: "" };
+    if (!tr) return fallback;
     const o = JSON.parse(tr) as {
       mode?: string;
       y?: number;
@@ -200,7 +174,7 @@ function readStoredTableRange(): {
     if (o.mode === "custom") {
       return {
         mode: "custom",
-        month: defaultMonth,
+        month: fallback.month,
         customFrom: typeof o.customFrom === "string" ? o.customFrom : "",
         customTo: typeof o.customTo === "string" ? o.customTo : "",
       };
@@ -211,10 +185,22 @@ function readStoredTableRange(): {
   } catch {
     /* ignore */
   }
+  return fallback;
+}
+
+function defaultTableRange(): {
+  mode: "month";
+  month: { y: number; m: number };
+  customFrom: string;
+  customTo: string;
+} {
+  const n = new Date();
+  const defaultMonth = { y: n.getFullYear(), m: n.getMonth() };
   return { mode: "month", month: defaultMonth, customFrom: "", customTo: "" };
 }
 
 export function WorklogsClient() {
+  const { t } = useI18n();
   const { settings } = useDashboardConfig();
   const mpd = settings?.worklogMinutesPerDay ?? 1440;
   const [view, setView] = useState<"list" | "table">("table");
@@ -225,12 +211,12 @@ export function WorklogsClient() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  const [tableRangeBootstrap] = useState(() => readStoredTableRange());
+  const [tableRangeBootstrap] = useState(() => defaultTableRange());
   const [tableMonth, setTableMonth] = useState(tableRangeBootstrap.month);
   const [tableRangeMode, setTableRangeMode] = useState<"month" | "custom">(tableRangeBootstrap.mode);
   const [customFrom, setCustomFrom] = useState(tableRangeBootstrap.customFrom);
   const [customTo, setCustomTo] = useState(tableRangeBootstrap.customTo);
-  const [listBootstrap] = useState(() => readStoredListRange());
+  const [listBootstrap] = useState(() => ({ from: "", to: "" }));
   const [listFrom, setListFrom] = useState(listBootstrap.from);
   const [listTo, setListTo] = useState(listBootstrap.to);
   const [tableLogs, setTableLogs] = useState<Worklog[]>([]);
@@ -238,35 +224,84 @@ export function WorklogsClient() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [groups, setGroups] = useState<TaskGroup[]>([]);
   const [entries, setEntries] = useState<OwnerEntry[]>([]);
-  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [tableLoading, setTableLoading] = useState(false);
   const [tableRefresh, setTableRefresh] = useState(0);
+  const [listEditWorklog, setListEditWorklog] = useState<Worklog | null>(null);
+  const [listRemovingId, setListRemovingId] = useState<string | null>(null);
+  const [entityCatalogReady, setEntityCatalogReady] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
 
   const tableRangeSpec = useMemo(
-    () => buildTableRangeSpec(tableRangeMode, tableMonth, customFrom, customTo),
-    [tableRangeMode, tableMonth.y, tableMonth.m, customFrom, customTo],
+    () =>
+      buildTableRangeSpec(tableRangeMode, tableMonth, customFrom, customTo, {
+        chooseCustomRange: t("worklog.chooseCustomRange"),
+        rangeTooLong: (days) =>
+          t("worklog.rangeTooLong", { days, maxDays: MAX_TABLE_RANGE_DAYS }),
+      }),
+    [tableRangeMode, tableMonth.y, tableMonth.m, customFrom, customTo, t],
   );
+
+  const loadEntityCatalog = useCallback(async () => {
+    try {
+      const [ow, tk, gr, en, pj] = await Promise.all([
+        fetch("/api/owners").then((r) => r.json()),
+        fetch("/api/tasks").then((r) => r.json()),
+        fetch("/api/groups").then((r) => r.json()),
+        fetch("/api/entries").then((r) => r.json()),
+        fetch("/api/projects").then((r) => r.json()),
+      ]);
+      setOwners(Array.isArray(ow) ? ow : []);
+      setTasks(Array.isArray(tk) ? tk : []);
+      setGroups(Array.isArray(gr) ? gr : []);
+      setEntries(Array.isArray(en) ? en : []);
+      setProjects(Array.isArray(pj) ? pj : []);
+    } catch {
+      /* ignore */
+    } finally {
+      setEntityCatalogReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (view !== "list") return;
+    queueMicrotask(() => {
+      void loadEntityCatalog();
+    });
+  }, [view, loadEntityCatalog]);
 
   useEffect(() => {
     queueMicrotask(() => {
       try {
         const v = localStorage.getItem(VIEW_STORAGE_KEY);
         if (v === "list" || v === "table") setView(v);
+        const tableRange = readStoredTableRange();
+        setTableMonth(tableRange.month);
+        setTableRangeMode(tableRange.mode);
+        setCustomFrom(tableRange.customFrom);
+        setCustomTo(tableRange.customTo);
+        const listRange = readStoredListRange();
+        setListFrom(listRange.from);
+        setListTo(listRange.to);
       } catch {
         /* ignore */
+      } finally {
+        setStorageReady(true);
       }
     });
   }, []);
 
   useEffect(() => {
+    if (!storageReady) return;
     try {
       localStorage.setItem(VIEW_STORAGE_KEY, view);
     } catch {
       /* ignore */
     }
-  }, [view]);
+  }, [storageReady, view]);
 
   useEffect(() => {
+    if (!storageReady) return;
     try {
       localStorage.setItem(
         TABLE_RANGE_STORAGE_KEY,
@@ -279,15 +314,16 @@ export function WorklogsClient() {
     } catch {
       /* ignore */
     }
-  }, [tableRangeMode, tableMonth.y, tableMonth.m, customFrom, customTo]);
+  }, [storageReady, tableRangeMode, tableMonth.y, tableMonth.m, customFrom, customTo]);
 
   useEffect(() => {
+    if (!storageReady) return;
     try {
       localStorage.setItem(LIST_RANGE_STORAGE_KEY, JSON.stringify({ from: listFrom, to: listTo }));
     } catch {
       /* ignore */
     }
-  }, [listFrom, listTo]);
+  }, [storageReady, listFrom, listTo]);
 
   const loadList = useCallback(async (p: number) => {
     setLoading(true);
@@ -321,6 +357,32 @@ export function WorklogsClient() {
       setLoading(false);
     }
   }, [listFrom, listTo]);
+
+  const removeListWorklog = useCallback(
+    async (w: Worklog) => {
+      if (
+        !window.confirm(
+          "Remove this worklog entry? Time and comment will be discarded. This cannot be undone.",
+        )
+      ) {
+        return;
+      }
+      setListRemovingId(w.id);
+      setErr(null);
+      try {
+        const r = await fetch(`/api/worklogs/${encodeURIComponent(w.id)}`, { method: "DELETE" });
+        if (!r.ok) {
+          setErr("Could not remove worklog.");
+          return;
+        }
+        if (listEditWorklog?.id === w.id) setListEditWorklog(null);
+        await loadList(page);
+      } finally {
+        setListRemovingId(null);
+      }
+    },
+    [page, loadList, listEditWorklog?.id],
+  );
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -359,11 +421,11 @@ export function WorklogsClient() {
         setTasks(Array.isArray(tk) ? tk : []);
         setGroups(Array.isArray(gr) ? gr : []);
         setEntries(Array.isArray(en) ? en : []);
-        setProjects(
-          Array.isArray(pj) ? pj.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })) : [],
-        );
+        setProjects(Array.isArray(pj) ? pj : []);
+        setEntityCatalogReady(true);
       } catch {
         if (!cancelled) setTableLogs([]);
+        setEntityCatalogReady(true);
       } finally {
         if (!cancelled) setTableLoading(false);
       }
@@ -373,23 +435,25 @@ export function WorklogsClient() {
     };
   }, [view, tableRangeSpec, tableRefresh]);
 
-  const ownerName = useCallback(
-    (id: string) => owners.find((o) => o.id === id)?.name ?? id,
-    [owners],
+  const ownerName = useCallback((id: string) => {
+    if (id === "__orphan__") return t("worklog.removedTargets");
+    if (id === "__project__") return t("nav.projects");
+    if (id === "__unassigned__") return t("worklog.unassigned");
+    return owners.find((o) => o.id === id)?.name ?? id;
+  }, [owners, t]);
+
+  const entityMaps = useMemo(
+    () => buildWorklogEntityMaps(tasks, groups, entries, projects, owners),
+    [tasks, groups, entries, projects, owners],
   );
 
   const tableBlocks = useMemo((): OwnerBlock[] => {
-    const taskById = new Map(tasks.map((t) => [t.id, t] as const));
-    const groupById = new Map(groups.map((g) => [g.id, g] as const));
-    const entryById = new Map(entries.map((e) => [e.id, e] as const));
-    const projectById = new Map(projects.map((p) => [p.id, p] as const));
-
     function resolveOwnerId(w: Worklog): string {
       const t = w.target;
-      if (t.kind === "task") return taskById.get(t.taskId)?.ownerId ?? "__orphan__";
-      if (t.kind === "epic") return groupById.get(t.groupId)?.ownerId ?? "__orphan__";
+      if (t.kind === "task") return entityMaps.taskById.get(t.taskId)?.ownerId ?? "__orphan__";
+      if (t.kind === "epic") return entityMaps.groupById.get(t.groupId)?.ownerId ?? "__orphan__";
       if (t.kind === "note") {
-        const e = entryById.get(t.entryId);
+        const e = entityMaps.entryById.get(t.entryId);
         return e?.ownerId ?? "__unassigned__";
       }
       if (t.kind === "project") return "__project__";
@@ -397,51 +461,35 @@ export function WorklogsClient() {
       return "__orphan__";
     }
 
-    function rowMeta(w: Worklog): { rowKey: string; label: string; href: string } {
+    function targetRowKey(w: Worklog): string {
       const t = w.target;
-      if (t.kind === "task") {
-        const task = taskById.get(t.taskId);
-        const k = task?.key ?? t.taskId;
-        const nm = task?.name ?? "Task";
-        return { rowKey: `task:${t.taskId}`, label: `${k} · ${nm}`, href: `/tasks/${t.taskId}` };
-      }
-      if (t.kind === "epic") {
-        const g = groupById.get(t.groupId);
-        return {
-          rowKey: `epic:${t.groupId}`,
-          label: `${g?.key ?? "EPC"} · ${g?.name ?? "Epic"}`,
-          href: `/epics/${t.groupId}`,
-        };
-      }
-      if (t.kind === "note") {
-        const e = entryById.get(t.entryId);
-        return {
-          rowKey: `note:${t.entryId}`,
-          label: `${e?.key ?? "NTE"} · ${e?.title ?? "Note"}`,
-          href: `/notes/${t.entryId}`,
-        };
-      }
-      if (t.kind === "project") {
-        const p = projectById.get(t.projectId);
-        return {
-          rowKey: `project:${t.projectId}`,
-          label: `${p?.name ?? "Project"}`,
-          href: `/projects/${t.projectId}`,
-        };
-      }
-      if (t.kind === "owner") {
-        return {
-          rowKey: `ownerlog:${t.ownerId}`,
-          label: "Owner time",
-          href: `/owners/${t.ownerId}`,
-        };
-      }
-      return { rowKey: "?", label: "?", href: "/" };
+      if (t.kind === "task") return `task:${t.taskId}`;
+      if (t.kind === "epic") return `epic:${t.groupId}`;
+      if (t.kind === "note") return `note:${t.entryId}`;
+      if (t.kind === "project") return `project:${t.projectId}`;
+      if (t.kind === "owner") return `ownerlog:${t.ownerId}`;
+      return "?";
+    }
+
+    function rowMeta(w: Worklog): { rowKey: string; label: string; href: string; deleted: boolean } {
+      const r = resolveWorklogTargetDisplay(w, entityMaps);
+      return {
+        rowKey: targetRowKey(w),
+        label: `${r.publicId} - ${r.entryName}`,
+        href: r.href,
+        deleted: r.deleted,
+      };
     }
 
     const byOwner = new Map<
       string,
-      Map<string, { meta: { rowKey: string; label: string; href: string }; minutesByDay: Record<string, number> }>
+      Map<
+        string,
+        {
+          meta: { rowKey: string; label: string; href: string; deleted: boolean };
+          minutesByDay: Record<string, number>;
+        }
+      >
     >();
 
     for (const w of tableLogs) {
@@ -471,6 +519,7 @@ export function WorklogsClient() {
           rowKey: v.meta.rowKey,
           label: v.meta.label,
           href: v.meta.href,
+          deleted: v.meta.deleted,
           minutesByDay: v.minutesByDay,
           totalM,
         });
@@ -478,16 +527,16 @@ export function WorklogsClient() {
       rows.sort((a, b) => a.label.localeCompare(b.label));
       blocks.push({
         ownerId: oid,
-        ownerName: oid === "__project__" ? "Projects" : oid === "__unassigned__" ? "Unassigned" : ownerName(oid),
+        ownerName: ownerName(oid),
         rows,
         totalM: ownerTotal,
       });
     }
     return blocks;
-  }, [tableLogs, tasks, groups, entries, projects, ownerName]);
+  }, [tableLogs, entityMaps, ownerName]);
 
   const tableDays = tableRangeSpec.kind === "ok" ? tableRangeSpec.days : [];
-  const tableHeading = tableRangeSpec.kind === "ok" ? tableRangeSpec.heading : "Worklogs";
+  const tableHeading = tableRangeSpec.kind === "ok" ? tableRangeSpec.heading : t("nav.worklogs");
 
   const pageCount = Math.max(1, Math.ceil(total / API_PAGE_SIZE_DEFAULT));
 
@@ -495,9 +544,11 @@ export function WorklogsClient() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Worklogs</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {t("nav.worklogs")}
+          </h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            Time logged across tasks, epics, notes, projects, and owners. Log work from any item&apos;s page.
+            {t("worklog.pageDescription")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -514,7 +565,7 @@ export function WorklogsClient() {
                   : "text-zinc-700 dark:text-zinc-300"
               }`}
             >
-              List
+              {t("worklog.list")}
             </button>
             <button
               type="button"
@@ -525,18 +576,19 @@ export function WorklogsClient() {
                   : "text-zinc-700 dark:text-zinc-300"
               }`}
             >
-              Table
+              {t("worklog.table")}
             </button>
           </div>
           <button
             type="button"
             onClick={() => {
+              void loadEntityCatalog();
               if (view === "list") void loadList(page);
               else setTableRefresh((n) => n + 1);
             }}
             className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
           >
-            Refresh
+            {t("common.refresh")}
           </button>
         </div>
       </div>
@@ -551,7 +603,7 @@ export function WorklogsClient() {
         <>
           <div className="mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 dark:border-zinc-800 dark:bg-zinc-900/30">
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-zinc-500">From (optional)</span>
+              <span className="text-zinc-500">{t("worklog.fromOptional")}</span>
               <input
                 type="date"
                 value={listFrom}
@@ -560,7 +612,7 @@ export function WorklogsClient() {
               />
             </label>
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-zinc-500">To (optional)</span>
+              <span className="text-zinc-500">{t("worklog.toOptional")}</span>
               <input
                 type="date"
                 value={listTo}
@@ -576,10 +628,10 @@ export function WorklogsClient() {
                 setListTo("");
               }}
             >
-              Clear dates
+              {t("worklog.clearDates")}
             </button>
             <p className="w-full text-xs text-zinc-500 sm:w-auto sm:flex-1 sm:self-end">
-              Inclusive local dates; leave blank for all time. Changing dates reloads from page 1.
+              {t("worklog.listDateHelp")}
             </p>
           </div>
           <DashboardPager
@@ -591,48 +643,72 @@ export function WorklogsClient() {
             onPageChange={(p) => void loadList(p)}
           />
           {loading ? (
-            <p className="mt-6 text-zinc-500">Loading…</p>
+            <p className="mt-6 text-zinc-500">{t("common.loading")}</p>
+          ) : logs.length > 0 && !entityCatalogReady ? (
+            <p className="mt-6 text-zinc-500">{t("common.loading")}</p>
           ) : logs.length === 0 ? (
             <p className="mt-6 text-zinc-500">
               {listFrom.trim() || listTo.trim()
-                ? "No worklogs in this date range."
-                : "No worklogs yet."}
+                ? t("worklog.noWorklogsDateRange")
+                : t("worklog.noWorklogsYet")}
             </p>
           ) : (
             <div className="mt-6 overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-              <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+              <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-700">
-                    <th className="px-3 py-2 font-medium">Key</th>
-                    <th className="px-3 py-2 font-medium">Target</th>
-                    <th className="px-3 py-2 font-medium">Started</th>
+                    <th className="min-w-[16rem] px-3 py-2 font-medium">Entry</th>
+                    <th className="whitespace-nowrap px-3 py-2 font-medium">Started</th>
                     <th className="px-3 py-2 font-medium">Time</th>
                     <th className="px-3 py-2 font-medium">Comment</th>
+                    <th className="min-w-[7rem] px-3 py-2 text-right font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map((w) => (
-                    <tr key={w.id} className="border-b border-zinc-100 dark:border-zinc-800">
-                      <td className="px-3 py-2 font-mono text-xs text-zinc-600 dark:text-zinc-400">{w.key}</td>
-                      <td className="px-3 py-2">
-                        <Link
-                          href={targetHref(w)}
-                          className="text-blue-600 hover:underline dark:text-blue-400"
-                        >
-                          {targetLabel(w)}
-                        </Link>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-zinc-800 dark:text-zinc-200">
-                        {w.startedAt.slice(0, 16).replace("T", " ")}
-                      </td>
-                      <td className="px-3 py-2 font-medium text-zinc-900 dark:text-zinc-100">
-                        {formatJiraDuration(w.durationMinutes, { minutesPerDay: mpd })}
-                      </td>
-                      <td className="max-w-md truncate px-3 py-2 text-zinc-600 dark:text-zinc-400">
-                        {w.comment?.trim() || "—"}
-                      </td>
-                    </tr>
-                  ))}
+                  {logs.map((w) => {
+                    const r = resolveWorklogTargetDisplay(w, entityMaps);
+                    const owner = r.ownerId ? entityMaps.ownerById.get(r.ownerId) : undefined;
+                    const project = r.projectId ? entityMaps.projectById.get(r.projectId) : undefined;
+                    return (
+                      <tr key={w.id} className="border-b border-zinc-100 dark:border-zinc-800">
+                        <td className="px-3 py-2 align-top">
+                          <WorklogListTargetRichCell resolved={r} owner={owner} project={project} />
+                          <div className="mt-1 font-mono text-[10px] text-zinc-400 dark:text-zinc-500">{w.key}</div>
+                        </td>
+                        <td className="px-3 py-2 align-top whitespace-nowrap text-zinc-800 dark:text-zinc-200">
+                          {w.startedAt.slice(0, 16).replace("T", " ")}
+                        </td>
+                        <td className="px-3 py-2 align-top font-medium text-zinc-900 dark:text-zinc-100">
+                          {formatJiraDuration(w.durationMinutes, { minutesPerDay: mpd })}
+                        </td>
+                        <td className="max-w-md truncate px-3 py-2 align-top text-zinc-600 dark:text-zinc-400">
+                          {w.comment?.trim() || "—"}
+                        </td>
+                        <td className="px-3 py-2 align-top text-right">
+                          <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              disabled={listRemovingId === w.id}
+                              onClick={() => setListEditWorklog(w)}
+                              className={`${dashboardIconBtnPrimaryClass} disabled:opacity-50`}
+                              aria-label="Edit worklog"
+                              title="Edit worklog"
+                            >
+                              <PencilIcon />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={listRemovingId === w.id}
+                              onClick={() => void removeListWorklog(w)}
+                              className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/40"
+                            >
+                              {listRemovingId === w.id ? "…" : "Remove"}
+                            </button>
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -676,7 +752,7 @@ export function WorklogsClient() {
                     })
                   }
                 >
-                  Previous month
+                  {t("worklog.previousMonth")}
                 </button>
                 <button
                   type="button"
@@ -688,7 +764,7 @@ export function WorklogsClient() {
                     })
                   }
                 >
-                  Next month
+                  {t("worklog.nextMonth")}
                 </button>
                 <button
                   type="button"
@@ -698,13 +774,13 @@ export function WorklogsClient() {
                     setTableMonth({ y: n.getFullYear(), m: n.getMonth() });
                   }}
                 >
-                  This month
+                  {t("worklog.thisMonth")}
                 </button>
               </div>
             ) : (
               <>
                 <label className="flex flex-col gap-1 text-sm">
-                  <span className="text-zinc-500">From</span>
+                  <span className="text-zinc-500">{t("worklog.from")}</span>
                   <input
                     type="date"
                     value={customFrom}
@@ -713,7 +789,7 @@ export function WorklogsClient() {
                   />
                 </label>
                 <label className="flex flex-col gap-1 text-sm">
-                  <span className="text-zinc-500">To</span>
+                  <span className="text-zinc-500">{t("worklog.to")}</span>
                   <input
                     type="date"
                     value={customTo}
@@ -730,16 +806,20 @@ export function WorklogsClient() {
                     setCustomTo(b.to);
                   }}
                 >
-                  Use current month
+                  {t("worklog.useCurrentMonth")}
                 </button>
               </>
             )}
           </div>
           {tableRangeSpec.kind === "ok" ? (
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Range {tableRangeSpec.from} – {tableRangeSpec.to} (local dates, inclusive). Project-only logs
-              appear under &quot;Projects&quot;. The table supports up to {MAX_TABLE_RANGE_DAYS} days; use List for
-              longer spans.
+              {t("worklog.tableRangeHelp", {
+                from: tableRangeSpec.from,
+                to: tableRangeSpec.to,
+                projects: t("nav.projects"),
+                maxDays: MAX_TABLE_RANGE_DAYS,
+                list: t("worklog.list"),
+              })}
             </p>
           ) : tableRangeSpec.kind === "invalid" ? (
             <p className="text-sm text-zinc-600 dark:text-zinc-400">{tableRangeSpec.message}</p>
@@ -749,9 +829,9 @@ export function WorklogsClient() {
             </p>
           )}
           {tableLoading ? (
-            <p className="text-zinc-500">Loading…</p>
+            <p className="text-zinc-500">{t("common.loading")}</p>
           ) : tableRangeSpec.kind !== "ok" ? null : tableBlocks.length === 0 ? (
-            <p className="text-zinc-500">No worklogs in this range.</p>
+            <p className="text-zinc-500">{t("worklog.noWorklogsInRange")}</p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
               <table className="w-full border-collapse text-center text-xs">
@@ -811,13 +891,22 @@ export function WorklogsClient() {
                             </td>
                           ) : null}
                           <td className="min-w-[12rem] max-w-xs border-r border-zinc-100 px-2 py-1.5 text-left dark:border-zinc-800">
-                            <Link
-                              href={row.href}
-                              className="block truncate text-blue-600 hover:underline dark:text-blue-400"
-                              title={row.label}
-                            >
-                              {row.label}
-                            </Link>
+                            {row.deleted ? (
+                              <span
+                                className="block truncate text-zinc-400 line-through decoration-zinc-400 dark:text-zinc-500"
+                                title={`${row.label} (deleted)`}
+                              >
+                                {row.label}
+                              </span>
+                            ) : (
+                              <Link
+                                href={row.href}
+                                className="block truncate text-blue-600 hover:underline dark:text-blue-400"
+                                title={row.label}
+                              >
+                                {row.label}
+                              </Link>
+                            )}
                           </td>
                           <td className="w-16 min-w-16 whitespace-nowrap border-r border-zinc-200 bg-zinc-100 px-2 py-1.5 text-right tabular-nums text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
                             {fmtHours(row.totalM) || "—"}
@@ -848,6 +937,19 @@ export function WorklogsClient() {
           )}
         </div>
       )}
+      {listEditWorklog ? (
+        <WorklogDialog
+          open
+          onClose={() => setListEditWorklog(null)}
+          onSaved={() => {
+            setListEditWorklog(null);
+            void loadList(page);
+          }}
+          target={listEditWorklog.target}
+          minutesPerDay={mpd}
+          initialWorklog={listEditWorklog}
+        />
+      ) : null}
     </div>
   );
 }

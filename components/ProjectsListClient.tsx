@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import type { Project, Task, TaskGroup } from "@/lib/schemas";
 import { markdownExcerpt } from "@/lib/markdownExcerpt";
-import { TrashIcon } from "@/components/icons";
+import {
+  dashboardIconBtnNeutralClass,
+  dashboardIconBtnPrimaryClass,
+} from "@/lib/dashboardTableActionClasses";
+import { ArrowTopRightOnSquareIcon, PencilIcon, TrashIcon } from "@/components/icons";
 import { HexColorPickerRow } from "@/components/OwnerStyleColorPicker";
 import { OwnerSwatch } from "@/components/OwnerSwatch";
 import { fileToOwnerIconDataUrl } from "@/lib/ownerIconDataUrl";
@@ -16,6 +20,7 @@ import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosur
 import { DashboardPager } from "@/components/DashboardPager";
 import { EntityArchivedBadge } from "@/components/EntityArchivedMark";
 import { EntityKeyTagInput } from "@/components/EntityKeyTagInput";
+import { LogWorkButton } from "@/components/LogWorkButton";
 
 export function ProjectsListClient() {
   const { settings } = useDashboardConfig();
@@ -321,19 +326,29 @@ export function ProjectsListClient() {
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
               {summary ? <span className="block pd-clamp-2">{summary}</span> : <span>—</span>}
             </p>
-            <div className="mt-4 flex gap-3 text-sm">
+            <div className="mt-4 flex flex-wrap gap-1 text-sm">
               <Link
                 href={`/projects/${p.id}`}
-                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                className={dashboardIconBtnNeutralClass}
+                aria-label="Open project"
+                title="Open project"
               >
-                Open
+                <ArrowTopRightOnSquareIcon />
               </Link>
               <Link
                 href={`/projects/${p.id}/edit`}
-                className="text-blue-600 hover:underline dark:text-blue-400"
+                className={dashboardIconBtnPrimaryClass}
+                aria-label="Edit project"
+                title="Edit project"
               >
-                Edit
+                <PencilIcon />
               </Link>
+              <LogWorkButton
+                target={{ kind: "project", projectId: p.id }}
+                disabled={isArchived(p)}
+                variant="link"
+                className="font-medium"
+              />
             </div>
           </li>
         ))}

@@ -33,7 +33,9 @@ export function useTableColumnWidths(
       for (const [k, v] of Object.entries(o)) {
         if (typeof v === "number" && Number.isFinite(v)) next[k] = clamp(v, MIN_W, MAX_W);
       }
-      if (Object.keys(next).length) setMap(next);
+      if (Object.keys(next).length) {
+        queueMicrotask(() => setMap(next));
+      }
     } catch {
       /* ignore */
     }

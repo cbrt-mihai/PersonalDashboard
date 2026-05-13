@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import { DetailCollapsibleSection } from "@/components/DetailCollapsibleSection";
+import { useI18n } from "@/components/LocaleProvider";
 import { WorklogDialog } from "@/components/WorklogDialog";
 import { formatJiraDuration } from "@/lib/jiraDuration";
 import { aggregateWorklogsForTarget } from "@/lib/worklogs";
@@ -60,6 +61,7 @@ function buildQuery(target: WorklogTarget): string {
 }
 
 export function WorklogSection({ target, disabled = false }: { target: WorklogTarget; disabled?: boolean }) {
+  const { t } = useI18n();
   const { settings } = useDashboardConfig();
   const mpd = settings?.worklogMinutesPerDay ?? 1440;
   const [preset, setPreset] = useState<RangePreset>("all");
@@ -68,6 +70,9 @@ export function WorklogSection({ target, disabled = false }: { target: WorklogTa
   const [logs, setLogs] = useState<Worklog[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editWorklog, setEditWorklog] = useState<Worklog | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [actionErr, setActionErr] = useState<string | null>(null);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -147,31 +152,62 @@ export function WorklogSection({ target, disabled = false }: { target: WorklogTa
     });
   }, [logs, rangeBounds]);
 
+  const removeWorklog = useCallback(
+    async (w: Worklog) => {
+      if (
+        !window.confirm(
+          "Remove this worklog entry? Time and comment will be discarded. This cannot be undone.",
+        )
+      ) {
+        return;
+      }
+      setActionErr(null);
+      setRemovingId(w.id);
+      try {
+        const r = await fetch(`/api/worklogs/${encodeURIComponent(w.id)}`, { method: "DELETE" });
+        if (!r.ok) {
+          setActionErr("Could not remove worklog.");
+          return;
+        }
+        if (editWorklog?.id === w.id) setEditWorklog(null);
+        await load();
+      } finally {
+        setRemovingId(null);
+      }
+    },
+    [load, editWorklog?.id],
+  );
+
   return (
     <>
       <DetailCollapsibleSection
-        title="Work log"
+        title={t("worklog.workLog")}
         titleClassName="text-lg font-semibold text-zinc-900 dark:text-zinc-50"
       >
         <div className="flex flex-wrap items-end gap-3">
+          {actionErr ? (
+            <p className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+              {actionErr}
+            </p>
+          ) : null}
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-zinc-500">Range</span>
+            <span className="text-zinc-500">{t("worklog.range")}</span>
             <select
               value={preset}
               onChange={(e) => setPreset(e.target.value as RangePreset)}
               className="rounded-lg border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
             >
-              <option value="all">All time</option>
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="month">This month</option>
-              <option value="custom">Custom</option>
+              <option value="all">{t("worklog.allTime")}</option>
+              <option value="7d">{t("worklog.last7Days")}</option>
+              <option value="30d">{t("worklog.last30Days")}</option>
+              <option value="month">{t("worklog.thisMonth")}</option>
+              <option value="custom">{t("worklog.custom")}</option>
             </select>
           </label>
           {preset === "custom" ? (
             <>
               <label className="flex flex-col gap-1 text-sm">
-                <span className="text-zinc-500">From</span>
+                <span className="text-zinc-500">{t("worklog.from")}</span>
                 <input
                   type="date"
                   value={customFrom}
@@ -180,7 +216,7 @@ export function WorklogSection({ target, disabled = false }: { target: WorklogTa
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm">
-                <span className="text-zinc-500">To</span>
+                <span className="text-zinc-500">{t("worklog.to")}</span>
                 <input
                   type="date"
                   value={customTo}
@@ -193,26 +229,29 @@ export function WorklogSection({ target, disabled = false }: { target: WorklogTa
           <button
             type="button"
             disabled={disabled}
-            onClick={() => setDialogOpen(true)}
+            onClick={() => {
+              setEditWorklog(null);
+              setDialogOpen(true);
+            }}
             className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            Log work
+            {t("worklog.logWork")}
           </button>
         </div>
 
         <div className="mt-4 grid gap-2 rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900/40 sm:grid-cols-3">
           <div>
-            <div className="text-zinc-500">Total (range)</div>
+            <div className="text-zinc-500">{t("worklog.totalRange")}</div>
             <div className="font-semibold text-zinc-900 dark:text-zinc-100">
               {formatJiraDuration(agg.totalMinutes, { minutesPerDay: mpd })}
             </div>
           </div>
           <div>
-            <div className="text-zinc-500">Entries</div>
+            <div className="text-zinc-500">{t("worklog.entries")}</div>
             <div className="font-semibold text-zinc-900 dark:text-zinc-100">{agg.entryCount}</div>
           </div>
           <div>
-            <div className="text-zinc-500">Span</div>
+            <div className="text-zinc-500">{t("worklog.span")}</div>
             <div className="text-xs text-zinc-700 dark:text-zinc-300">
               {agg.firstStartedAt && agg.lastStartedAt
                 ? `${agg.firstStartedAt.slice(0, 10)} → ${agg.lastStartedAt.slice(0, 10)}`
@@ -222,9 +261,9 @@ export function WorklogSection({ target, disabled = false }: { target: WorklogTa
         </div>
 
         {loading ? (
-          <p className="mt-3 text-sm text-zinc-500">Loading worklogs…</p>
+          <p className="mt-3 text-sm text-zinc-500">{t("worklog.loadingWorklogs")}</p>
         ) : displayLogs.length === 0 ? (
-          <p className="mt-3 text-sm text-zinc-500">No worklogs in this range.</p>
+          <p className="mt-3 text-sm text-zinc-500">{t("worklog.noWorklogsInRange")}</p>
         ) : (
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[480px] border-collapse text-left text-sm">
@@ -232,7 +271,8 @@ export function WorklogSection({ target, disabled = false }: { target: WorklogTa
                 <tr className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-700">
                   <th className="py-2 pr-2 font-medium">Date</th>
                   <th className="py-2 pr-2 font-medium">Time</th>
-                  <th className="py-2 font-medium">Comment</th>
+                  <th className="py-2 pr-2 font-medium">Comment</th>
+                  <th className="min-w-[7rem] py-2 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -244,8 +284,31 @@ export function WorklogSection({ target, disabled = false }: { target: WorklogTa
                     <td className="py-2 pr-2 whitespace-nowrap font-medium text-zinc-900 dark:text-zinc-100">
                       {formatJiraDuration(w.durationMinutes, { minutesPerDay: mpd })}
                     </td>
-                    <td className="py-2 text-zinc-600 dark:text-zinc-400">
+                    <td className="py-2 pr-2 text-zinc-600 dark:text-zinc-400">
                       {w.comment?.trim() ? w.comment : "—"}
+                    </td>
+                    <td className="py-2 text-right">
+                      <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          disabled={disabled || removingId === w.id}
+                          onClick={() => {
+                            setDialogOpen(false);
+                            setEditWorklog(w);
+                          }}
+                          className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          disabled={disabled || removingId === w.id}
+                          onClick={() => void removeWorklog(w)}
+                          className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/40"
+                        >
+                          {removingId === w.id ? "…" : "Remove"}
+                        </button>
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -256,12 +319,16 @@ export function WorklogSection({ target, disabled = false }: { target: WorklogTa
       </DetailCollapsibleSection>
 
       <WorklogDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
+        open={dialogOpen || editWorklog != null}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditWorklog(null);
+        }}
         onSaved={() => void load()}
         target={target}
         minutesPerDay={mpd}
         disabled={disabled}
+        initialWorklog={editWorklog}
       />
     </>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useI18n } from "@/components/LocaleProvider";
 
 export function FilterMultiDropdown({
   label,
@@ -13,6 +14,7 @@ export function FilterMultiDropdown({
   selected: string[];
   onChange: (next: string[]) => void;
 }) {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const filteredOptions = useMemo(() => {
     const ql = q.trim().toLowerCase();
@@ -22,12 +24,12 @@ export function FilterMultiDropdown({
 
   const summaryText =
     selected.length === 0
-      ? "All"
+      ? t("common.all")
       : selected.length <= 2
         ? selected
             .map((v) => options.find((o) => o.value === v)?.label ?? v)
             .join(", ")
-        : `${selected.length} selected`;
+        : t("common.selectedCount", { count: selected.length });
 
   return (
     <div className="flex flex-col gap-1 text-sm">
@@ -38,11 +40,13 @@ export function FilterMultiDropdown({
         </summary>
         <div className="absolute left-0 right-0 z-20 mt-1 max-h-56 min-w-[12rem] overflow-y-auto rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-600 dark:bg-zinc-950">
           <label className="mb-1 flex flex-col gap-1">
-            <span className="sr-only">Search {label}</span>
+            <span className="sr-only">
+              {t("common.search")} {label}
+            </span>
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search…"
+              placeholder={`${t("common.search")}…`}
               className="w-full rounded-md border border-zinc-200 px-2 py-1 text-xs dark:border-zinc-700 dark:bg-zinc-900"
             />
           </label>
@@ -55,12 +59,12 @@ export function FilterMultiDropdown({
                 onChange([]);
               }}
             >
-              Clear
+              {t("common.clear")}
             </button>
           ) : null}
           <div className="flex max-h-48 flex-col gap-0.5">
             {filteredOptions.length === 0 ? (
-              <div className="px-2 py-2 text-xs text-zinc-500">No matches.</div>
+              <div className="px-2 py-2 text-xs text-zinc-500">{t("common.noMatches")}</div>
             ) : null}
             {filteredOptions.map((opt) => (
               <label

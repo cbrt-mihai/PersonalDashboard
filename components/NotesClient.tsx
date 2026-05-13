@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
 import { DashboardPager } from "@/components/DashboardPager";
+import { LogWorkButton } from "@/components/LogWorkButton";
 import { FilterMultiDropdown } from "@/components/FilterMultiDropdown";
 import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -27,7 +28,11 @@ import { noteEntryEditHref, noteEntryViewHref } from "@/lib/noteEntryPaths";
 import type { Owner, OwnerEntry, Project, Task, TaskGroup } from "@/lib/schemas";
 import { OwnerSwatch } from "@/components/OwnerSwatch";
 import { EntityArchivedBadge } from "./EntityArchivedMark";
-import { TrashIcon } from "@/components/icons";
+import {
+  dashboardIconBtnNeutralClass,
+  dashboardIconBtnPrimaryClass,
+} from "@/lib/dashboardTableActionClasses";
+import { EyeIcon, PencilIcon, TrashIcon } from "@/components/icons";
 import { MarkdownField } from "@/components/MarkdownField";
 import { NoteStatusSelect } from "@/components/NoteStatusSelect";
 import { NoteTagsEditor } from "@/components/NoteTagsEditor";
@@ -174,7 +179,7 @@ export function NotesClient() {
   const [tableColumns, setTableColumns] = useState<Record<NotesTableColumnId, boolean>>({
     ...DEFAULT_NOTES_TABLE_COLUMNS,
   });
-  const skipTableColPersist = useRef(true);
+  const [tableColumnsReady, setTableColumnsReady] = useState(false);
 
   const router = useRouter();
   const [noteCreateOpen, setNoteCreateOpen] = useState(false);
@@ -320,21 +325,20 @@ export function NotesClient() {
         setTableColumns(parseNotesTableColumnPrefs(raw));
       } catch {
         /* ignore */
+      } finally {
+        setTableColumnsReady(true);
       }
     });
   }, []);
 
   useEffect(() => {
-    if (skipTableColPersist.current) {
-      skipTableColPersist.current = false;
-      return;
-    }
+    if (!tableColumnsReady) return;
     try {
       localStorage.setItem(NOTES_TABLE_COLUMN_STORAGE_KEY, JSON.stringify(tableColumns));
     } catch {
       /* ignore */
     }
-  }, [tableColumns]);
+  }, [tableColumnsReady, tableColumns]);
 
   const ownerFilterOptions = useMemo(
     () => [
@@ -1027,19 +1031,28 @@ export function NotesClient() {
                       </td>
                     ) : null}
                     <td className="px-3 py-2 align-middle whitespace-nowrap">
-                      <TableCellSlot className="flex-nowrap gap-x-3">
+                      <TableCellSlot className="flex-nowrap gap-x-1">
                       <Link
                         href={noteEntryViewHref(e)}
-                        className="text-blue-600 text-xs hover:underline"
+                        className={dashboardIconBtnNeutralClass}
+                        aria-label="View note"
+                        title="View note"
                       >
-                        View
+                        <EyeIcon />
                       </Link>
                       <Link
                         href={noteEntryEditHref(e)}
-                        className="text-blue-600 text-xs hover:underline"
+                        className={dashboardIconBtnPrimaryClass}
+                        aria-label="Edit note"
+                        title="Edit note"
                       >
-                        Edit
+                        <PencilIcon />
                       </Link>
+                      <LogWorkButton
+                        target={{ kind: "note", entryId: e.id }}
+                        disabled={isArchived(e)}
+                        variant="link"
+                      />
                       <button
                         type="button"
                         className="inline-flex items-center justify-center rounded p-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-300"

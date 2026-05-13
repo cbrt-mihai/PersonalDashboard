@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ThemeProvider } from "@mui/material/styles";
 import ExpandedThemeBox from "@/components/ExpandedThemeBox";
+import { LanguageSelect } from "@/components/LanguageSelect";
 import { LandscapeThemeToggle } from "@/components/LandscapeThemeToggle";
+import { useI18n } from "@/components/LocaleProvider";
 import { useTheme } from "@/components/ThemeProvider";
 import { dashboardMuiTheme } from "@/lib/muiDashboardTheme";
 import { GlobalSearch } from "@/components/GlobalSearch";
@@ -23,82 +26,97 @@ function NavThemeSwitch() {
   );
 }
 
+const NAV_LINK_CLASS =
+  "rounded-md px-1.5 py-1 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100";
+const NAV_LINK_ACTIVE_CLASS =
+  "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100 dark:bg-blue-950/40 dark:text-blue-200 dark:ring-blue-900/70";
+
+const NAV_ITEMS = [
+  {
+    href: "/",
+    labelKey: "nav.tasks",
+    isActive: (pathname: string) => pathname === "/" || pathname.startsWith("/tasks"),
+  },
+  {
+    href: "/notes",
+    labelKey: "nav.notes",
+    isActive: (pathname: string) => pathname.startsWith("/notes"),
+  },
+  {
+    href: "/epics",
+    labelKey: "nav.epics",
+    isActive: (pathname: string) => pathname.startsWith("/epics"),
+  },
+  {
+    href: "/projects",
+    labelKey: "nav.projects",
+    isActive: (pathname: string) => pathname.startsWith("/projects"),
+  },
+  {
+    href: "/owners",
+    labelKey: "nav.owners",
+    isActive: (pathname: string) => pathname.startsWith("/owners"),
+  },
+  {
+    href: "/worklogs",
+    labelKey: "nav.worklogs",
+    isActive: (pathname: string) => pathname.startsWith("/worklogs"),
+  },
+  {
+    href: "/achievements",
+    labelKey: "nav.achievements",
+    isActive: (pathname: string) => pathname.startsWith("/achievements"),
+  },
+  {
+    href: "/docs/markdown",
+    labelKey: "nav.markdown",
+    isActive: (pathname: string) => pathname.startsWith("/docs/markdown"),
+  },
+  {
+    href: "/settings",
+    labelKey: "nav.settings",
+    isActive: (pathname: string) => pathname.startsWith("/settings"),
+  },
+  {
+    href: "/audit",
+    labelKey: "nav.audit",
+    isActive: (pathname: string) => pathname.startsWith("/audit"),
+  },
+] as const;
+
 export function Nav() {
+  const pathname = usePathname();
+  const { t } = useI18n();
+
   return (
-    <header className="relative z-50 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-        <div className="flex flex-wrap items-center gap-6">
+    <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
+      <div className="mx-auto flex max-w-[min(100%,96rem)] items-center justify-between gap-4 px-4 py-3">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-6 gap-y-3">
           <Link
             href="/"
             className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
           >
-            Dashboard
+            {t("nav.dashboard")}
           </Link>
-          <nav className="flex flex-wrap gap-4 text-sm font-medium">
-            <Link
-              href="/"
-              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              Tasks
-            </Link>
-            <Link
-              href="/notes"
-              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              Notes
-            </Link>
-            <Link
-              href="/epics"
-              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              Epics
-            </Link>
-            <Link
-              href="/projects"
-              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              Projects
-            </Link>
-            <Link
-              href="/owners"
-              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              Owners
-            </Link>
-            <Link
-              href="/worklogs"
-              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              Worklogs
-            </Link>
-            <Link
-              href="/achievements"
-              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              Achievements
-            </Link>
-            <Link
-              href="/docs/markdown"
-              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              Markdown
-            </Link>
-            <Link
-              href="/settings"
-              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              Settings
-            </Link>
-            <Link
-              href="/audit"
-              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-            >
-              Audit log
-            </Link>
+          <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium">
+            {NAV_ITEMS.map((item) => {
+              const active = item.isActive(pathname);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`${NAV_LINK_CLASS} ${active ? NAV_LINK_ACTIVE_CLASS : ""}`}
+                >
+                  {t(item.labelKey)}
+                </Link>
+              );
+            })}
           </nav>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
           <GlobalSearch />
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <LanguageSelect />
           <NavThemeSwitch />
         </div>
       </div>

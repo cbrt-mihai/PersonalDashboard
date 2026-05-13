@@ -4,6 +4,7 @@ import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
 import { DashboardPager } from "@/components/DashboardPager";
 import { FilterMultiDropdown } from "@/components/FilterMultiDropdown";
+import { useI18n } from "@/components/LocaleProvider";
 import { StatusBadge } from "@/components/StatusBadge";
 import { TaskTypeBadge } from "@/components/TaskMetaBadges";
 import {
@@ -18,12 +19,17 @@ import {
   type BragTaskRow,
 } from "@/lib/achievements";
 import {
+  aggregateWorklogAchievementEntityRollups,
   aggregateWorklogAchievementStats,
+  aggregateWorklogByEntryTypeStats,
+  attachWorklogEntryTypeSwatches,
+  attachWorklogRollupSwatches,
   buildAchievementsWorklogSummaryHtml,
   filterWorklogsForAchievements,
   WORKLOG_KIND_LABEL,
 } from "@/lib/achievementsWorklogs";
 import { isArchived } from "@/lib/archive";
+import { DEFAULT_DASHBOARD_SETTINGS } from "@/lib/defaultDashboardSettings";
 import { formatJiraDuration } from "@/lib/jiraDuration";
 import { markdownExcerpt } from "@/lib/markdownExcerpt";
 import { tagOptionsFromEntries } from "@/lib/noteTags";
@@ -32,6 +38,7 @@ import { TASK_FORM_PRIORITIES, TASK_FORM_TYPES } from "@/lib/taskFormOptions";
 import { paginateGroupedSections } from "@/lib/paginateGroupedSections";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDashboardLocalPager } from "@/lib/useDashboardLocalPager";
+import { buildWorklogEntityMaps } from "@/lib/worklogTargetDisplay";
 
 function BragTaskCard({ row }: { row: BragTaskRow }) {
   const { task, ownerName, projectName, epicName } = row;
@@ -68,6 +75,7 @@ function BragTaskCard({ row }: { row: BragTaskRow }) {
 }
 
 export function AchievementsClient() {
+  const { t } = useI18n();
   const { settings, statusMap, statusKeys } = useDashboardConfig();
   const types = useMemo(
     () =>
@@ -210,13 +218,13 @@ export function AchievementsClient() {
 
   const projectFilterOptions = useMemo(() => {
     return [
-      { value: "__no_project__", label: "No project" },
+      { value: "__no_project__", label: t("common.noProject") },
       ...[...projects]
         .filter((p) => showArchived || !isArchived(p))
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((p) => ({ value: p.id, label: p.name })),
     ];
-  }, [projects, showArchived]);
+  }, [projects, showArchived, t]);
 
   const groupFilterOptions = useMemo(() => {
     const base = groups.filter((g) => {
@@ -224,12 +232,12 @@ export function AchievementsClient() {
       return ownerIds.length === 0 || ownerIds.includes(g.ownerId);
     });
     return [
-      { value: "__ungrouped__", label: "Ungrouped" },
+      { value: "__ungrouped__", label: t("common.ungrouped") },
       ...[...base]
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((g) => ({ value: g.id, label: g.name })),
     ];
-  }, [groups, ownerIds, showArchived]);
+  }, [groups, ownerIds, showArchived, t]);
 
   const typeFilterOptions = useMemo(() => types.map((t) => ({ value: t, label: t })), [types]);
 
@@ -271,23 +279,48 @@ export function AchievementsClient() {
     [achievementWorklogs],
   );
 
+  const worklogEntityMaps = useMemo(
+    () => buildWorklogEntityMaps(tasks, groups, entries, projects, owners),
+    [tasks, groups, entries, projects, owners],
+  );
+
+  const worklogEntityRollups = useMemo(
+    () => aggregateWorklogAchievementEntityRollups(achievementWorklogs, worklogEntityMaps),
+    [achievementWorklogs, worklogEntityMaps],
+  );
+
+  const worklogEntryTypeStats = useMemo(
+    () => aggregateWorklogByEntryTypeStats(achievementWorklogs, worklogEntityMaps),
+    [achievementWorklogs, worklogEntityMaps],
+  );
+
   const mpd = settings?.worklogMinutesPerDay ?? 1440;
 
   const { from: rf, to: rt } = normalizeDateRange(from, to);
 
   const downloadHtml = () => {
-    const title = "Achievements";
+    const title = t("achievements.title");
     const subtitle =
       rf && rt
-        ? `Task dates ${rf} through ${rt}`
-        : "Tasks matching your filters (date range optional)";
+        ? t("achievements.taskDatesThrough", { from: rf, to: rt })
+        : t("achievements.tasksMatchingFilters");
+    const taskTypes = settings?.taskTypes ?? DEFAULT_DASHBOARD_SETTINGS.taskTypes;
     const worklogSummaryHtml = buildAchievementsWorklogSummaryHtml({
       from: rf,
       to: rt,
       totalMinutes: worklogStats.totalMinutes,
       entryCount: worklogStats.entryCount,
       byKind: worklogStats.byKind,
+      byEpic: attachWorklogRollupSwatches("epic", worklogEntityRollups.byEpic, worklogEntityMaps),
+      byProject: attachWorklogRollupSwatches(
+        "project",
+        worklogEntityRollups.byProject,
+        worklogEntityMaps,
+      ),
+      byOwner: attachWorklogRollupSwatches("owner", worklogEntityRollups.byOwner, worklogEntityMaps),
+      byEntryType: attachWorklogEntryTypeSwatches(worklogEntryTypeStats, taskTypes),
       minutesPerDay: mpd,
+      taskTypes,
     });
     const html = buildAchievementsHtmlDocument({
       title,
@@ -352,23 +385,18 @@ export function AchievementsClient() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="print:hidden">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Achievements
-        </h1>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {t("achievements.title")}
+          </h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Build a shareable summary of tasks in a date range. Filter by owner, project, epic, type,
-          status, priority, and tags. Worklog totals use the same date range on{" "}
-          <strong>worklog start dates</strong> and respect your structural filters (task-type worklogs
-          also follow type, status, priority, and tag filters). The exported HTML has two task tabs —
-          terminal work and every matching task — a worklog summary, and extra filters inside the file.
-          Print or save from the browser.
+          {t("achievements.description")}
         </p>
 
         {err ? (
           <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
             {err}{" "}
             <button type="button" className="underline" onClick={() => void load()}>
-              Retry
+              {t("common.retry")}
             </button>
           </p>
         ) : null}
@@ -380,28 +408,33 @@ export function AchievementsClient() {
             disabled={loading}
             className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            Download HTML
+            {t("achievements.downloadHtml")}
           </button>
         </div>
 
         <section className="mt-6 rounded-xl border border-zinc-200 bg-white/80 p-4 dark:border-zinc-800 dark:bg-zinc-950/60">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Worklogs</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+            {t("nav.worklogs")}
+          </h2>
           <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            Started between {rf} and {rt}, matching filters below. Task rows count tasks by{" "}
-            <em>task date</em>; this block uses <em>worklog start date</em> on the same calendar range.
+            {t("worklog.startedBetween", { from: rf, to: rt })}
           </p>
           {loading ? (
-            <p className="mt-3 text-sm text-zinc-500">Loading…</p>
+            <p className="mt-3 text-sm text-zinc-500">{t("common.loading")}</p>
           ) : (
             <dl className="mt-3 grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-zinc-900/40">
-                <dt className="text-xs font-medium tracking-wide text-zinc-500 uppercase">Entries</dt>
+                <dt className="text-xs font-medium tracking-wide text-zinc-500 uppercase">
+                  {t("worklog.entries")}
+                </dt>
                 <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
                   {worklogStats.entryCount}
                 </dd>
               </div>
               <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-zinc-900/40">
-                <dt className="text-xs font-medium tracking-wide text-zinc-500 uppercase">Total time</dt>
+                <dt className="text-xs font-medium tracking-wide text-zinc-500 uppercase">
+                  {t("worklog.totalTime")}
+                </dt>
                 <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
                   {formatJiraDuration(worklogStats.totalMinutes, { minutesPerDay: mpd })}
                 </dd>
@@ -413,9 +446,9 @@ export function AchievementsClient() {
               <table className="w-full min-w-[16rem] text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-xs text-zinc-500 uppercase dark:border-zinc-700">
-                    <th className="py-2 pr-2 font-medium">Target</th>
-                    <th className="py-2 pr-2 font-medium">Entries</th>
-                    <th className="py-2 font-medium">Time</th>
+                    <th className="py-2 pr-2 font-medium">{t("worklog.target")}</th>
+                    <th className="py-2 pr-2 font-medium">{t("worklog.entries")}</th>
+                    <th className="py-2 font-medium">{t("worklog.time")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -442,11 +475,13 @@ export function AchievementsClient() {
         </section>
 
         <section className="mt-8 space-y-4 rounded-xl border border-zinc-200 bg-white/80 p-4 dark:border-zinc-800 dark:bg-zinc-950/60">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Filters</h2>
-          <DashboardFilterDisclosure title="Date range, grouping, and task filters">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+            {t("worklog.filters")}
+          </h2>
+          <DashboardFilterDisclosure title={t("achievements.dateRangeGroupingFilters")}>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-zinc-500">From (task date)</span>
+              <span className="text-zinc-500">{t("achievements.fromTaskDate")}</span>
               <input
                 type="date"
                 value={from}
@@ -455,7 +490,7 @@ export function AchievementsClient() {
               />
             </label>
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-zinc-500">To (task date)</span>
+              <span className="text-zinc-500">{t("achievements.toTaskDate")}</span>
               <input
                 type="date"
                 value={to}
@@ -466,58 +501,58 @@ export function AchievementsClient() {
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <FilterMultiDropdown
-              label="Owner"
+              label={t("common.owner")}
               options={ownerFilterOptions}
               selected={ownerIds}
               onChange={setOwnerIds}
             />
             <FilterMultiDropdown
-              label="Project"
+              label={t("common.project")}
               options={projectFilterOptions}
               selected={projectIds}
               onChange={setProjectIds}
             />
             <FilterMultiDropdown
-              label="Epic"
+              label={t("common.epic")}
               options={groupFilterOptions}
               selected={epicIds}
               onChange={setEpicIds}
             />
             <FilterMultiDropdown
-              label="Task type"
+              label={t("common.taskType")}
               options={typeFilterOptions}
               selected={selectedTypes}
               onChange={setSelectedTypes}
             />
             <FilterMultiDropdown
-              label="Status"
+              label={t("common.status")}
               options={statusFilterOptions}
               selected={selectedStatuses}
               onChange={setSelectedStatuses}
             />
             <FilterMultiDropdown
-              label="Priority"
+              label={t("common.priority")}
               options={priorityFilterOptions}
               selected={selectedPriorities}
               onChange={setSelectedPriorities}
             />
             <FilterMultiDropdown
-              label="Tags"
+              label={t("common.tags")}
               options={tagFilterOptions}
               selected={selectedTagKeys}
               onChange={setSelectedTagKeys}
             />
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-zinc-500">Group preview and export by</span>
+              <span className="text-zinc-500">{t("achievements.groupPreviewExportBy")}</span>
               <select
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value as BragGroupBy)}
                 className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
               >
-                <option value="owner">Owner</option>
-                <option value="project">Project</option>
-                <option value="epic">Epic</option>
-                <option value="none">None (single list)</option>
+                <option value="owner">{t("common.owner")}</option>
+                <option value="project">{t("common.project")}</option>
+                <option value="epic">{t("common.epic")}</option>
+                <option value="none">{t("achievements.noneSingleList")}</option>
               </select>
             </label>
           </div>
@@ -528,7 +563,7 @@ export function AchievementsClient() {
               onChange={(e) => setShowArchived(e.target.checked)}
               className="rounded border-zinc-300 dark:border-zinc-600"
             />
-            Include archived tasks
+            {t("achievements.includeArchivedTasks")}
           </label>
           </DashboardFilterDisclosure>
         </section>
@@ -536,27 +571,42 @@ export function AchievementsClient() {
 
       <section className="mt-10">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 print:hidden">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Preview</h2>
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            {t("common.preview")}
+          </h2>
           <p className="text-sm text-zinc-500">
-            {loading ? "Loading…" : `${totalCount} task${totalCount === 1 ? "" : "s"} · dates ${rf}–${rt}`}
+            {loading
+              ? t("common.loading")
+              : t("achievements.previewSummary", {
+                  count: totalCount,
+                  taskLabel:
+                    totalCount === 1
+                      ? t("achievements.taskSingular")
+                      : t("achievements.taskPlural"),
+                  from: rf,
+                  to: rt,
+                })}
           </p>
         </div>
 
         <div className="hidden print:block print:mb-4">
-          <h1 className="text-2xl font-bold">Achievements</h1>
+          <h1 className="text-2xl font-bold">{t("achievements.title")}</h1>
           <p className="text-sm text-zinc-600">
-            {rf && rt ? `Task dates ${rf} through ${rt}` : ""}
+            {rf && rt ? t("achievements.taskDatesThrough", { from: rf, to: rt }) : ""}
           </p>
-          <p className="text-xs text-zinc-500">{totalCount} tasks</p>
+          <p className="text-xs text-zinc-500">
+            {totalCount}{" "}
+            {totalCount === 1 ? t("achievements.taskSingular") : t("achievements.taskPlural")}
+          </p>
         </div>
 
         {loading ? (
           <p className="rounded-lg border border-zinc-200 px-4 py-8 text-center text-sm text-zinc-500 dark:border-zinc-700">
-            Loading…
+            {t("common.loading")}
           </p>
         ) : totalCount === 0 ? (
           <p className="rounded-lg border border-dashed border-zinc-300 px-4 py-8 text-center text-sm text-zinc-500 dark:border-zinc-700">
-            No tasks match these filters. Try widening the date range or clearing filters.
+            {t("achievements.noTasksMatch")}
           </p>
         ) : (
           <>

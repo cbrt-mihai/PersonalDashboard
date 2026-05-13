@@ -992,6 +992,179 @@ export function buildAchievementsHtmlDocument(opts: {
       border: 1px solid var(--border);
     }
 
+    /* Achievements export — worklog breakdown (swatches, aligned tables) */
+    .export-worklog-summary {
+      margin-top: 1.75rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .export-worklog-hero {
+      position: relative;
+      padding: 1rem 1.1rem 1.15rem;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 55%, var(--surface-solid) 100%);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .export-worklog-hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), #a855f7, #22c55e);
+      opacity: 0.85;
+    }
+    .export-worklog-hero__title {
+      margin: 0.35rem 0 0.5rem;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .export-worklog-hero__lead {
+      margin: 0 0 0.85rem;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: var(--muted);
+      max-width: 58rem;
+    }
+    .export-worklog-hero__stats {
+      margin-top: 0 !important;
+    }
+    .export-worklog-stat-card--accent {
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+      background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface-solid));
+    }
+    .export-worklog-rollup-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+      align-items: stretch;
+    }
+    .export-worklog-split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+      align-items: start;
+    }
+    .export-wl-panel {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-solid);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      padding: 0.75rem 0.85rem 0.85rem;
+      min-width: 0;
+    }
+    .export-wl-panel__title {
+      margin: 0 0 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+    .export-wl-panel__sub {
+      margin: -0.1rem 0 0.5rem;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--faint);
+    }
+    .export-wl-tableWrap {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: visible;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      -webkit-overflow-scrolling: touch;
+    }
+    .export-wl-table {
+      table-layout: auto;
+      min-width: 100%;
+      width: max-content;
+      font-size: 0.875rem;
+    }
+    .export-wl-table thead th {
+      padding: 0.5rem 0.6rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface-solid) 88%, var(--border));
+    }
+    .export-wl-th-lead {
+      text-align: left;
+    }
+    .export-wl-th-metric {
+      text-align: right;
+      white-space: nowrap;
+    }
+    .export-wl-table tbody td {
+      vertical-align: middle;
+      padding: 0.5rem 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .export-wl-dataRow td {
+      background: transparent;
+    }
+    .export-wl-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .export-wl-lead {
+      padding-left: 0.35rem !important;
+    }
+    .export-wl-leadRow {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+    .export-wl-swatch {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+    }
+    .export-wl-swatch__img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .export-wl-swatch--emoji {
+      background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.92)) !important;
+      border: 1px solid var(--border);
+    }
+    .export-wl-swatch__glyph--emoji {
+      color: inherit;
+      text-shadow: none;
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+    .export-wl-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      min-width: 0;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .export-wl-metric {
+      font-size: 0.875rem;
+    }
+
     .brag-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -1486,6 +1659,11 @@ export function buildAchievementsHtmlDocument(opts: {
       }
       .brag-section { break-inside: avoid; }
       .export-summary { break-inside: avoid; }
+      .export-worklog-rollup-grid,
+      .export-worklog-split,
+      .export-wl-panel {
+        break-inside: avoid;
+      }
       .export-task-tabs { display: none !important; }
       .brag-tab-panel[hidden] {
         display: block !important;

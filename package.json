@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "mock:screenshots": "cp data/store.screenshots.json data/store.json"
+    "mock": "node scripts/use-mock-store.mjs",
+    "mock:screenshots": "node scripts/use-mock-store.mjs screenshots",
+    "mock:validate": "node scripts/validate-mock-store.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

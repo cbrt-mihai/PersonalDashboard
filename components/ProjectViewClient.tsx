@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  dashboardIconBtnNeutralClass,
+  dashboardIconBtnPrimaryClass,
+} from "@/lib/dashboardTableActionClasses";
 import { isArchived } from "@/lib/archive";
 import { NOTE_ENTRY_TYPES } from "@/lib/noteEntryFormOptions";
 import { noteEntryAttributionForSwatch } from "@/lib/noteEntryAttributionDisplay";
@@ -33,7 +37,7 @@ import { MarkdownView } from "@/components/MarkdownView";
 import { OwnerSwatch } from "@/components/OwnerSwatch";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StatusBadge } from "@/components/StatusBadge";
-import { TrashIcon } from "@/components/icons";
+import { ArrowTopRightOnSquareIcon, EyeIcon, PencilIcon, TrashIcon } from "@/components/icons";
 import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import {
   epicRollupStateFromTasks,
@@ -430,8 +434,9 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
         <div className="flex flex-wrap gap-2">
           <Link
             href={`/projects/${project.id}/edit`}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
+            <PencilIcon className="h-4 w-4 shrink-0" />
             Edit
           </Link>
           <button
@@ -678,15 +683,19 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
                   <div className="flex flex-wrap gap-2 text-sm">
                     <Link
                       href={noteEntryViewHref(e)}
-                      className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                      className={dashboardIconBtnNeutralClass}
+                      aria-label="View note"
+                      title="View note"
                     >
-                      Open
+                      <EyeIcon />
                     </Link>
                     <Link
                       href={noteEntryEditHref(e)}
-                      className="text-blue-600 hover:underline"
+                      className={dashboardIconBtnPrimaryClass}
+                      aria-label="Edit note"
+                      title="Edit note"
                     >
-                      Edit
+                      <PencilIcon />
                     </Link>
                     <button
                       type="button"
@@ -835,24 +844,30 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
                     <ProgressBar tasks={inGroup} statusMap={statusMap} />
                   </div>
                 </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-3 text-sm">
+                <div className="flex shrink-0 flex-wrap items-center gap-1 text-sm">
                   <Link
                     href={`/epics/${g.id}`}
-                    className="text-zinc-600 hover:underline dark:text-zinc-400"
+                    className={dashboardIconBtnNeutralClass}
+                    aria-label="Epic overview"
+                    title="Epic overview"
                   >
-                    Overview
+                    <ArrowTopRightOnSquareIcon />
                   </Link>
                   <Link
                     href={`/epics/${g.id}/edit`}
-                    className="text-blue-600 hover:underline dark:text-blue-400"
+                    className={dashboardIconBtnPrimaryClass}
+                    aria-label="Edit epic"
+                    title="Edit epic"
                   >
-                    Edit
+                    <PencilIcon />
                   </Link>
                   <Link
                     href={`/?groupId=${g.id}`}
-                    className="text-zinc-600 hover:underline dark:text-zinc-400"
+                    className={dashboardIconBtnNeutralClass}
+                    aria-label="View tasks on this epic"
+                    title="View tasks on this epic"
                   >
-                    View tasks
+                    <ArrowTopRightOnSquareIcon />
                   </Link>
                 </div>
               </li>
@@ -991,18 +1006,22 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
                       </div>
                     ) : null}
                   </div>
-                  <div className="flex shrink-0 flex-wrap gap-2 text-sm">
+                  <div className="flex shrink-0 flex-wrap gap-1 text-sm">
                     <Link
                       href={`/tasks/${t.id}`}
-                      className="text-zinc-600 hover:underline dark:text-zinc-400"
+                      className={dashboardIconBtnNeutralClass}
+                      aria-label="View task"
+                      title="View task"
                     >
-                      View
+                      <ArrowTopRightOnSquareIcon />
                     </Link>
                     <Link
                       href={`/tasks/${t.id}/edit`}
-                      className="text-blue-600 hover:underline dark:text-blue-400"
+                      className={dashboardIconBtnPrimaryClass}
+                      aria-label="Edit task"
+                      title="Edit task"
                     >
-                      Edit
+                      <PencilIcon />
                     </Link>
                   </div>
                 </li>

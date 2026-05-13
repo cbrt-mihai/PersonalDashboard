@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EpicEditClient } from "@/components/EpicEditClient";
+import { getServerTranslator } from "@/lib/i18n/server";
 import { metadataTitleForEpic } from "@/lib/pageMetadata";
 
 export async function generateMetadata({
@@ -8,7 +9,8 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  return { title: `Edit · ${metadataTitleForEpic(id)}` };
+  const t = await getServerTranslator();
+  return { title: `${t("common.edit")} · ${metadataTitleForEpic(id, t("common.epic"))}` };
 }
 
 export default async function EpicEditPage({

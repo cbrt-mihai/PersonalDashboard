@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useI18n } from "@/components/LocaleProvider";
 
 type Props = {
   /** Summary line when the block is collapsed or expanded. */
@@ -16,11 +17,14 @@ type Props = {
  * Collapsible region for dashboard search/filter grids (native `<details>`).
  */
 export function DashboardFilterDisclosure({
-  title = "Search & filters",
+  title,
   className = "",
   summaryClassName = "",
   children,
 }: Props) {
+  const { t } = useI18n();
+  const resolvedTitle = title ?? t("common.searchFilters");
+
   return (
     <details
       className={`group rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 ${className}`}
@@ -35,7 +39,7 @@ export function DashboardFilterDisclosure({
           >
             ▸
           </span>
-          {title}
+          {resolvedTitle}
         </span>
       </summary>
       <div className="border-t border-zinc-100 px-4 pb-4 pt-3 dark:border-zinc-800">{children}</div>

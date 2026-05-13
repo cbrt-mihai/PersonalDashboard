@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  dashboardIconBtnNeutralClass,
+  dashboardIconBtnPrimaryClass,
+} from "@/lib/dashboardTableActionClasses";
 import { noteEntryEditHref, noteEntryViewHref } from "@/lib/noteEntryPaths";
 import type { Owner, OwnerEntry, Project, Task, TaskGroup } from "@/lib/schemas";
 import { SearchableSingleSelect } from "./SearchableSingleSelect";
@@ -35,7 +39,13 @@ import { StatusBadge } from "./StatusBadge";
 import { TaskStatusSelect } from "./TaskStatusSelect";
 import { TaskPriorityBadge, TaskTypeBadge } from "./TaskMetaBadges";
 import { OwnerSwatch } from "./OwnerSwatch";
-import { TrashIcon } from "./icons";
+import {
+  ArrowTopRightOnSquareIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  PencilIcon,
+  TrashIcon,
+} from "./icons";
 
 type EpicStateFilter = "__done__" | "__active__" | "__empty__";
 
@@ -521,15 +531,22 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
             <span className="text-xs text-zinc-500">{t.date}</span>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 text-sm">
+        <div className="flex flex-wrap gap-1 text-sm">
           <Link
             href={`/tasks/${t.id}`}
-            className="text-zinc-600 hover:underline dark:text-zinc-400"
+            className={dashboardIconBtnNeutralClass}
+            aria-label="View task"
+            title="View task"
           >
-            View
+            <ArrowTopRightOnSquareIcon />
           </Link>
-          <Link href={`/tasks/${t.id}/edit`} className="text-blue-600 hover:underline">
-            Edit
+          <Link
+            href={`/tasks/${t.id}/edit`}
+            className={dashboardIconBtnPrimaryClass}
+            aria-label="Edit task"
+            title="Edit task"
+          >
+            <PencilIcon />
           </Link>
           <button
             type="button"
@@ -546,23 +563,6 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
   }
 
   const ungroupedFilteredTasks = filteredTasks.filter((t) => !t.groupId);
-
-  function ChevronIcon({ open }: { open: boolean }) {
-    return (
-      <svg
-        viewBox="0 0 20 20"
-        fill="currentColor"
-        className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
-        aria-hidden
-      >
-        <path
-          fillRule="evenodd"
-          d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.937a.75.75 0 1 1 1.08 1.04l-4.25 4.51a.75.75 0 0 1-1.08 0l-4.25-4.51a.75.75 0 0 1 .02-1.06Z"
-          clipRule="evenodd"
-        />
-      </svg>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-10">
@@ -591,8 +591,9 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
           <div className="flex shrink-0 flex-col items-end gap-3 sm:flex-row sm:items-center">
             <Link
               href={`/owners/${ownerId}/edit`}
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+              className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
             >
+              <PencilIcon className="h-4 w-4 shrink-0" />
               Edit owner
             </Link>
           </div>
@@ -674,39 +675,48 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
                       <EntityArchivedBadge entity={g} />
                       <button
                         type="button"
-                        className="inline-flex items-center rounded-md p-1 font-medium text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
+                        className={dashboardIconBtnPrimaryClass}
                         onClick={() =>
                           setEpicDetailsOpen((prev) => ({ ...prev, [g.id]: !prev[g.id] }))
                         }
-                        aria-label={open ? "Collapse epic details" : "Expand epic details"}
-                        title={open ? "Collapse details" : "Expand details"}
+                        aria-label={open ? "Hide epic details" : "Show epic details"}
+                        title={open ? "Hide details" : "Show details"}
                       >
-                        <ChevronIcon open={open} />
+                        {open ? <EyeSlashIcon /> : <EyeIcon />}
                       </button>
                     </div>
                     <div className="mt-2 max-w-md">
                       <ProgressBar tasks={inG} statusMap={statusMap} />
                     </div>
                   </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-3 text-sm">
+                  <div className="flex shrink-0 flex-wrap items-center gap-1 text-sm">
                     <Link
                       href={`/epics/${g.id}`}
-                      className="text-zinc-600 hover:underline dark:text-zinc-400"
+                      className={dashboardIconBtnNeutralClass}
+                      aria-label="Epic overview"
+                      title="Epic overview"
                     >
-                      Overview
+                      <ArrowTopRightOnSquareIcon />
                     </Link>
                     <Link
                       href={`/?groupId=${g.id}`}
-                      className="text-zinc-600 hover:underline dark:text-zinc-400"
+                      className={dashboardIconBtnNeutralClass}
+                      aria-label="View tasks on this epic"
+                      title="View tasks on this epic"
                     >
-                      View tasks
+                      <ArrowTopRightOnSquareIcon />
                     </Link>
-                    <Link href={`/epics/${g.id}/edit`} className="text-blue-600 hover:underline">
-                      Edit
+                    <Link
+                      href={`/epics/${g.id}/edit`}
+                      className={dashboardIconBtnPrimaryClass}
+                      aria-label="Edit epic"
+                      title="Edit epic"
+                    >
+                      <PencilIcon />
                     </Link>
                     <button
                       type="button"
-                      className="text-red-600 hover:text-red-700"
+                      className="inline-flex items-center justify-center rounded p-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-300"
                       onClick={() => void deleteGroup(g.id)}
                       aria-label="Delete epic"
                       title="Delete epic"
@@ -849,19 +859,23 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
                         </span>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 text-sm">
+                    <div className="flex flex-wrap gap-1 text-sm">
                       <Link
                         href={`#epic-${g.id}`}
-                        className="text-zinc-600 hover:underline dark:text-zinc-400"
+                        className={dashboardIconBtnNeutralClass}
+                        aria-label="Jump to epic on this page"
+                        title="Jump to epic on this page"
                       >
-                        View
+                        <ArrowTopRightOnSquareIcon />
                       </Link>
                       <button
                         type="button"
-                        className="text-blue-600 hover:underline"
+                        className={dashboardIconBtnPrimaryClass}
                         onClick={() => openGroupEdit(g)}
+                        aria-label="Edit epic"
+                        title="Edit epic"
                       >
-                        Edit
+                        <PencilIcon />
                       </button>
                     </div>
                   </div>
@@ -971,18 +985,22 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
                     </div>
                   ) : null}
                 </div>
-                <div className="flex flex-wrap gap-2 text-sm">
+                <div className="flex flex-wrap gap-1 text-sm">
                   <Link
                     href={noteEntryViewHref(e)}
-                    className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                    className={dashboardIconBtnNeutralClass}
+                    aria-label="View note"
+                    title="View note"
                   >
-                    Open
+                    <EyeIcon />
                   </Link>
                   <Link
                     href={noteEntryEditHref(e)}
-                    className="text-blue-600 hover:underline"
+                    className={dashboardIconBtnPrimaryClass}
+                    aria-label="Edit note"
+                    title="Edit note"
                   >
-                    Edit
+                    <PencilIcon />
                   </Link>
                   <button
                     type="button"

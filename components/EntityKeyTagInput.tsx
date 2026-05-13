@@ -1,6 +1,7 @@
 "use client";
 
 import { ENTITY_KEY_TAG_MAX } from "@/lib/entityKeyNormalize";
+import { useI18n } from "@/components/LocaleProvider";
 
 /** Optional tag prefix for generated public keys (`TAG-<digits>`), up to ENTITY_KEY_TAG_MAX A–Z / 0–9 chars. */
 export function EntityKeyTagInput({
@@ -14,10 +15,12 @@ export function EntityKeyTagInput({
   defaultTag: string;
   disabled?: boolean;
 }) {
+  const { t } = useI18n();
   const tag = value.trim() ? value.slice(0, ENTITY_KEY_TAG_MAX) : defaultTag;
+  const example = `${tag}-3435`;
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-zinc-500">Public key tag</span>
+      <span className="text-zinc-500">{t("common.publicKeyTag")}</span>
       <input
         value={value}
         disabled={disabled}
@@ -34,9 +37,11 @@ export function EntityKeyTagInput({
         aria-describedby="entity-key-tag-hint"
       />
       <p id="entity-key-tag-hint" className="text-xs text-zinc-500 dark:text-zinc-400">
-        Letters and digits (A–Z, 0–9), 2–{ENTITY_KEY_TAG_MAX} characters. The app appends random digits (example:{" "}
-        <span className="font-mono text-zinc-700 dark:text-zinc-300">{tag}-3435</span>
-        ). Leave blank to use <span className="font-mono">{defaultTag}</span>.
+        {t("common.publicKeyTagHint", {
+          max: ENTITY_KEY_TAG_MAX,
+          example,
+          defaultTag,
+        })}
       </p>
     </label>
   );

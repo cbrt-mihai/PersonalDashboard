@@ -37,12 +37,17 @@ export function TableClampCell({
   }, [fullTitle, suppressTitle]);
 
   useLayoutEffect(() => {
-    measure();
+    const id = requestAnimationFrame(() => measure());
     const el = ref.current;
-    if (!el) return;
+    if (!el) {
+      return () => cancelAnimationFrame(id);
+    }
     const ro = new ResizeObserver(() => measure());
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      cancelAnimationFrame(id);
+      ro.disconnect();
+    };
   }, [measure]);
 
   useLayoutEffect(() => {

@@ -12,7 +12,11 @@ import {
 import { useDashboardLocalPager } from "@/lib/useDashboardLocalPager";
 import { HexColorPickerRow } from "@/components/OwnerStyleColorPicker";
 import { OwnerSwatch } from "@/components/OwnerSwatch";
-import { TrashIcon } from "@/components/icons";
+import {
+  dashboardIconBtnNeutralClass,
+  dashboardIconBtnPrimaryClass,
+} from "@/lib/dashboardTableActionClasses";
+import { ArrowTopRightOnSquareIcon, PencilIcon, TrashIcon } from "@/components/icons";
 import { fileToOwnerIconDataUrl } from "@/lib/ownerIconDataUrl";
 import type { Owner, Project, Task, TaskGroup } from "@/lib/schemas";
 import { NAMED_OWNER_COLOR_PRESETS } from "@/lib/presetColors";
@@ -21,6 +25,7 @@ import { EntityArchivedBadge } from "@/components/EntityArchivedMark";
 import { EntityKeyTagInput } from "@/components/EntityKeyTagInput";
 import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
 import { DashboardPager } from "@/components/DashboardPager";
+import { LogWorkButton } from "@/components/LogWorkButton";
 
 export function OwnersListClient() {
   const { settings } = useDashboardConfig();
@@ -278,19 +283,29 @@ export function OwnersListClient() {
                 return `${shown.join(", ")}${names.length > shown.length ? ` (+${names.length - shown.length})` : ""}`;
               })()}
             </p>
-            <div className="mt-4 flex gap-3 text-sm">
+            <div className="mt-4 flex flex-wrap items-center gap-1 text-sm">
               <Link
                 href={`/owners/${p.id}`}
-                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                className={dashboardIconBtnNeutralClass}
+                aria-label="Open owner"
+                title="Open owner"
               >
-                Open
+                <ArrowTopRightOnSquareIcon />
               </Link>
               <Link
                 href={`/owners/${p.id}/edit`}
-                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                className={dashboardIconBtnPrimaryClass}
+                aria-label="Edit owner"
+                title="Edit owner"
               >
-                Edit
+                <PencilIcon />
               </Link>
+              <LogWorkButton
+                target={{ kind: "owner", ownerId: p.id }}
+                disabled={isArchived(p)}
+                variant="link"
+                className="font-medium"
+              />
               <button
                 type="button"
                 className="inline-flex items-center justify-center rounded p-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-300"

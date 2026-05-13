@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { OwnerEntryViewClient } from "@/components/OwnerEntryViewClient";
+import { getServerTranslator } from "@/lib/i18n/server";
 import { metadataTitleForOwnerEntry } from "@/lib/pageMetadata";
 
 export async function generateMetadata({
@@ -8,7 +9,8 @@ export async function generateMetadata({
   params: Promise<{ entryId: string }>;
 }): Promise<Metadata> {
   const { entryId } = await params;
-  return { title: metadataTitleForOwnerEntry(entryId) };
+  const t = await getServerTranslator();
+  return { title: metadataTitleForOwnerEntry(entryId, t("common.note")) };
 }
 
 export default async function NoteEntryPage({

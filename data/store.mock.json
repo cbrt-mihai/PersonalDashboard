@@ -1,0 +1,233 @@
+{
+  "settings": {
+    "worklogMinutesPerDay": 480
+  },
+  "owners": [
+    {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "key": "OPS-1",
+      "name": "Operations",
+      "color": "#2563eb",
+      "archivedAt": null
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000002",
+      "key": "UX-2",
+      "name": "UX Studio",
+      "color": "#7c3aed",
+      "archivedAt": null
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000003",
+      "key": "TEAM-3",
+      "name": "Platform Team",
+      "color": "#0f766e",
+      "archivedAt": null
+    }
+  ],
+  "projects": [
+    {
+      "id": "20000000-0000-4000-8000-000000000001",
+      "key": "PDASH-1",
+      "name": "Personal Dashboard polish",
+      "archivedAt": null,
+      "color": "#6366f1",
+      "description": "Improve the dashboard shell with language switching, persistent navigation, and friendlier audit details.",
+      "tags": ["i18n", "navigation", "audit"]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000002",
+      "key": "DOCS-2",
+      "name": "Documentation refresh",
+      "archivedAt": null,
+      "color": "#ea580c",
+      "description": "Make setup instructions clearer for macOS, Linux, and Windows users.",
+      "tags": ["docs", "windows"]
+    }
+  ],
+  "taskGroups": [
+    {
+      "id": "30000000-0000-4000-8000-000000000001",
+      "key": "INTL-1",
+      "ownerId": "10000000-0000-4000-8000-000000000003",
+      "projectId": "20000000-0000-4000-8000-000000000001",
+      "archivedAt": null,
+      "name": "Language support",
+      "description": "Typed dictionaries, placeholder replacement, and a small language selector.",
+      "tags": ["i18n"]
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000002",
+      "key": "NAV-2",
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "projectId": "20000000-0000-4000-8000-000000000001",
+      "archivedAt": null,
+      "name": "Navigation polish",
+      "description": "Keep the menu visible and highlight the active tab.",
+      "tags": ["nav", "ux"]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "40000000-0000-4000-8000-000000000001",
+      "key": "TASK-1",
+      "ownerId": "10000000-0000-4000-8000-000000000003",
+      "groupId": "30000000-0000-4000-8000-000000000001",
+      "archivedAt": null,
+      "name": "Add English and Romanian dictionaries",
+      "description": "Use `.ts` locale files and placeholder replacement such as `{year}` or `{total}`.",
+      "type": "Task",
+      "status": "done",
+      "date": "2026-05-13",
+      "priority": "High",
+      "tags": ["i18n", "typescript"],
+      "subtasks": [
+        {
+          "id": "50000000-0000-4000-8000-000000000001",
+          "title": "Create base English schema",
+          "done": true
+        },
+        {
+          "id": "50000000-0000-4000-8000-000000000002",
+          "title": "Add Romanian locale",
+          "done": true
+        }
+      ],
+      "createdAt": "2026-05-13T08:00:00.000Z",
+      "updatedAt": "2026-05-13T15:00:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000002",
+      "key": "TASK-2",
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "groupId": "30000000-0000-4000-8000-000000000002",
+      "archivedAt": null,
+      "name": "Make active menu state obvious",
+      "description": "Highlight the current area and keep the menu sticky while scrolling.",
+      "type": "Task",
+      "status": "in_progress",
+      "date": "2026-05-14",
+      "priority": "Medium",
+      "tags": ["nav", "ux"],
+      "subtasks": [
+        {
+          "id": "50000000-0000-4000-8000-000000000003",
+          "title": "Add route-prefix matching",
+          "done": true
+        },
+        {
+          "id": "50000000-0000-4000-8000-000000000004",
+          "title": "Check mobile wrapping",
+          "done": false
+        }
+      ],
+      "createdAt": "2026-05-13T09:00:00.000Z",
+      "updatedAt": "2026-05-13T16:30:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000003",
+      "key": "TASK-3",
+      "ownerId": "10000000-0000-4000-8000-000000000001",
+      "groupId": null,
+      "archivedAt": null,
+      "name": "Verify Windows setup instructions",
+      "description": "Run through PowerShell commands and make sure mock data loading does not depend on `cp`.",
+      "type": "Task",
+      "status": "open",
+      "date": "2026-05-15",
+      "priority": "High",
+      "tags": ["windows", "docs"],
+      "subtasks": [],
+      "createdAt": "2026-05-13T10:00:00.000Z",
+      "updatedAt": "2026-05-13T10:00:00.000Z"
+    }
+  ],
+  "ownerEntries": [
+    {
+      "id": "60000000-0000-4000-8000-000000000001",
+      "key": "PDASH-1-1",
+      "ownerId": null,
+      "projectId": "20000000-0000-4000-8000-000000000001",
+      "archivedAt": null,
+      "title": "Translation rollout notes",
+      "body": "The first pass focuses on platform text. User-authored content stays as-is.\n\nRelated task: [[TASK-1]]",
+      "createdAt": "2026-05-13T12:00:00.000Z",
+      "closedAt": null,
+      "status": "todo",
+      "type": "Note",
+      "priority": "Medium",
+      "tags": ["i18n"],
+      "taskId": "40000000-0000-4000-8000-000000000001",
+      "taskGroupId": "30000000-0000-4000-8000-000000000001"
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000002",
+      "key": "DOCS-2-1",
+      "ownerId": "10000000-0000-4000-8000-000000000001",
+      "projectId": "20000000-0000-4000-8000-000000000002",
+      "archivedAt": null,
+      "title": "Windows README checklist",
+      "body": "- PowerShell quick start\n- Shared npm scripts\n- Ctrl+K shortcut callout\n- Mock fixture command",
+      "createdAt": "2026-05-13T13:00:00.000Z",
+      "closedAt": null,
+      "status": "todo",
+      "type": "Decision",
+      "priority": "High",
+      "tags": ["docs", "windows"],
+      "taskId": "40000000-0000-4000-8000-000000000003",
+      "taskGroupId": null
+    }
+  ],
+  "worklogs": [
+    {
+      "id": "70000000-0000-4000-8000-000000000001",
+      "key": "LOG-1",
+      "startedAt": "2026-05-13T14:00:00.000Z",
+      "durationMinutes": 90,
+      "comment": "Drafted locale structure and Romanian labels.",
+      "target": {
+        "kind": "task",
+        "taskId": "40000000-0000-4000-8000-000000000001"
+      },
+      "targetEntryKey": "TASK-1",
+      "targetEntryName": "Add English and Romanian dictionaries",
+      "createdAt": "2026-05-13T15:30:00.000Z",
+      "updatedAt": "2026-05-13T15:30:00.000Z"
+    },
+    {
+      "id": "70000000-0000-4000-8000-000000000002",
+      "key": "LOG-2",
+      "startedAt": "2026-05-13T16:00:00.000Z",
+      "durationMinutes": 45,
+      "comment": "Reviewed README quick-start flow on Windows.",
+      "target": {
+        "kind": "project",
+        "projectId": "20000000-0000-4000-8000-000000000002"
+      },
+      "targetEntryKey": "DOCS-2",
+      "targetEntryName": "Documentation refresh",
+      "createdAt": "2026-05-13T16:45:00.000Z",
+      "updatedAt": "2026-05-13T16:45:00.000Z"
+    }
+  ],
+  "auditLog": [
+    {
+      "id": "80000000-0000-4000-8000-000000000001",
+      "at": "2026-05-13T15:00:00.000Z",
+      "action": "update",
+      "entity": "task",
+      "entityId": "40000000-0000-4000-8000-000000000002",
+      "summary": "Updated task \"Make active menu state obvious\"",
+      "detail": "{\n  \"changes\": {\n    \"status\": {\n      \"from\": \"open\",\n      \"to\": \"in_progress\"\n    },\n    \"description\": {\n      \"from\": \"Highlight the current area.\",\n      \"to\": \"Highlight the current area and keep the menu sticky while scrolling.\"\n    }\n  }\n}"
+    },
+    {
+      "id": "80000000-0000-4000-8000-000000000002",
+      "at": "2026-05-13T13:00:00.000Z",
+      "action": "create",
+      "entity": "owner_entry",
+      "entityId": "60000000-0000-4000-8000-000000000002",
+      "summary": "Created note \"Windows README checklist\"",
+      "detail": "{\n  \"created\": {\n    \"title\": \"Windows README checklist\",\n    \"status\": \"todo\",\n    \"priority\": \"High\"\n  }\n}"
+    }
+  ]
+}

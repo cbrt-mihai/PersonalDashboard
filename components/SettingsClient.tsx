@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useI18n } from "@/components/LocaleProvider";
 import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import { useTheme } from "@/components/ThemeProvider";
 import {
@@ -18,8 +19,8 @@ import {
   parseWorkdayMinutesFromSettingsInput,
 } from "@/lib/jiraDuration";
 
-function confirmRemoveItem(label: string): boolean {
-  return typeof window !== "undefined" && confirm(`Remove ${label}?`);
+function confirmRemoveItem(message: string): boolean {
+  return typeof window !== "undefined" && confirm(message);
 }
 
 function swapAdjacent<T>(arr: T[], i: number, j: number): T[] {
@@ -39,6 +40,7 @@ function section(title: string, children: ReactNode) {
 }
 
 export function SettingsClient() {
+  const { t } = useI18n();
   const { theme, setTheme, themeNavToggle, setThemeNavToggle } = useTheme();
   const { settings, reload, loading } = useDashboardConfig();
   const [draft, setDraft] = useState<DashboardSettings | null>(null);
@@ -57,8 +59,10 @@ export function SettingsClient() {
 
   useEffect(() => {
     if (!draft) return;
-    setWorklogDayInput(formatWorkdayMinutesForSettingsInput(draft.worklogMinutesPerDay));
-  }, [draft?.worklogMinutesPerDay]);
+    queueMicrotask(() => {
+      setWorklogDayInput(formatWorkdayMinutesForSettingsInput(draft.worklogMinutesPerDay));
+    });
+  }, [draft]);
 
   const exportAllData = useCallback(async () => {
     setExporting(true);
@@ -67,7 +71,7 @@ export function SettingsClient() {
       const r = await fetch("/api/store", { method: "GET" });
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
-        setMsg(typeof j.error === "string" ? j.error : "Export failed");
+        setMsg(typeof j.error === "string" ? j.error : t("settings.exportFailed"));
         return;
       }
       const blob = await r.blob();
@@ -84,17 +88,17 @@ export function SettingsClient() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      setMsg("Exported.");
+      setMsg(t("settings.exported"));
     } catch {
-      setMsg("Export failed");
+      setMsg(t("settings.exportFailed"));
     } finally {
       setExporting(false);
     }
-  }, []);
+  }, [t]);
 
   const importAllData = useCallback(async (file: File) => {
     const ok = confirm(
-      "Import will REPLACE all data (owners, epics, tasks, notes, settings, and audit log). Continue?",
+      t("settings.importConfirm"),
     );
     if (!ok) return;
     setImporting(true);
@@ -105,7 +109,7 @@ export function SettingsClient() {
       try {
         data = JSON.parse(text);
       } catch {
-        setMsg("Invalid JSON file");
+        setMsg(t("settings.invalidJsonFile"));
         return;
       }
       const r = await fetch("/api/store", {
@@ -115,18 +119,18 @@ export function SettingsClient() {
       });
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
-        setMsg(typeof j.error === "string" ? j.error : "Import failed");
+        setMsg(typeof j.error === "string" ? j.error : t("settings.importFailed"));
         return;
       }
-      setMsg("Imported. Reloading…");
+      setMsg(t("settings.importedReloading"));
       window.location.reload();
     } catch {
-      setMsg("Import failed");
+      setMsg(t("settings.importFailed"));
     } finally {
       setImporting(false);
       if (importInputRef.current) importInputRef.current.value = "";
     }
-  }, []);
+  }, [t]);
 
   const save = useCallback(async () => {
     if (!draft) return;
@@ -137,7 +141,7 @@ export function SettingsClient() {
       const mpd = parseWorkdayMinutesFromSettingsInput(worklogDayInput);
       body = { ...draft, worklogMinutesPerDay: mpd };
     } catch (e) {
-      setMsg(e instanceof JiraDurationParseError ? e.message : "Invalid workday length");
+      setMsg(e instanceof JiraDurationParseError ? e.message : t("settings.invalidWorkdayLength"));
       setSaving(false);
       return;
     }
@@ -149,20 +153,20 @@ export function SettingsClient() {
       });
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
-        setMsg(typeof j.error === "string" ? j.error : "Save failed");
+        setMsg(typeof j.error === "string" ? j.error : t("settings.saveFailed"));
         return;
       }
-      setMsg("Saved.");
+      setMsg(t("settings.saved"));
       await reload();
     } catch {
-      setMsg("Save failed");
+      setMsg(t("settings.saveFailed"));
     } finally {
       setSaving(false);
     }
-  }, [draft, reload, worklogDayInput]);
+  }, [draft, reload, t, worklogDayInput]);
 
   const resetDefaults = useCallback(async () => {
-    if (!confirm("Reset all lists, colors, and task statuses to built-in defaults?")) return;
+    if (!confirm(t("settings.resetConfirm"))) return;
     setSaving(true);
     setMsg(null);
     try {
@@ -172,23 +176,33 @@ export function SettingsClient() {
         body: JSON.stringify({ reset: true }),
       });
       if (!r.ok) {
-        setMsg("Reset failed");
+        setMsg(t("settings.resetFailed"));
         return;
       }
       const next: DashboardSettings = await r.json();
       setDraft(next);
-      setMsg("Restored defaults.");
+      setMsg(t("settings.restoredDefaults"));
       await reload();
     } finally {
       setSaving(false);
     }
-  }, [reload]);
+  }, [reload, t]);
 
   if (loading || !draft) {
-    return <p className="text-zinc-500">Loading configuration…</p>;
+    return <p className="text-zinc-500">{t("common.loadingConfiguration")}</p>;
   }
 
   const themes: ThemeMode[] = ["light", "dark", "system"];
+  const themeLabel = (mode: ThemeMode) => {
+    switch (mode) {
+      case "light":
+        return t("settings.themeLight");
+      case "dark":
+        return t("settings.themeDark");
+      case "system":
+        return t("settings.themeSystem");
+    }
+  };
 
   function updateStatus(i: number, patch: Partial<TaskStatusRow>) {
     setDraft((d) => {
@@ -243,16 +257,12 @@ export function SettingsClient() {
     : STATUS_BG_SWATCHES.map((value) => ({ name: value, value }));
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-[min(100%,96rem)] flex-col gap-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Settings
+          {t("settings.title")}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Appearance uses your browser profile (stored locally). Lists and colors are saved in{" "}
-          <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">data/store.json</code>
-          .
-        </p>
+        <p className="mt-1 text-sm text-zinc-500">{t("settings.description")}</p>
       </div>
 
       {msg ? (
@@ -262,14 +272,10 @@ export function SettingsClient() {
       ) : null}
 
       {section(
-        "Data import/export",
+        t("settings.dataImportExport"),
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Export downloads a JSON backup of{" "}
-            <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">
-              data/store.json
-            </code>
-            . Import replaces the entire file.
+            {t("settings.dataImportExportHelp")}
           </p>
           <div className="flex flex-wrap gap-2">
             <button
@@ -278,7 +284,7 @@ export function SettingsClient() {
               onClick={() => void exportAllData()}
               className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600 disabled:opacity-50"
             >
-              {exporting ? "Exporting…" : "Export all data"}
+              {exporting ? t("settings.exporting") : t("settings.exportAllData")}
             </button>
             <button
               type="button"
@@ -286,7 +292,7 @@ export function SettingsClient() {
               onClick={() => importInputRef.current?.click()}
               className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600 disabled:opacity-50"
             >
-              {importing ? "Importing…" : "Import data"}
+              {importing ? t("settings.importing") : t("settings.importData")}
             </button>
             <input
               ref={importInputRef}
@@ -303,19 +309,13 @@ export function SettingsClient() {
       )}
 
       {section(
-        "Worklogs",
+        t("settings.worklogs"),
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Jira-style durations use <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">d</code> for a
-            &quot;day&quot; of this many minutes. Use <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">h</code>{" "}
-            and <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">m</code> (e.g.{" "}
-            <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">8h</code>,{" "}
-            <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">7h 30m</code>) or a minute count
-            60–2880. Example: 8h = one working day for <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">1d</code> in
-            worklog strings.
+            {t("settings.worklogHelp")}
           </p>
           <label className="flex max-w-md flex-col gap-1 text-sm">
-            <span className="text-zinc-700 dark:text-zinc-300">Minutes per day</span>
+            <span className="text-zinc-700 dark:text-zinc-300">{t("settings.minutesPerDay")}</span>
             <input
               type="text"
               value={worklogDayInput}
@@ -338,10 +338,10 @@ export function SettingsClient() {
       )}
 
       {section(
-        "Appearance",
+        t("settings.appearance"),
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Matches the nav toggle. “System” follows your OS light/dark setting.
+            {t("settings.appearanceHelp")}
           </p>
           <div className="flex flex-wrap gap-2">
             {themes.map((m) => (
@@ -355,17 +355,16 @@ export function SettingsClient() {
                     : "border-zinc-300 dark:border-zinc-600"
                 }`}
               >
-                {m}
+                {themeLabel(m)}
               </button>
             ))}
           </div>
           <div className="mt-4 border-t border-zinc-100 pt-4 dark:border-zinc-800">
             <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              Nav theme toggle
+              {t("settings.navThemeToggle")}
             </p>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Choose the control shown in the header next to the page links (stored in this
-              browser).
+              {t("settings.navThemeToggleHelp")}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
@@ -377,7 +376,7 @@ export function SettingsClient() {
                     : "border-zinc-300 dark:border-zinc-600"
                 }`}
               >
-                Classic slider
+                {t("settings.classicSlider")}
               </button>
               <button
                 type="button"
@@ -388,7 +387,7 @@ export function SettingsClient() {
                     : "border-zinc-300 dark:border-zinc-600"
                 }`}
               >
-                Scenic toggle
+                {t("settings.scenicToggle")}
               </button>
             </div>
           </div>
@@ -396,7 +395,7 @@ export function SettingsClient() {
       )}
 
       {section(
-        "Suggested color presets",
+        t("settings.suggestedColorPresets"),
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Named colors shown when creating or editing owners and projects. Choose each with the color
@@ -425,7 +424,7 @@ export function SettingsClient() {
                 />
               </label>
               <div className="text-sm">
-                <span className="text-xs text-zinc-500">Color</span>
+                <span className="text-xs text-zinc-500">{t("settings.color")}</span>
                 <div className="mt-2">
                   <input
                     type="color"
@@ -448,7 +447,11 @@ export function SettingsClient() {
                 type="button"
                 className="self-start text-sm text-red-600 hover:underline dark:text-red-400 sm:mt-5"
                 onClick={() => {
-                  if (!confirmRemoveItem("this owner color preset")) return;
+                  if (
+                    !confirmRemoveItem(
+                      t("settings.removeItemConfirm", { label: t("settings.ownerColorPresetItem") }),
+                    )
+                  ) return;
                   setDraft((d) => {
                     if (!d || d.ownerColorPresets.length <= 1) return d;
                     return {
@@ -458,7 +461,7 @@ export function SettingsClient() {
                   });
                 }}
               >
-                Remove
+                {t("common.remove")}
               </button>
             </div>
           ))}
@@ -485,10 +488,10 @@ export function SettingsClient() {
       )}
 
       {section(
-        "Task types",
+        t("settings.taskTypes"),
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Order matches dropdowns elsewhere (e.g. new task, edit task). Use the arrows to reorder.
+            {t("settings.taskTypeHelp")}
           </p>
           {draft.taskTypes.map((row, i) => {
             const cannotRemove = draft.taskTypes.length <= 1;
@@ -502,8 +505,8 @@ export function SettingsClient() {
                     <button
                       type="button"
                       disabled={i === 0}
-                      aria-label="Move type up"
-                      title="Move up"
+                      aria-label={t("settings.moveTypeUp")}
+                      title={t("settings.moveUp")}
                       onClick={() =>
                         setDraft((d) =>
                           d && i > 0
@@ -518,8 +521,8 @@ export function SettingsClient() {
                     <button
                       type="button"
                       disabled={i === draft.taskTypes.length - 1}
-                      aria-label="Move type down"
-                      title="Move down"
+                      aria-label={t("settings.moveTypeDown")}
+                      title={t("settings.moveDown")}
                       onClick={() =>
                         setDraft((d) =>
                           d && i < d.taskTypes.length - 1
@@ -535,7 +538,7 @@ export function SettingsClient() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <span className="text-xs text-zinc-500">Preview</span>
+                  <span className="text-xs text-zinc-500">{t("settings.preview")}</span>
                   <div className="mt-1">
                     <span
                       className="inline-flex max-w-[14rem] items-center gap-1.5 truncate rounded-full px-2 py-0.5 text-xs font-medium"
@@ -549,7 +552,7 @@ export function SettingsClient() {
                 </div>
 
                 <label className="flex flex-col gap-1 text-xs text-zinc-500 sm:col-span-2">
-                  Icon
+                  {t("settings.icon")}
                   <input
                     value={row.icon ?? ""}
                     onChange={(e) => updateTaskTypeRow(i, { icon: e.target.value })}
@@ -559,7 +562,7 @@ export function SettingsClient() {
                 </label>
 
                 <label className="flex flex-col gap-1 text-xs text-zinc-500 sm:col-span-3">
-                  Label
+                  {t("settings.label")}
                   <input
                     value={row.label}
                     onChange={(e) => updateTaskTypeRow(i, { label: e.target.value })}
@@ -568,7 +571,7 @@ export function SettingsClient() {
                 </label>
 
                 <label className="flex flex-col gap-1 text-xs text-zinc-500 sm:col-span-1">
-                  Color
+                  {t("settings.color")}
                   <input
                     type="color"
                     value={expandHex(row.color)}
@@ -578,7 +581,7 @@ export function SettingsClient() {
                 </label>
 
                 <div className="sm:col-span-2">
-                  <span className="text-xs text-zinc-500">Background</span>
+                  <span className="text-xs text-zinc-500">{t("settings.background")}</span>
                   <div className="mt-1">
                     <TintBackgroundPickerRow
                       value={row.bg}
@@ -595,15 +598,19 @@ export function SettingsClient() {
                     className="text-sm text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-40 dark:text-red-400"
                     onClick={() => {
                       if (cannotRemove) return;
-                      if (!confirmRemoveItem("this task type")) return;
+                      if (
+                        !confirmRemoveItem(
+                          t("settings.removeItemConfirm", { label: t("settings.taskTypeItem") }),
+                        )
+                      ) return;
                       setDraft((d) => {
                         if (!d || d.taskTypes.length <= 1) return d;
                         return { ...d, taskTypes: d.taskTypes.filter((_, j) => j !== i) };
                       });
                     }}
-                    title={cannotRemove ? "At least one task type is required" : "Remove"}
+                    title={cannotRemove ? t("settings.atLeastOneTaskType") : t("common.remove")}
                   >
-                    Remove
+                    {t("common.remove")}
                   </button>
                 </div>
               </div>
@@ -631,17 +638,16 @@ export function SettingsClient() {
               )
             }
           >
-            Add task type
+            {t("settings.addTaskType")}
           </button>
         </>,
       )}
 
       {section(
-        "Task priorities",
+        t("settings.taskPriorities"),
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Order matches priority dropdowns and is also used when sorting by priority in tables
-            (top = least urgent, bottom = most urgent). Use the arrows to reorder.
+            {t("settings.taskPrioritiesHelp")}
           </p>
           {draft.taskPriorities.map((row, i) => {
             const cannotRemove = draft.taskPriorities.length <= 1;
@@ -655,8 +661,8 @@ export function SettingsClient() {
                     <button
                       type="button"
                       disabled={i === 0}
-                      aria-label="Move priority up"
-                      title="Move up"
+                      aria-label={t("settings.movePriorityUp")}
+                      title={t("settings.moveUp")}
                       onClick={() =>
                         setDraft((d) =>
                           d && i > 0
@@ -674,8 +680,8 @@ export function SettingsClient() {
                     <button
                       type="button"
                       disabled={i === draft.taskPriorities.length - 1}
-                      aria-label="Move priority down"
-                      title="Move down"
+                      aria-label={t("settings.movePriorityDown")}
+                      title={t("settings.moveDown")}
                       onClick={() =>
                         setDraft((d) =>
                           d && i < d.taskPriorities.length - 1
@@ -694,7 +700,7 @@ export function SettingsClient() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <span className="text-xs text-zinc-500">Preview</span>
+                  <span className="text-xs text-zinc-500">{t("settings.preview")}</span>
                   <div className="mt-1">
                     <span
                       className="inline-flex max-w-[14rem] items-center gap-1.5 truncate rounded-full px-2 py-0.5 text-xs font-medium"
@@ -708,7 +714,7 @@ export function SettingsClient() {
                 </div>
 
                 <label className="flex flex-col gap-1 text-xs text-zinc-500 sm:col-span-2">
-                  Icon
+                  {t("settings.icon")}
                   <input
                     value={row.icon ?? ""}
                     onChange={(e) => updateTaskPriorityRow(i, { icon: e.target.value })}
@@ -718,7 +724,7 @@ export function SettingsClient() {
                 </label>
 
                 <label className="flex flex-col gap-1 text-xs text-zinc-500 sm:col-span-3">
-                  Label
+                  {t("settings.label")}
                   <input
                     value={row.label}
                     onChange={(e) => updateTaskPriorityRow(i, { label: e.target.value })}
@@ -727,7 +733,7 @@ export function SettingsClient() {
                 </label>
 
                 <label className="flex flex-col gap-1 text-xs text-zinc-500 sm:col-span-1">
-                  Color
+                  {t("settings.color")}
                   <input
                     type="color"
                     value={expandHex(row.color)}
@@ -737,7 +743,7 @@ export function SettingsClient() {
                 </label>
 
                 <div className="sm:col-span-2">
-                  <span className="text-xs text-zinc-500">Background</span>
+                  <span className="text-xs text-zinc-500">{t("settings.background")}</span>
                   <div className="mt-1">
                     <TintBackgroundPickerRow
                       value={row.bg}
@@ -754,7 +760,11 @@ export function SettingsClient() {
                     className="text-sm text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-40 dark:text-red-400"
                     onClick={() => {
                       if (cannotRemove) return;
-                      if (!confirmRemoveItem("this task priority")) return;
+                      if (
+                        !confirmRemoveItem(
+                          t("settings.removeItemConfirm", { label: t("settings.taskPriorityItem") }),
+                        )
+                      ) return;
                       setDraft((d) => {
                         if (!d || d.taskPriorities.length <= 1) return d;
                         return {
@@ -763,9 +773,9 @@ export function SettingsClient() {
                         };
                       });
                     }}
-                    title={cannotRemove ? "At least one priority is required" : "Remove"}
+                    title={cannotRemove ? t("settings.atLeastOnePriority") : t("common.remove")}
                   >
-                    Remove
+                    {t("common.remove")}
                   </button>
                 </div>
               </div>
@@ -788,25 +798,25 @@ export function SettingsClient() {
               )
             }
           >
-            Add priority
+            {t("settings.addPriority")}
           </button>
         </>,
       )}
 
       {section(
-        "Note types",
+        t("settings.noteTypes"),
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Default note types for every note (any owner or project). Order matches note type dropdowns. Use the arrows to reorder.
+            {t("settings.noteTypesHelp")}
           </p>
-          {draft.noteTypes.map((t, i) => (
+          {draft.noteTypes.map((noteType, i) => (
             <div key={i} className="flex items-center gap-2">
               <div className="flex shrink-0 flex-col gap-0.5">
                 <button
                   type="button"
                   disabled={i === 0}
-                  aria-label="Move note type up"
-                  title="Move up"
+                  aria-label={t("settings.moveNoteTypeUp")}
+                  title={t("settings.moveUp")}
                   onClick={() =>
                     setDraft((d) =>
                       d && i > 0 ? { ...d, noteTypes: swapAdjacent(d.noteTypes, i, i - 1) } : d,
@@ -819,8 +829,8 @@ export function SettingsClient() {
                 <button
                   type="button"
                   disabled={i === draft.noteTypes.length - 1}
-                  aria-label="Move note type down"
-                  title="Move down"
+                  aria-label={t("settings.moveNoteTypeDown")}
+                  title={t("settings.moveDown")}
                   onClick={() =>
                     setDraft((d) =>
                       d && i < d.noteTypes.length - 1
@@ -834,7 +844,7 @@ export function SettingsClient() {
                 </button>
               </div>
               <input
-                value={t}
+                value={noteType}
                 onChange={(e) => {
                   const v = e.target.value;
                   setDraft((d) => {
@@ -850,14 +860,18 @@ export function SettingsClient() {
                 type="button"
                 className="shrink-0 text-sm text-red-600 dark:text-red-400"
                 onClick={() => {
-                  if (!confirmRemoveItem("this note type")) return;
+                  if (
+                    !confirmRemoveItem(
+                      t("settings.removeItemConfirm", { label: t("settings.noteTypeItem") }),
+                    )
+                  ) return;
                   setDraft((d) => {
                     if (!d || d.noteTypes.length <= 1) return d;
                     return { ...d, noteTypes: d.noteTypes.filter((_, j) => j !== i) };
                   });
                 }}
               >
-                Remove
+                {t("common.remove")}
               </button>
             </div>
           ))}
@@ -866,31 +880,29 @@ export function SettingsClient() {
             className="self-start rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
             onClick={() => setDraft((d) => (d ? { ...d, noteTypes: [...d.noteTypes, "New"] } : d))}
           >
-            Add note type
+            {t("settings.addNoteType")}
           </button>
         </>,
       )}
 
       {section(
-        "Notes statuses",
+        t("settings.noteStatuses"),
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            <code className="rounded bg-zinc-100 px-1 text-xs dark:bg-zinc-800">Id</code> is stored on
-            owner notes (normalized like task statuses). Changing ids can orphan existing notes
-            until you edit their status. This list is independent from task statuses.
+            {t("settings.noteStatusesHelp")}
           </p>
           <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
             <table className="w-full min-w-[72rem] text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                  <th className="p-2 font-medium">Id</th>
-                  <th className="p-2 font-medium">Label</th>
-                  <th className="min-w-[11rem] p-2 font-medium">Color</th>
-                  <th className="min-w-[11rem] p-2 font-medium">Background</th>
-                  <th className="p-2 font-medium">Order</th>
-                  <th className="p-2 font-medium">Terminal</th>
+                  <th className="p-2 font-medium">{t("settings.id")}</th>
+                  <th className="p-2 font-medium">{t("settings.label")}</th>
+                  <th className="min-w-[11rem] p-2 font-medium">{t("settings.color")}</th>
+                  <th className="min-w-[11rem] p-2 font-medium">{t("settings.background")}</th>
+                  <th className="p-2 font-medium">{t("settings.order")}</th>
+                  <th className="p-2 font-medium">{t("settings.terminal")}</th>
                   <th className="sticky right-0 z-10 p-2 text-right font-medium bg-zinc-50 dark:bg-zinc-900/50">
-                    Remove
+                    {t("common.remove")}
                   </th>
                 </tr>
               </thead>
@@ -917,7 +929,7 @@ export function SettingsClient() {
                           className="inline-flex w-fit items-center gap-1.5 rounded-full border border-zinc-200 px-2 py-0.5 text-xs font-medium dark:border-zinc-600"
                           style={{ color: row.color, backgroundColor: row.bg }}
                         >
-                          Preview
+                          {t("settings.preview")}
                         </span>
                         <HexColorPickerRow
                           value={row.color}
@@ -965,7 +977,11 @@ export function SettingsClient() {
                         type="button"
                         className="text-xs text-red-600 dark:text-red-400"
                         onClick={() => {
-                          if (!confirmRemoveItem("this note status")) return;
+                          if (
+                            !confirmRemoveItem(
+                              t("settings.removeItemConfirm", { label: t("settings.noteStatusItem") }),
+                            )
+                          ) return;
                           setDraft((d) => {
                             if (!d || d.noteStatuses.length <= 1) return d;
                             return {
@@ -975,7 +991,7 @@ export function SettingsClient() {
                           });
                         }}
                       >
-                        Remove
+                        {t("common.remove")}
                       </button>
                     </td>
                   </tr>
@@ -988,7 +1004,7 @@ export function SettingsClient() {
             className="self-start rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
             onClick={() => setPaletteDialogOpen(true)}
           >
-            Add/Edit palette
+            {t("settings.addEditPalette")}
           </button>
           <button
             type="button"
@@ -1013,31 +1029,29 @@ export function SettingsClient() {
               )
             }
           >
-            Add note status
+            {t("settings.addNoteStatus")}
           </button>
         </>,
       )}
 
       {section(
-        "Task statuses",
+        t("settings.taskStatuses"),
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            <code className="rounded bg-zinc-100 px-1 text-xs dark:bg-zinc-800">Id</code> is stored on
-            tasks (normalized to lowercase with spaces as underscores). Changing ids can orphan
-            existing tasks until you edit their status.
+            {t("settings.taskStatusesHelp")}
           </p>
           <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
             <table className="w-full min-w-[72rem] text-left text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                  <th className="p-2 font-medium">Id</th>
-                  <th className="p-2 font-medium">Label</th>
-                  <th className="min-w-[11rem] p-2 font-medium">Color</th>
-                  <th className="min-w-[11rem] p-2 font-medium">Background</th>
-                  <th className="p-2 font-medium">Order</th>
-                  <th className="p-2 font-medium">Terminal</th>
+                  <th className="p-2 font-medium">{t("settings.id")}</th>
+                  <th className="p-2 font-medium">{t("settings.label")}</th>
+                  <th className="min-w-[11rem] p-2 font-medium">{t("settings.color")}</th>
+                  <th className="min-w-[11rem] p-2 font-medium">{t("settings.background")}</th>
+                  <th className="p-2 font-medium">{t("settings.order")}</th>
+                  <th className="p-2 font-medium">{t("settings.terminal")}</th>
                   <th className="sticky right-0 z-10 p-2 text-right font-medium bg-zinc-50 dark:bg-zinc-900/50">
-                    Remove
+                    {t("common.remove")}
                   </th>
                 </tr>
               </thead>
@@ -1064,7 +1078,7 @@ export function SettingsClient() {
                           className="inline-flex w-fit items-center gap-1.5 rounded-full border border-zinc-200 px-2 py-0.5 text-xs font-medium dark:border-zinc-600"
                           style={{ color: row.color, backgroundColor: row.bg }}
                         >
-                          Preview
+                          {t("settings.preview")}
                         </span>
                         <HexColorPickerRow
                           value={row.color}
@@ -1112,7 +1126,11 @@ export function SettingsClient() {
                         type="button"
                         className="text-xs text-red-600 dark:text-red-400"
                         onClick={() => {
-                          if (!confirmRemoveItem("this task status")) return;
+                          if (
+                            !confirmRemoveItem(
+                              t("settings.removeItemConfirm", { label: t("settings.taskStatusItem") }),
+                            )
+                          ) return;
                           setDraft((d) => {
                             if (!d || d.taskStatuses.length <= 1) return d;
                             return {
@@ -1122,7 +1140,7 @@ export function SettingsClient() {
                           });
                         }}
                       >
-                        Remove
+                        {t("common.remove")}
                       </button>
                     </td>
                   </tr>
@@ -1135,7 +1153,7 @@ export function SettingsClient() {
             className="self-start rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
             onClick={() => setPaletteDialogOpen(true)}
           >
-            Add/Edit palette
+            {t("settings.addEditPalette")}
           </button>
           <button
             type="button"
@@ -1160,7 +1178,7 @@ export function SettingsClient() {
               )
             }
           >
-            Add status
+            {t("settings.addStatus")}
           </button>
         </>,
       )}
@@ -1171,10 +1189,10 @@ export function SettingsClient() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                  Status palette
+                  {t("settings.statusPalette")}
                 </h3>
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                  Names appear on hover after 1 second.
+                  {t("settings.statusPaletteHelp")}
                 </p>
               </div>
               <button
@@ -1182,14 +1200,16 @@ export function SettingsClient() {
                 className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
                 onClick={() => setPaletteDialogOpen(false)}
               >
-                Close
+                {t("settings.close")}
               </button>
             </div>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
               <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
                 <div className="flex items-center justify-between gap-2">
-                  <h4 className="font-medium text-zinc-900 dark:text-zinc-100">Text color swatches</h4>
+                  <h4 className="font-medium text-zinc-900 dark:text-zinc-100">
+                    {t("settings.textColorSwatches")}
+                  </h4>
                   <button
                     type="button"
                     className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
@@ -1207,14 +1227,14 @@ export function SettingsClient() {
                       )
                     }
                   >
-                    Add
+                    {t("settings.add")}
                   </button>
                 </div>
                 <div className="mt-3 flex flex-col gap-2">
                   {(draft.statusTextColorSwatches ?? []).map((row, i) => (
                     <div key={i} className="flex flex-wrap items-end gap-2">
                       <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
-                        Name
+                        {t("settings.name")}
                         <input
                           value={row.name}
                           onChange={(e) => {
@@ -1230,7 +1250,7 @@ export function SettingsClient() {
                         />
                       </label>
                       <label className="flex flex-col gap-1 text-xs text-zinc-500">
-                        Color
+                        {t("settings.color")}
                         <input
                           type="color"
                           value={expandHex(row.value)}
@@ -1257,7 +1277,7 @@ export function SettingsClient() {
                           });
                         }}
                       >
-                        Remove
+                        {t("common.remove")}
                       </button>
                     </div>
                   ))}
@@ -1266,7 +1286,9 @@ export function SettingsClient() {
 
               <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
                 <div className="flex items-center justify-between gap-2">
-                  <h4 className="font-medium text-zinc-900 dark:text-zinc-100">Background swatches</h4>
+                  <h4 className="font-medium text-zinc-900 dark:text-zinc-100">
+                    {t("settings.backgroundSwatches")}
+                  </h4>
                   <button
                     type="button"
                     className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
@@ -1284,14 +1306,14 @@ export function SettingsClient() {
                       )
                     }
                   >
-                    Add
+                    {t("settings.add")}
                   </button>
                 </div>
                 <div className="mt-3 flex flex-col gap-2">
                   {(draft.statusBgSwatches ?? []).map((row, i) => (
                     <div key={i} className="flex flex-wrap items-end gap-2">
                       <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-xs text-zinc-500">
-                        Name
+                        {t("settings.name")}
                         <input
                           value={row.name}
                           onChange={(e) => {
@@ -1307,7 +1329,7 @@ export function SettingsClient() {
                         />
                       </label>
                       <label className="flex flex-1 flex-col gap-1 text-xs text-zinc-500">
-                        Color (CSS)
+                        {t("settings.colorCss")}
                         <input
                           value={row.value}
                           onChange={(e) => {
@@ -1333,16 +1355,12 @@ export function SettingsClient() {
                           });
                         }}
                       >
-                        Remove
+                        {t("common.remove")}
                       </button>
                     </div>
                   ))}
                   <p className="text-xs text-zinc-500">
-                    Tip: use strings like{" "}
-                    <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-900">
-                      rgba(99,102,241,0.12)
-                    </code>
-                    .
+                    {t("settings.backgroundColorTip", { example: "rgba(99,102,241,0.12)" })}
                   </p>
                 </div>
               </div>
@@ -1358,7 +1376,7 @@ export function SettingsClient() {
           onClick={() => void save()}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {saving ? "Saving…" : "Save configuration"}
+          {saving ? t("common.saving") : t("settings.saveConfiguration")}
         </button>
         <button
           type="button"
@@ -1366,7 +1384,7 @@ export function SettingsClient() {
           onClick={() => void resetDefaults()}
           className="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700 dark:border-red-800 dark:text-red-300"
         >
-          Reset to defaults
+          {t("settings.resetToDefaults")}
         </button>
       </div>
     </div>

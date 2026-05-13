@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { useI18n } from "@/components/LocaleProvider";
 import { MarkdownView } from "./MarkdownView";
 
 export function MarkdownField({
@@ -16,6 +17,7 @@ export function MarkdownField({
   rows?: number;
   minHeight?: string;
 }) {
+  const { t } = useI18n();
   const id = useId();
   const [tab, setTab] = useState<"edit" | "preview">("edit");
 
@@ -36,7 +38,7 @@ export function MarkdownField({
               : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
           }`}
         >
-          Edit
+          {t("common.edit")}
         </button>
         <button
           type="button"
@@ -47,7 +49,7 @@ export function MarkdownField({
               : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
           }`}
         >
-          Preview
+          {t("common.preview")}
         </button>
       </div>
       {tab === "edit" ? (
@@ -68,7 +70,7 @@ export function MarkdownField({
           {value.trim() ? (
             <MarkdownView markdown={value} />
           ) : (
-            <p className="text-sm text-zinc-400">Nothing to preview yet.</p>
+            <p className="text-sm text-zinc-400">{t("common.nothingToPreviewYet")}</p>
           )}
         </div>
       )}

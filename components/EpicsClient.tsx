@@ -12,6 +12,7 @@ import { isTerminalStatus, statusDef } from "@/lib/statusConfig";
 import { entryMatchesTagKeys, tagOptionsFromEntries } from "@/lib/noteTags";
 import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
 import { DashboardPager } from "@/components/DashboardPager";
+import { LogWorkButton } from "@/components/LogWorkButton";
 import { FilterMultiDropdown } from "./FilterMultiDropdown";
 import { MarkdownField } from "./MarkdownField";
 import { MarkdownView } from "./MarkdownView";
@@ -23,7 +24,8 @@ import { StatusBadge } from "./StatusBadge";
 import { EntityArchivedBadge } from "./EntityArchivedMark";
 import { EntityKeyTagInput } from "./EntityKeyTagInput";
 import { TableCellSlot, TableClampCell } from "./TableClampCell";
-import { TrashIcon } from "./icons";
+import { dashboardIconBtnPrimaryClass } from "@/lib/dashboardTableActionClasses";
+import { EyeIcon, EyeSlashIcon, TrashIcon } from "./icons";
 import { useDashboardLocalPager } from "@/lib/useDashboardLocalPager";
 import { TableColumnResizeHandle, useTableColumnWidths } from "@/lib/useTableColumnWidths";
 
@@ -97,7 +99,7 @@ export function EpicsClient() {
   const [tableColumns, setTableColumns] = useState<Record<TableColumnId, boolean>>({
     ...DEFAULT_TABLE_COLUMNS,
   });
-  const [columnsReady, setColumnsReady] = useState(false);
+  const [tableColumnsReady, setTableColumnsReady] = useState(false);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createOwnerId, setCreateOwnerId] = useState("");
@@ -150,19 +152,19 @@ export function EpicsClient() {
       } catch {
         /* ignore */
       } finally {
-        setColumnsReady(true);
+        setTableColumnsReady(true);
       }
     });
   }, []);
 
   useEffect(() => {
-    if (!columnsReady) return;
+    if (!tableColumnsReady) return;
     try {
       localStorage.setItem(TABLE_COLUMN_STORAGE_KEY, JSON.stringify(tableColumns));
     } catch {
       /* ignore */
     }
-  }, [columnsReady, tableColumns]);
+  }, [tableColumnsReady, tableColumns]);
 
   const ownerFilterOptions = useMemo(
     () =>
@@ -697,26 +699,33 @@ export function EpicsClient() {
                         </td>
                       ) : null}
                       <td className="px-3 py-2 align-middle whitespace-nowrap">
-                        <TableCellSlot className="flex-nowrap gap-x-3">
+                        <TableCellSlot className="flex-nowrap gap-1.5">
                         <button
                           type="button"
-                          className="text-blue-600 text-xs hover:underline"
+                          className={dashboardIconBtnPrimaryClass}
                           onClick={() => setExpanded((e) => ({ ...e, [g.id]: !e[g.id] }))}
+                          aria-label={isOpen ? "Hide details" : "Show details"}
+                          title={isOpen ? "Hide details" : "Show details"}
                         >
-                          {isOpen ? "Hide" : "Details"}
+                          {isOpen ? <EyeSlashIcon /> : <EyeIcon />}
                         </button>
                         <Link
                           href={`/owners/${g.ownerId}`}
-                          className="text-zinc-600 text-xs hover:underline dark:text-zinc-400"
+                          className="inline-flex shrink-0 items-center rounded-md border border-zinc-300 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 shadow-sm hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
                         >
                           Open owner
                         </Link>
                         <Link
                           href={`/?groupId=${g.id}`}
-                          className="text-zinc-600 text-xs hover:underline dark:text-zinc-400"
+                          className="inline-flex shrink-0 items-center rounded-md border border-zinc-300 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 shadow-sm hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
                         >
                           View tasks
                         </Link>
+                        <LogWorkButton
+                          target={{ kind: "epic", groupId: g.id }}
+                          disabled={isArchived(g)}
+                          variant="link"
+                        />
                         <button
                           type="button"
                           className="inline-flex items-center justify-center rounded p-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-300"

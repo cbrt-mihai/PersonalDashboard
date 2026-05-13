@@ -6,6 +6,7 @@ import { nextEntityKey } from "@/lib/apiEntityKey";
 import { ENTITY_KEY_TAG_MAX, normalizeKeyTag } from "@/lib/entityKey";
 import { JiraDurationParseError, parseJiraDuration } from "@/lib/jiraDuration";
 import { mutateStore, readStore } from "@/lib/jsonStore";
+import { snapshotTargetEntryForWorklog } from "@/lib/worklogTargetDisplay";
 import { filterWorklogs } from "@/lib/worklogs";
 import { worklogSchema, worklogTargetSchema } from "@/lib/schemas";
 import {
@@ -106,6 +107,7 @@ export async function POST(req: Request) {
     }
   }
   const now = new Date().toISOString();
+  const snap = snapshotTargetEntryForWorklog(store, parsed.data.target);
   const wl = worklogSchema.parse({
     id: randomUUID(),
     key: nextEntityKey(normalizeKeyTag(parsed.data.keyTag, "WLG")),
@@ -113,6 +115,7 @@ export async function POST(req: Request) {
     durationMinutes,
     comment: parsed.data.comment ?? "",
     target: parsed.data.target,
+    ...snap,
     createdAt: now,
     updatedAt: now,
   });

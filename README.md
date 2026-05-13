@@ -9,25 +9,39 @@ If you want architecture, APIs, and implementation detail, see **[README.technic
 ## Quick start
 
 1. **Install** [Node.js](https://nodejs.org/) 20 or newer (includes `npm`).
-2. In a terminal, go to this project folder and run:
+2. In a terminal, go to this project folder.
+
+   macOS / Linux:
+
+   ```bash
+   cd /path/to/PersonalDashboard
+   ```
+
+   Windows PowerShell:
+
+   ```powershell
+   cd C:\path\to\PersonalDashboard
+   ```
+
+3. Install dependencies and start the dev server:
 
    ```bash
    npm install
    npm run dev
    ```
 
-3. Open **http://localhost:3000** in your browser.
+4. Open **http://localhost:3000** in your browser.
 
 On first use, the app creates its data file when needed. To try the UI with sample data instead of an empty slate, run:
 
 ```bash
-npm run mock:screenshots
+npm run mock
 npm run dev
 ```
 
-That copies a prepared dataset into place, then you start the app as usual.
+That copies a prepared dataset into place, then you start the app as usual. The command is implemented with Node, so it works in macOS/Linux shells, Windows PowerShell, and Command Prompt. A screenshot-focused fixture is also available with `npm run mock:screenshots`.
 
-**Other useful commands:** `npm run build` checks that everything compiles for production; `npm run start` serves a production build; `npm run lint` runs the code linter.
+**Other useful commands:** `npm run build` checks that everything compiles for production; `npm run start` serves a production build; `npm run lint` runs the code linter; `npm run mock:validate` checks the primary mock fixture without replacing your data.
 
 ---
 
@@ -82,10 +96,17 @@ Think of the app as a small personal **command center**: you record who/what wor
 ### Search
 
 - Use **Search** in the header or press **⌘K** (Mac) / **Ctrl+K** (Windows) to open a **quick search** across owners, projects, epics, tasks, and notes.
+- The top menu stays visible while you scroll and highlights the section you are currently viewing.
 
-### Audit log
+### Language
+
+- Use the language dropdown in the header to switch platform text between **English** and **Romanian**.
+- The selection is saved in your browser cookie. User-authored content such as task names, notes, and custom status labels is not translated automatically.
+
+### Audit Log
 
 - The app keeps an **append-only log** of many create/update/delete actions so you can see **what changed** and when.
+- Audit details are shown in a diff-style view when possible, so field changes are easier to scan than raw JSON.
 
 ### Settings
 

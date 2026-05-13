@@ -243,6 +243,18 @@ export const worklogSchema = z.object({
     z.string().max(2000).default(""),
   ),
   target: worklogTargetSchema,
+  /**
+   * Snapshot of the target’s public key and title/name at worklog creation time.
+   * Used to show “PublicID - Entry name” when the target entity is later deleted.
+   */
+  targetEntryKey: z.preprocess(
+    (v) => (v === null || v === undefined || v === "" ? undefined : v),
+    z.string().max(80).optional(),
+  ),
+  targetEntryName: z.preprocess(
+    (v) => (v === null || v === undefined || v === "" ? undefined : v),
+    z.string().max(500).optional(),
+  ),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

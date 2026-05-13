@@ -66,15 +66,15 @@ function worklogSubtitle(store: Store, w: Worklog): string {
   const t = w.target;
   switch (t.kind) {
     case "task":
-      return store.tasks.find((x) => x.id === t.taskId)?.name ?? "Task";
+      return store.tasks.find((x) => x.id === t.taskId)?.name ?? w.targetEntryName ?? "Task";
     case "epic":
-      return store.taskGroups.find((x) => x.id === t.groupId)?.name ?? "Epic";
+      return store.taskGroups.find((x) => x.id === t.groupId)?.name ?? w.targetEntryName ?? "Epic";
     case "project":
-      return store.projects.find((x) => x.id === t.projectId)?.name ?? "Project";
+      return store.projects.find((x) => x.id === t.projectId)?.name ?? w.targetEntryName ?? "Project";
     case "owner":
-      return store.owners.find((x) => x.id === t.ownerId)?.name ?? "Owner";
+      return store.owners.find((x) => x.id === t.ownerId)?.name ?? w.targetEntryName ?? "Owner";
     case "note":
-      return store.ownerEntries.find((x) => x.id === t.entryId)?.title ?? "Note";
+      return store.ownerEntries.find((x) => x.id === t.entryId)?.title ?? w.targetEntryName ?? "Note";
     default: {
       const _x: never = t;
       void _x;

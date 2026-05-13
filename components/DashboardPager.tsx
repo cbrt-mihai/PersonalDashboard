@@ -1,5 +1,7 @@
 "use client";
 
+import { useI18n } from "@/components/LocaleProvider";
+
 type Props = {
   page: number;
   pageCount: number;
@@ -17,6 +19,7 @@ export function DashboardPager({
   onPageChange,
   className = "",
 }: Props) {
+  const { t } = useI18n();
   if (pageCount <= 1 || total === 0) return null;
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
@@ -25,7 +28,7 @@ export function DashboardPager({
       className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-900/50 ${className}`}
     >
       <span className="text-zinc-600 dark:text-zinc-400">
-        Page {page} of {pageCount} ({from}–{to} of {total})
+        {t("common.pageRange", { page, pageCount, from, to, total })}
       </span>
       <div className="flex flex-wrap gap-2">
         <button
@@ -34,7 +37,7 @@ export function DashboardPager({
           onClick={() => onPageChange(page - 1)}
           className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-600"
         >
-          Previous
+          {t("common.previousPage")}
         </button>
         <button
           type="button"
@@ -42,7 +45,7 @@ export function DashboardPager({
           onClick={() => onPageChange(page + 1)}
           className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-600"
         >
-          Next
+          {t("common.nextPage")}
         </button>
       </div>
     </div>

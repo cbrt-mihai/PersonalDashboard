@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { EpicsClient } from "@/components/EpicsClient";
+import { getServerTranslator } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Epics",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getServerTranslator();
+  return { title: t("nav.epics") };
+}
 
 export default function EpicsPage() {
   return (

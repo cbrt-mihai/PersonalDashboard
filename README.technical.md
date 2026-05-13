@@ -23,7 +23,11 @@ Scripts (see [package.json](package.json)):
 | `npm run build` | Production build; runs TypeScript as part of Next. |
 | `npm run start` | Serve production build. |
 | `npm run lint` | ESLint. |
-| `npm run mock:screenshots` | `cp data/store.screenshots.json data/store.json` for a fixture dataset. |
+| `npm run mock` | Copy `data/store.mock.json` to `data/store.json` with a Node script. |
+| `npm run mock:screenshots` | Copy `data/store.screenshots.json` to `data/store.json` with the same Node script. |
+| `npm run mock:validate` | Validate the primary mock fixture without overwriting `data/store.json`. |
+
+The mock commands use [`scripts/use-mock-store.mjs`](scripts/use-mock-store.mjs), not shell-specific commands like `cp`, so they work in macOS/Linux shells, Windows PowerShell, and Command Prompt.
 
 ---
 
@@ -52,6 +56,12 @@ flowchart LR
 
 Initial theme is applied early via [`lib/themeStorage.ts`](lib/themeStorage.ts) and an inline script in [`app/layout.tsx`](app/layout.tsx). The nav can show either a compact MUI switch or the “landscape” toggle depending on [`components/SettingsClient.tsx`](components/SettingsClient.tsx) / store settings.
 
+### Internationalization
+
+Platform text uses typed TypeScript dictionaries under [`lib/i18n/locales`](lib/i18n/locales). English is the base schema; Romanian must satisfy the same key shape. The translator supports simple placeholder replacement such as `{year}`, `{total}`, or `{page}`.
+
+[`app/layout.tsx`](app/layout.tsx) reads the selected locale from the `pd-locale` cookie and sets `<html lang>`. [`components/LocaleProvider.tsx`](components/LocaleProvider.tsx) exposes `useI18n()` to client components and updates the cookie when the language selector changes. User-authored data remains stored exactly as entered.
+
 ---
 
 ## Persistence
@@ -61,6 +71,7 @@ Initial theme is applied early via [`lib/themeStorage.ts`](lib/themeStorage.ts) 
 - Primary path: **`data/store.json`** (created on first write if missing).
 - Root shape is validated by **`storeSchema`** in [`lib/schemas.ts`](lib/schemas.ts): owners, projects, task groups (epics), tasks, owner entries (notes), worklogs, settings, audit log, etc.
 - **Backups:** treat this file as the database; copy it before bulk edits or schema experiments.
+- **Mock data:** `npm run mock` replaces this file with [`data/store.mock.json`](data/store.mock.json). Back up real data first.
 
 ### Legacy migration
 
@@ -112,6 +123,10 @@ Optional **`keyTag`** (2–16 letters A–Z) on create for **owners**, **project
 | Audit | [`lib/auditLog.ts`](lib/auditLog.ts), [`app/api/audit/route.ts`](app/api/audit/route.ts), [`app/audit/page.tsx`](app/audit/page.tsx) |
 | Settings | [`app/api/settings/route.ts`](app/api/settings/route.ts), [`components/SettingsClient.tsx`](components/SettingsClient.tsx) |
 
+### Audit detail rendering
+
+Audit entries still store `detail` as a string for compatibility. Update details are usually JSON shaped like `{ "changes": { "field": { "from": ..., "to": ... } } }`; create/delete details use `{ "created": ... }` or `{ "deleted": ... }`. [`components/AuditDetailDiff.tsx`](components/AuditDetailDiff.tsx) parses those known shapes and renders a diff-style view, falling back to raw text for legacy, truncated, or unknown details.
+
 ---
 
 ## HTTP API index (representative)
@@ -146,8 +161,9 @@ Exact bodies are validated with Zod in each route file.
 
 | Symptom | Things to check |
 |---------|-------------------|
-| Build / parse fails on store | Restore a backup `store.json` or run `npm run mock:screenshots`. |
+| Build / parse fails on store | Restore a backup `store.json` or run `npm run mock`. |
 | `readStore` / Zod errors | Invalid JSON or post-migration shape; inspect [`lib/storeMigrateLegacy.ts`](lib/storeMigrateLegacy.ts) and [`lib/schemas.ts`](lib/schemas.ts). |
 | Search returns nothing | Query length ≥ 1; only local store is indexed. |
+| Mock command fails on Windows | Use `npm run mock` or `npm run mock:screenshots`; do not run `cp` manually in PowerShell or Command Prompt. |
 
 ---

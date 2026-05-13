@@ -150,7 +150,7 @@ Real content starts here.
 
 ## Wiki links
 
-Bare `[[…]]` links are preprocessed **after** frontmatter removal and **before** Markdown runs. Each segment can be a **UUID** or a **public entity key** (for example `TSK-592` or legacy `TAG-ABC12D`); use the values shown in the UI or in your local `data/store.json`. In the table below, placeholders like `{id}` mean “that entity’s UUID or key,” with **no spaces** inside the brackets.
+Bare `[[…]]` links are preprocessed **after** frontmatter removal and **before** Markdown runs. Each segment can be a **UUID** or a **public entity key** (for example `RBRAND-592` or legacy `TAG-ABC12D`); use the values shown in the UI or in your local `data/store.json`. In the table below, placeholders like `{id}` mean “that entity’s UUID or key,” with **no spaces** inside the brackets.
 
 | Form | Resolves to | Examples |
 |------|-------------|----------|

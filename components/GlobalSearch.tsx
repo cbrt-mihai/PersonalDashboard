@@ -3,13 +3,25 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useI18n } from "@/components/LocaleProvider";
 import type { DashboardSearchHit } from "@/lib/dashboardSearch";
 
 type SearchResponse = { query: string; results: DashboardSearchHit[] };
 
+function detectIsMac(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const uaData = (navigator as Navigator & { userAgentData?: { platform?: string } })
+    .userAgentData;
+  const platform = (uaData?.platform || navigator.platform || "").toLowerCase();
+  if (platform.includes("mac")) return true;
+  return /mac os x|macintosh/i.test(navigator.userAgent);
+}
+
 export function GlobalSearch() {
   const router = useRouter();
+  const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
+  const [isMac, setIsMac] = useState(false);
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [results, setResults] = useState<DashboardSearchHit[]>([]);
@@ -21,6 +33,7 @@ export function GlobalSearch() {
   useEffect(() => {
     queueMicrotask(() => {
       setMounted(true);
+      setIsMac(detectIsMac());
     });
   }, []);
 
@@ -124,7 +137,7 @@ export function GlobalSearch() {
           className="w-full max-w-lg overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-950"
           role="dialog"
           aria-modal="true"
-          aria-label="Search"
+          aria-label={t("search.ariaLabel")}
           onKeyDown={onPaletteKeyDown}
         >
           <div className="border-b border-zinc-200 p-3 dark:border-zinc-800">
@@ -133,22 +146,19 @@ export function GlobalSearch() {
               type="search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search tasks, notes, projects…"
+              placeholder={t("search.placeholder")}
               className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900"
               autoComplete="off"
             />
-            <p className="mt-2 text-xs text-zinc-500">
-              Owners, projects, epics, tasks, notes, and worklogs (by key or text). Use arrow keys and
-              Enter.
-            </p>
+            <p className="mt-2 text-xs text-zinc-500">{t("search.help")}</p>
           </div>
           <div className="max-h-[min(50vh,22rem)] overflow-y-auto">
             {loading ? (
-              <p className="px-4 py-6 text-center text-sm text-zinc-500">Searching…</p>
+              <p className="px-4 py-6 text-center text-sm text-zinc-500">{t("search.searching")}</p>
             ) : q.trim().length < 1 ? (
-              <p className="px-4 py-6 text-center text-sm text-zinc-500">Type to search.</p>
+              <p className="px-4 py-6 text-center text-sm text-zinc-500">{t("common.typeToSearch")}</p>
             ) : results.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-zinc-500">No matches.</p>
+              <p className="px-4 py-6 text-center text-sm text-zinc-500">{t("common.noMatches")}</p>
             ) : (
               <ul className="py-1">
                 {results.map((r, i) => (
@@ -182,10 +192,15 @@ export function GlobalSearch() {
         onClick={() => setOpen(true)}
         className="relative z-[1] inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
       >
-        <span>Search</span>
-        <kbd className="hidden rounded border border-zinc-300 bg-white px-1.5 py-0.5 font-mono text-xs text-zinc-500 sm:inline dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-400">
-          ⌘K
-        </kbd>
+        <span>{t("search.openButton")}</span>
+        {mounted ? (
+          <kbd
+            className="hidden rounded border border-zinc-300 bg-white px-1.5 py-0.5 font-mono text-xs text-zinc-500 sm:inline dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-400"
+            aria-label={isMac ? t("search.commandK") : t("search.controlK")}
+          >
+            {isMac ? "⌘K" : "Ctrl+K"}
+          </kbd>
+        ) : null}
       </button>
 
       {mounted && overlay ? createPortal(overlay, document.body) : null}

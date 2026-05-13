@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useI18n } from "@/components/LocaleProvider";
 import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import { TaskDetailsMarkdown } from "@/components/TaskDetailsMarkdown";
 import {
@@ -36,16 +37,20 @@ import { entryMatchesTagKeys, tagOptionsFromEntries } from "@/lib/noteTags";
 import { CreateTaskDialog } from "@/components/CreateTaskDialog";
 import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
 import { DashboardPager } from "@/components/DashboardPager";
+import { LogWorkButton } from "@/components/LogWorkButton";
 import { FilterMultiDropdown } from "./FilterMultiDropdown";
 import { MarkdownView } from "./MarkdownView";
 import { ProgressBar } from "./ProgressBar";
 import { SubtaskProgressBar } from "./SubtaskProgressBar";
-import { TaskStatusSelect } from "./TaskStatusSelect";
 import { TaskTypeBadge } from "./TaskMetaBadges";
 import { OwnerSwatch } from "./OwnerSwatch";
 import { EntityArchivedBadge } from "./EntityArchivedMark";
 import { TableCellSlot, TableClampCell } from "./TableClampCell";
-import { TrashIcon } from "./icons";
+import {
+  dashboardIconBtnNeutralClass,
+  dashboardIconBtnPrimaryClass,
+} from "@/lib/dashboardTableActionClasses";
+import { ArrowTopRightOnSquareIcon, EyeIcon, EyeSlashIcon, PencilIcon, TrashIcon } from "./icons";
 import { useDashboardLocalPager } from "@/lib/useDashboardLocalPager";
 import { TableColumnResizeHandle, useTableColumnWidths } from "@/lib/useTableColumnWidths";
 
@@ -127,6 +132,7 @@ function groupName(groups: TaskGroup[], id: string | null) {
 }
 
 export function HomeClient() {
+  const { t } = useI18n();
   const { settings, statusMap, statusKeys } = useDashboardConfig();
   const types = settings?.taskTypes ? settings.taskTypes.map((r) => r.label) : [...TASK_FORM_TYPES];
   const priorities = settings?.taskPriorities
@@ -160,7 +166,7 @@ export function HomeClient() {
   const [tableColumns, setTableColumns] = useState<Record<TableColumnId, boolean>>({
     ...DEFAULT_TABLE_COLUMNS,
   });
-  const skipTableColPersist = useRef(true);
+  const [tableColumnsReady, setTableColumnsReady] = useState(false);
   const [savingTaskEdits, setSavingTaskEdits] = useState<Record<string, boolean>>({});
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -227,21 +233,20 @@ export function HomeClient() {
         setTableColumns(parseTableColumnPrefs(raw));
       } catch {
         /* ignore */
+      } finally {
+        setTableColumnsReady(true);
       }
     });
   }, []);
 
   useEffect(() => {
-    if (skipTableColPersist.current) {
-      skipTableColPersist.current = false;
-      return;
-    }
+    if (!tableColumnsReady) return;
     try {
       localStorage.setItem(TABLE_COLUMN_STORAGE_KEY, JSON.stringify(tableColumns));
     } catch {
       /* ignore */
     }
-  }, [tableColumns]);
+  }, [tableColumnsReady, tableColumns]);
 
   const filtered = useMemo(() => {
     let t = tasks;
@@ -448,6 +453,34 @@ export function HomeClient() {
     return { total, done };
   }, [filtered, statusMap]);
 
+  const columnLabel = useCallback(
+    (id: TableColumnId) => {
+      switch (id) {
+        case "name":
+          return t("common.name");
+        case "owner":
+          return t("common.owner");
+        case "project":
+          return t("common.project");
+        case "epic":
+          return t("common.epic");
+        case "type":
+          return t("common.type");
+        case "status":
+          return t("common.status");
+        case "date":
+          return t("common.date");
+        case "priority":
+          return t("common.priority");
+        case "tags":
+          return t("common.tags");
+        case "summary":
+          return t("common.summary");
+      }
+    },
+    [t],
+  );
+
   const groupsForEpicView = useMemo(() => {
     let g = groups;
     if (!showArchived) g = g.filter((x) => !isArchived(x));
@@ -559,7 +592,7 @@ export function HomeClient() {
   }
 
   if (loading) {
-    return <p className="text-zinc-500">Loading…</p>;
+    return <p className="text-zinc-500">{t("common.loading")}</p>;
   }
 
   return (
@@ -573,10 +606,10 @@ export function HomeClient() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Tasks
+            {t("dashboard.tasksTitle")}
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {progress.done} / {progress.total} done in current filters
+            {t("dashboard.progress", { done: progress.done, total: progress.total })}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -589,7 +622,7 @@ export function HomeClient() {
                 : "border border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-900"
             }`}
           >
-            Table
+            {t("dashboard.table")}
           </button>
           <button
             type="button"
@@ -600,7 +633,7 @@ export function HomeClient() {
                 : "border border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-900"
             }`}
           >
-            By epic
+            {t("dashboard.byEpic")}
           </button>
           <button
             type="button"
@@ -608,7 +641,7 @@ export function HomeClient() {
             disabled={owners.length === 0}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            New task
+            {t("dashboard.newTask")}
           </button>
         </div>
       </div>
@@ -616,52 +649,52 @@ export function HomeClient() {
       <DashboardFilterDisclosure>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-zinc-500">Search</span>
+          <span className="text-zinc-500">{t("common.search")}</span>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Name or description"
+            placeholder={t("dashboard.searchPlaceholder")}
             className="rounded-lg border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
           />
         </label>
         <FilterMultiDropdown
-          label="Owner"
+          label={t("common.owner")}
           options={ownerFilterOptions}
           selected={ownerIds}
           onChange={setOwnerIds}
         />
         <FilterMultiDropdown
-          label="Project"
+          label={t("common.project")}
           options={projectFilterOptions}
           selected={projectIds}
           onChange={setProjectIds}
         />
         <FilterMultiDropdown
-          label="Epic / group"
+          label={t("dashboard.epicGroup")}
           options={groupFilterOptions}
           selected={groupIds}
           onChange={setGroupIds}
         />
         <FilterMultiDropdown
-          label="Type"
+          label={t("common.type")}
           options={typeFilterOptions}
           selected={selectedTypes}
           onChange={setSelectedTypes}
         />
         <FilterMultiDropdown
-          label="Status"
+          label={t("common.status")}
           options={statusFilterOptions}
           selected={selectedStatuses}
           onChange={setSelectedStatuses}
         />
         <FilterMultiDropdown
-          label="Priority"
+          label={t("common.priority")}
           options={priorityFilterOptions}
           selected={selectedPriorities}
           onChange={setSelectedPriorities}
         />
         <FilterMultiDropdown
-          label="Tags (any match)"
+          label={t("dashboard.tagsAnyMatch")}
           options={tagFilterOptions}
           selected={selectedTagKeys}
           onChange={setSelectedTagKeys}
@@ -673,16 +706,16 @@ export function HomeClient() {
             onChange={(e) => setShowArchived(e.target.checked)}
             className="rounded border-zinc-300 dark:border-zinc-600"
           />
-          Show archived tasks and epics
+          {t("dashboard.showArchived")}
         </label>
         </div>
       </DashboardFilterDisclosure>
 
       {owners.length === 0 ? (
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Add an owner first under{" "}
+          {t("dashboard.addOwnerFirst")}{" "}
           <Link href="/owners" className="text-blue-600 underline">
-            Owners
+            {t("nav.owners")}
           </Link>
           .
         </p>
@@ -703,7 +736,7 @@ export function HomeClient() {
           <div className="flex flex-wrap items-center justify-end gap-2">
             <details className="relative rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
               <summary className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-zinc-700 marker:hidden dark:text-zinc-200 [&::-webkit-details-marker]:hidden">
-                Columns
+                {t("dashboard.columns")}
               </summary>
               <div className="absolute right-0 z-10 mt-1 min-w-[12rem] rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-600 dark:bg-zinc-950">
                 {TABLE_COLUMNS.map((col) => (
@@ -719,7 +752,7 @@ export function HomeClient() {
                       }
                       className="rounded border-zinc-300 dark:border-zinc-600"
                     />
-                    {col.label}
+                    {columnLabel(col.id)}
                   </label>
                 ))}
               </div>
@@ -748,7 +781,7 @@ export function HomeClient() {
                             className="font-semibold hover:text-zinc-800 dark:hover:text-zinc-200"
                             onClick={() => toggleSort(colSort)}
                           >
-                            {col.label}
+                            {columnLabel(col.id)}
                             {sortKey === colSort
                               ? sortDir === "asc"
                                 ? " ↑"
@@ -756,7 +789,7 @@ export function HomeClient() {
                               : ""}
                           </button>
                         ) : (
-                          <span className="font-semibold">{col.label}</span>
+                          <span className="font-semibold">{columnLabel(col.id)}</span>
                         )}
                         <TableColumnResizeHandle columnKey={col.id} onStart={startResize} />
                       </th>
@@ -999,22 +1032,31 @@ export function HomeClient() {
                           </td>
                         ) : null}
                         <td className="px-3 py-2 align-middle whitespace-nowrap">
-                          <TableCellSlot className="flex-nowrap gap-x-3">
+                          <TableCellSlot className="flex-nowrap gap-x-1">
                           <button
                             type="button"
-                            className="text-blue-600 text-xs hover:underline"
+                            className={dashboardIconBtnPrimaryClass}
                             onClick={() =>
                               setExpanded((e) => ({ ...e, [t.id]: !e[t.id] }))
                             }
+                            aria-label={isOpen ? "Hide details" : "Show details"}
+                            title={isOpen ? "Hide details" : "Show details"}
                           >
-                            {isOpen ? "Hide" : "Details"}
+                            {isOpen ? <EyeSlashIcon /> : <EyeIcon />}
                           </button>
                           <Link
                             href={`/tasks/${t.id}/edit`}
-                            className="text-blue-600 text-xs hover:underline"
+                            className={dashboardIconBtnPrimaryClass}
+                            aria-label="Edit task"
+                            title="Edit task"
                           >
-                            Edit
+                            <PencilIcon />
                           </Link>
+                          <LogWorkButton
+                            target={{ kind: "task", taskId: t.id }}
+                            disabled={isArchived(t)}
+                            variant="link"
+                          />
                           <button
                             type="button"
                             className="inline-flex items-center justify-center rounded p-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-300"
@@ -1368,26 +1410,37 @@ function EpicTaskRow({
             </select>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs leading-none">
+        <div className="flex items-center gap-1 text-xs leading-none">
           <button
             type="button"
-            className="inline-flex items-center text-blue-600 hover:underline"
+            className={dashboardIconBtnPrimaryClass}
             onClick={onToggle}
+            aria-label={expanded ? "Hide details" : "Show details"}
+            title={expanded ? "Hide details" : "Show details"}
           >
-            {expanded ? "Hide" : "Details"}
+            {expanded ? <EyeSlashIcon /> : <EyeIcon />}
           </button>
           <Link
             href={`/tasks/${task.id}`}
-            className="inline-flex items-center text-zinc-600 hover:underline dark:text-zinc-400"
+            className={dashboardIconBtnNeutralClass}
+            aria-label="View task"
+            title="View task"
           >
-            View
+            <ArrowTopRightOnSquareIcon />
           </Link>
           <Link
             href={`/tasks/${task.id}/edit`}
-            className="inline-flex items-center text-blue-600 hover:underline"
+            className={dashboardIconBtnPrimaryClass}
+            aria-label="Edit task"
+            title="Edit task"
           >
-            Edit
+            <PencilIcon />
           </Link>
+          <LogWorkButton
+            target={{ kind: "task", taskId: task.id }}
+            disabled={archived}
+            variant="link"
+          />
           <button
             type="button"
             className="inline-flex items-center justify-center rounded p-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-300"

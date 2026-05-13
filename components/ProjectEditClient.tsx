@@ -280,21 +280,21 @@ export function ProjectEditClient({ projectId }: { projectId: string }) {
   }, [allGroups, archivedEpicSearch, owners]);
 
   useEffect(() => {
-    setAssignEpicPage(0);
+    queueMicrotask(() => setAssignEpicPage(0));
   }, [assignSearch]);
 
   useEffect(() => {
-    setArchivedEpicPage(0);
+    queueMicrotask(() => setArchivedEpicPage(0));
   }, [archivedEpicSearch]);
 
   const assignMaxPage = Math.max(0, Math.ceil(assignableEpics.length / EPIC_LIST_PAGE_SIZE) - 1);
   useEffect(() => {
-    setAssignEpicPage((p) => Math.min(p, assignMaxPage));
+    queueMicrotask(() => setAssignEpicPage((p) => Math.min(p, assignMaxPage)));
   }, [assignMaxPage]);
 
   const archivedMaxPage = Math.max(0, Math.ceil(archivedEpics.length / EPIC_LIST_PAGE_SIZE) - 1);
   useEffect(() => {
-    setArchivedEpicPage((p) => Math.min(p, archivedMaxPage));
+    queueMicrotask(() => setArchivedEpicPage((p) => Math.min(p, archivedMaxPage)));
   }, [archivedMaxPage]);
 
   const assignPageSafe = Math.min(
