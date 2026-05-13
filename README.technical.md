@@ -151,7 +151,3 @@ Exact bodies are validated with Zod in each route file.
 | Search returns nothing | Query length ≥ 1; only local store is indexed. |
 
 ---
-
-## Contributor notes
-
-- Next.js version notes: [AGENTS.md](AGENTS.md) points at in-repo Next docs under `node_modules/next/dist/docs/` when APIs differ from older Next versions.
