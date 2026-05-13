@@ -108,4 +108,3 @@ Everything you add is stored in **`data/store.json`** on this computer. That fil
 
 - **[README.technical.md](README.technical.md)** — stack, folder layout, APIs, keys, migration, troubleshooting.
 - **[docs/MARKDOWN.md](docs/MARKDOWN.md)** — wiki link syntax and Markdown behavior.
-- **[AGENTS.md](AGENTS.md)** — short note for automated assistants working in this repo.
