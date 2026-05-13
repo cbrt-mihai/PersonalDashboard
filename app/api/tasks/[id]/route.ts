@@ -3,6 +3,7 @@ import { z } from "zod";
 import { appendAudit, auditDetailForDelete, auditDetailForUpdate } from "@/lib/auditLog";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { dedupeTags } from "@/lib/noteTags";
+import { findTaskByIdOrKey } from "@/lib/resolveEntityId";
 import { taskSchema, taskSubtaskSchema } from "@/lib/schemas";
 import { canonicalPriorityLabel, taskPriorityKnownLabels } from "@/lib/taskFormOptions";
 
@@ -50,14 +51,14 @@ const patchBody = z.object({
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
-  const t = readStore().tasks.find((x) => x.id === id);
+  const { id: idOrKey } = await ctx.params;
+  const t = findTaskByIdOrKey(readStore(), idOrKey);
   if (!t) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(t);
 }
 
 export async function PATCH(req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
+  const { id: idOrKey } = await ctx.params;
   let body: unknown;
   try {
     body = await req.json();
@@ -69,8 +70,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
   const storeBefore = readStore();
-  const cur = storeBefore.tasks.find((x) => x.id === id);
+  const cur = findTaskByIdOrKey(storeBefore, idOrKey);
   if (!cur) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const id = cur.id;
 
   const ownerId = parsed.data.ownerId ?? cur.ownerId;
   if (!storeBefore.owners.some((p) => p.id === ownerId)) {
@@ -129,9 +131,11 @@ export async function PATCH(req: Request, ctx: Ctx) {
 }
 
 export async function DELETE(_req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
-  const exists = readStore().tasks.some((x) => x.id === id);
-  if (!exists) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const { id: idOrKey } = await ctx.params;
+  const store0 = readStore();
+  const row = findTaskByIdOrKey(store0, idOrKey);
+  if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const id = row.id;
   mutateStore((s) => {
     const t = s.tasks.find((x) => x.id === id);
     if (t) {

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function MarkdownDocsPage() {
   const markdown = readFileSync(join(process.cwd(), "docs", "MARKDOWN.md"), "utf-8");
   return (
-    <main className="mx-auto max-w-3xl flex-1 px-4 py-8">
+    <main className="mx-auto w-full max-w-[min(100%,90rem)] flex-1 px-4 py-8 sm:px-6 lg:px-8">
       <MarkdownDocBody markdown={markdown} />
     </main>
   );

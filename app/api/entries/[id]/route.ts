@@ -5,6 +5,7 @@ import { mutateStore, readStore } from "@/lib/jsonStore";
 import { closedAtAfterNoteStatusChange } from "@/lib/noteClosedAt";
 import { validateNoteAttribution } from "@/lib/noteAttribution";
 import { dedupeTags } from "@/lib/noteTags";
+import { findOwnerEntryByIdOrKey } from "@/lib/resolveEntityId";
 import { ownerEntrySchema } from "@/lib/schemas";
 import { buildStatusMapFromRows } from "@/lib/statusConfig";
 
@@ -48,14 +49,14 @@ const patchBody = z.object({
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
-  const entry = readStore().ownerEntries.find((x) => x.id === id);
+  const { id: idOrKey } = await ctx.params;
+  const entry = findOwnerEntryByIdOrKey(readStore(), idOrKey);
   if (!entry) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(entry);
 }
 
 export async function PATCH(req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
+  const { id: idOrKey } = await ctx.params;
   let body: unknown;
   try {
     body = await req.json();
@@ -67,10 +68,11 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
   const store = readStore();
-  const cur = store.ownerEntries.find((x) => x.id === id);
+  const cur = findOwnerEntryByIdOrKey(store, idOrKey);
   if (!cur) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+  const id = cur.id;
   const patch = { ...parsed.data };
   if (patch.tags !== undefined) {
     patch.tags = dedupeTags(patch.tags);
@@ -120,9 +122,10 @@ export async function PATCH(req: Request, ctx: Ctx) {
 }
 
 export async function DELETE(_req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
-  const exists = readStore().ownerEntries.some((x) => x.id === id);
-  if (!exists) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const { id: idOrKey } = await ctx.params;
+  const row = findOwnerEntryByIdOrKey(readStore(), idOrKey);
+  if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const id = row.id;
   mutateStore((s) => {
     const e = s.ownerEntries.find((x) => x.id === id);
     if (e) {

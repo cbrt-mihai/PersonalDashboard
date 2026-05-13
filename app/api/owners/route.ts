@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { appendAudit, auditDetailForCreate } from "@/lib/auditLog";
+import { nextEntityKey } from "@/lib/apiEntityKey";
+import { ENTITY_KEY_TAG_MAX, normalizeKeyTag } from "@/lib/entityKey";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { ownerSchema } from "@/lib/schemas";
 
@@ -11,6 +13,7 @@ const createBody = z.object({
   name: z.string().min(1),
   color: z.string().optional().default("#6366f1"),
   iconDataUrl: z.string().optional().nullable(),
+  keyTag: z.string().max(ENTITY_KEY_TAG_MAX).optional(),
 });
 
 export async function GET() {
@@ -40,6 +43,7 @@ export async function POST(req: Request) {
   const id = randomUUID();
   const owner = ownerSchema.parse({
     id,
+    key: nextEntityKey(normalizeKeyTag(parsed.data.keyTag, "OWN")),
     name: parsed.data.name,
     color: colorCheck.data,
     iconDataUrl: iconCheck.data ?? null,

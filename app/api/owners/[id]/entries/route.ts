@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { appendAudit, auditDetailForCreate } from "@/lib/auditLog";
+import { nextOwnerEntryKey } from "@/lib/apiEntityKey";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { closedAtForNewNote } from "@/lib/noteClosedAt";
 import { validateNoteAttribution } from "@/lib/noteAttribution";
@@ -70,6 +71,7 @@ export async function POST(req: Request, ctx: Ctx) {
   const status = parsed.data.status ?? defaultStatus;
   const entry = ownerEntrySchema.parse({
     id: randomUUID(),
+    key: nextOwnerEntryKey(store, { ownerId, projectId }),
     ownerId,
     projectId,
     title: parsed.data.title,

@@ -23,9 +23,12 @@ import "remark-github-blockquote-alert/alert.css";
 export function MarkdownView({
   markdown,
   className = "",
+  variant = "default",
 }: {
   markdown: string;
   className?: string;
+  /** `doc`: avoid horizontal page scroll on wide tables (e.g. Markdown help page). */
+  variant?: "default" | "doc";
 }) {
   const { resolvedDark: dark } = useTheme();
 
@@ -81,6 +84,13 @@ export function MarkdownView({
         );
       },
       table({ children }) {
+        if (variant === "doc") {
+          return (
+            <div className="my-2 min-w-0 w-full">
+              <table className="w-full table-fixed">{children}</table>
+            </div>
+          );
+        }
         return (
           <div className="my-2 max-w-full overflow-x-auto">
             <table>{children}</table>
@@ -95,12 +105,19 @@ export function MarkdownView({
         );
       },
     }),
-    [dark],
+    [dark, variant],
   );
+
+  const rootOverflow =
+    variant === "doc" ? "overflow-x-visible" : "overflow-x-auto";
+  const docTableLayout =
+    variant === "doc"
+      ? "[&_th]:align-top [&_td]:align-top [&_th]:[overflow-wrap:anywhere] [&_td]:[overflow-wrap:anywhere]"
+      : "";
 
   return (
     <div
-      className={`md-root min-w-0 w-full max-w-full overflow-x-auto break-words text-[0.95rem] leading-relaxed [overflow-wrap:anywhere] [&_li]:break-words [&_p]:break-words [&_td]:break-words [&_th]:break-words ${className}`}
+      className={`md-root min-w-0 w-full max-w-full ${rootOverflow} break-words text-[0.95rem] leading-relaxed [overflow-wrap:anywhere] [&_li]:break-words [&_p]:break-words [&_td]:break-words [&_th]:break-words ${docTableLayout} ${className}`}
       style={
         {
           ["--md-inline-bg" as string]: dark

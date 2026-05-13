@@ -3,6 +3,7 @@ import {
   DEFAULT_DASHBOARD_SETTINGS,
   ensureTodoNoteStatusInRows,
 } from "./defaultDashboardSettings";
+import { ENTITY_KEY_REGEX } from "./entityKey";
 import { normalizeOwnerColorPresetsForParse } from "./presetColors";
 import { firstStatusIdByOrder } from "./statusConfig";
 
@@ -23,6 +24,7 @@ export const auditEntitySchema = z.enum([
   "task",
   "owner_entry",
   "settings",
+  "worklog",
 ]);
 
 export const auditEventSchema = z.object({
@@ -39,8 +41,14 @@ export type AuditEvent = z.infer<typeof auditEventSchema>;
 export type AuditAction = z.infer<typeof auditActionSchema>;
 export type AuditEntity = z.infer<typeof auditEntitySchema>;
 
+const entityKeySchema = z.string().regex(
+  ENTITY_KEY_REGEX,
+  "Expected entity key: 2–16 letter tag, hyphen, digits (e.g. ONE-3435), legacy OWN-ABC12D, or note ONE-3435-44",
+);
+
 export const ownerSchema = z.object({
   id: z.string().uuid(),
+  key: entityKeySchema,
   name: z.string().min(1).max(200),
   color: hexColor,
   archivedAt: z.preprocess(
@@ -70,6 +78,7 @@ export const ownerSchema = z.object({
 
 export const projectSchema = z.object({
   id: z.string().uuid(),
+  key: entityKeySchema,
   name: z.string().min(1).max(200),
   archivedAt: z.preprocess(
     (v) => (v === undefined ? null : v),
@@ -93,6 +102,7 @@ export const projectSchema = z.object({
 
 export const taskGroupSchema = z.object({
   id: z.string().uuid(),
+  key: entityKeySchema,
   ownerId: z.string().uuid(),
   projectId: z.preprocess(
     (v) => (v === undefined ? null : v),
@@ -121,6 +131,7 @@ export const taskSubtaskSchema = z.object({
 
 export const taskSchema = z.object({
   id: z.string().uuid(),
+  key: entityKeySchema,
   ownerId: z.string().uuid(),
   groupId: z.string().uuid().nullable(),
   archivedAt: z.preprocess(
@@ -151,6 +162,7 @@ export const taskSchema = z.object({
 export const ownerEntrySchema = z
   .object({
     id: z.string().uuid(),
+    key: entityKeySchema,
     /** When set, the note is attributed to this owner (at most one). */
     ownerId: z.preprocess(
       (v) => (v === undefined || v === null || v === "" ? null : v),
@@ -197,6 +209,31 @@ export const ownerEntrySchema = z
       });
     }
   });
+
+export const worklogTargetSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("task"), taskId: z.string().uuid() }),
+  z.object({ kind: z.literal("epic"), groupId: z.string().uuid() }),
+  z.object({ kind: z.literal("note"), entryId: z.string().uuid() }),
+  z.object({ kind: z.literal("project"), projectId: z.string().uuid() }),
+  z.object({ kind: z.literal("owner"), ownerId: z.string().uuid() }),
+]);
+
+export const worklogSchema = z.object({
+  id: z.string().uuid(),
+  key: entityKeySchema,
+  startedAt: z.string().min(1).max(40),
+  durationMinutes: z.number().int().positive().max(60 * 24 * 365),
+  comment: z.preprocess(
+    (v) => (v === null || v === undefined ? "" : v),
+    z.string().max(2000).default(""),
+  ),
+  target: worklogTargetSchema,
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type WorklogTarget = z.infer<typeof worklogTargetSchema>;
+export type Worklog = z.infer<typeof worklogSchema>;
 
 export const taskStatusDefinitionSchema = z.object({
   id: z.string().min(1).max(64),
@@ -377,6 +414,11 @@ export const dashboardSettingsSchema = z.object({
       .max(40)
       .default(() => DEFAULT_DASHBOARD_SETTINGS.noteStatuses.map((r) => ({ ...r }))),
   ),
+  /** Minutes represented by `1d` in worklog Jira-style duration strings (60–2880). */
+  worklogMinutesPerDay: z.preprocess(
+    (v) => (v === undefined || v === null ? DEFAULT_DASHBOARD_SETTINGS.worklogMinutesPerDay : v),
+    z.coerce.number().int().min(60).max(2880),
+  ),
 });
 
 const settingsFromStore = z.preprocess(
@@ -394,6 +436,10 @@ export const storeSchema = z.object({
   taskGroups: z.array(taskGroupSchema),
   tasks: z.array(taskSchema),
   ownerEntries: z.array(ownerEntrySchema),
+  worklogs: z.preprocess(
+    (v) => (v === null || v === undefined ? [] : v),
+    z.array(worklogSchema).default([]),
+  ),
   auditLog: z.array(auditEventSchema).max(5000).default([]),
 });
 
@@ -414,5 +460,6 @@ export const emptyStore = (): Store => ({
   taskGroups: [],
   tasks: [],
   ownerEntries: [],
+  worklogs: [],
   auditLog: [],
 });

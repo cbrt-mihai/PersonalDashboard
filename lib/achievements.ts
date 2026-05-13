@@ -594,6 +594,8 @@ export function buildAchievementsHtmlDocument(opts: {
   taskPriorityLabels?: string[];
   /** All matching tasks (second tab), same `groupBy` as `sections`. */
   sectionsAllStatuses?: { heading: string; rows: BragTaskRow[] }[] | null;
+  /** Optional HTML block (e.g. worklog stats) inserted after the task summary panel. */
+  worklogSummaryHtml?: string | null;
 }): string {
   const {
     title,
@@ -604,6 +606,7 @@ export function buildAchievementsHtmlDocument(opts: {
     taskTypeLabels,
     taskPriorityLabels,
     sectionsAllStatuses = null,
+    worklogSummaryHtml = null,
   } = opts;
 
   const knownTaskTypes =
@@ -2160,6 +2163,8 @@ export function buildAchievementsHtmlDocument(opts: {
     ${filterToolbarHtml}
 
     ${summaryPanelHtml}
+
+    ${worklogSummaryHtml ?? ""}
 
     <main id="brag-main">
       ${mainContent}

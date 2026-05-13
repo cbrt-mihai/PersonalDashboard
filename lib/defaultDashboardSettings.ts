@@ -109,4 +109,6 @@ export const DEFAULT_DASHBOARD_SETTINGS = {
   taskStatuses: taskStatusRowsFromDefaultMap(),
   /** Workflow for owner-attributed notes (separate from task statuses). */
   noteStatuses: defaultNoteStatusRows(),
+  /** Minutes for `1d` in Jira-style worklog duration (e.g. 480 = 8h day). */
+  worklogMinutesPerDay: 1440,
 };

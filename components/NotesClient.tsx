@@ -800,7 +800,9 @@ export function NotesClient() {
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 dark:bg-zinc-950">
             <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">New note</h3>
             <p className="mt-1 text-sm text-zinc-500">
-              Set at least one owner or one project. You can change attribution later when editing.
+              Set at least one owner or one project. The public key is derived from that parent (for
+              example <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">ONE-3452-44</code>
+              ). You can change attribution later when editing.
             </p>
             {noteCreateErr ? (
               <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">

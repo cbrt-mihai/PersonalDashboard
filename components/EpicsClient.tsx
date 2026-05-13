@@ -19,6 +19,7 @@ import { ProgressBar } from "./ProgressBar";
 import { OwnerSwatch } from "./OwnerSwatch";
 import { StatusBadge } from "./StatusBadge";
 import { EntityArchivedBadge } from "./EntityArchivedMark";
+import { EntityKeyTagInput } from "./EntityKeyTagInput";
 import { TableCellSlot, TableClampCell } from "./TableClampCell";
 import { TrashIcon } from "./icons";
 
@@ -100,6 +101,7 @@ export function EpicsClient() {
   const [createDesc, setCreateDesc] = useState("");
   const [createTags, setCreateTags] = useState<string[]>([]);
   const [createProjectId, setCreateProjectId] = useState("");
+  const [createKeyTag, setCreateKeyTag] = useState("");
   const [createSaving, setCreateSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -312,6 +314,7 @@ export function EpicsClient() {
     setCreateDesc("");
     setCreateTags([]);
     setCreateProjectId("");
+    setCreateKeyTag("");
     setCreateOwnerId(ownerIds.length === 1 ? ownerIds[0]! : "");
     setCreateOpen(true);
   }
@@ -323,6 +326,7 @@ export function EpicsClient() {
     setCreateDesc("");
     setCreateTags([]);
     setCreateProjectId("");
+    setCreateKeyTag("");
   }
 
   async function submitCreateEpic() {
@@ -338,6 +342,7 @@ export function EpicsClient() {
           description: createDesc,
           tags: createTags,
           projectId: createProjectId ? createProjectId : null,
+          keyTag: createKeyTag,
         }),
       });
       if (!r.ok) throw new Error("Could not create epic");
@@ -717,6 +722,11 @@ export function EpicsClient() {
                     placeholder="Epic name"
                   />
                 </label>
+                <EntityKeyTagInput
+                  value={createKeyTag}
+                  onChange={setCreateKeyTag}
+                  defaultTag="EPC"
+                />
                 <SearchableSingleSelect
                   label="Project (optional)"
                   value={createProjectId}

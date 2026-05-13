@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { isArchived } from "@/lib/archive";
 import type { Owner, Project, Task, TaskGroup } from "@/lib/schemas";
 import { DetailCollapsibleSection } from "./DetailCollapsibleSection";
+import { WorklogSection } from "./WorklogSection";
 import { EntityArchivedBadge, EntityArchivedBanner } from "./EntityArchivedMark";
 import { useDashboardConfig } from "./DashboardSettingsProvider";
 import { entryMatchesTagKeys, normalizeTagKey, tagOptionsFromEntries } from "@/lib/noteTags";
@@ -469,6 +470,10 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
           <p className="mt-2 text-sm text-zinc-500">No tasks match search or filters.</p>
         ) : null}
       </DetailCollapsibleSection>
+
+      {epic ? (
+        <WorklogSection target={{ kind: "epic", groupId: epic.id }} disabled={isArchived(epic)} />
+      ) : null}
     </div>
   );
 }

@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { appendAudit, auditDetailForCreate } from "@/lib/auditLog";
+import { nextEntityKey } from "@/lib/apiEntityKey";
+import { ENTITY_KEY_TAG_MAX, normalizeKeyTag } from "@/lib/entityKey";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { dedupeTags } from "@/lib/noteTags";
 import { taskSchema, taskSubtaskSchema } from "@/lib/schemas";
@@ -33,6 +35,7 @@ const createBody = z.object({
   priority: z.string().optional().default("Medium"),
   tags: z.array(z.string()).optional().default([]),
   subtasks: z.array(taskSubtaskSchema).max(100).optional().default([]),
+  keyTag: z.string().max(ENTITY_KEY_TAG_MAX).optional(),
 });
 
 export async function GET(req: Request) {
@@ -78,8 +81,10 @@ export async function POST(req: Request) {
       : now.slice(0, 10);
   const knownPriorities = taskPriorityKnownLabels(store.settings.taskPriorities);
   const priority = canonicalPriorityLabel(parsed.data.priority ?? "Medium", knownPriorities);
+  const keyTag = normalizeKeyTag(parsed.data.keyTag, "TSK");
   const task = taskSchema.parse({
     id: randomUUID(),
+    key: nextEntityKey(keyTag),
     ownerId: parsed.data.ownerId,
     groupId,
     name: parsed.data.name,

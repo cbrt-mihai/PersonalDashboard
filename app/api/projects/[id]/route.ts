@@ -3,6 +3,7 @@ import { z } from "zod";
 import { appendAudit, auditDetailForDelete, auditDetailForUpdate } from "@/lib/auditLog";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { dedupeTags } from "@/lib/noteTags";
+import { findProjectByIdOrKey } from "@/lib/resolveEntityId";
 import { ownerEntrySchema, ownerSchema, projectSchema } from "@/lib/schemas";
 
 const PROJECT_UPDATE_AUDIT_KEYS = [
@@ -34,14 +35,14 @@ const patchBody = z.object({
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
-  const p = readStore().projects.find((x) => x.id === id);
+  const { id: idOrKey } = await ctx.params;
+  const p = findProjectByIdOrKey(readStore(), idOrKey);
   if (!p) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(p);
 }
 
 export async function PATCH(req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
+  const { id: idOrKey } = await ctx.params;
   let body: unknown;
   try {
     body = await req.json();
@@ -53,6 +54,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const row = findProjectByIdOrKey(readStore(), idOrKey);
+  if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const id = row.id;
   let updated = false;
   const project = mutateStore((s) => {
     const i = s.projects.findIndex((x) => x.id === id);
@@ -80,11 +84,11 @@ export async function PATCH(req: Request, ctx: Ctx) {
 }
 
 export async function DELETE(_req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
+  const { id: idOrKey } = await ctx.params;
   const store = readStore();
-  if (!store.projects.some((x) => x.id === id)) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+  const row = findProjectByIdOrKey(store, idOrKey);
+  if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const id = row.id;
   if (store.ownerEntries.some((e) => e.projectId === id && e.ownerId == null)) {
     return NextResponse.json(
       {

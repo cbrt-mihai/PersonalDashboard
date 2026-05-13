@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { appendAudit, auditDetailForCreate } from "@/lib/auditLog";
+import { nextEntityKey } from "@/lib/apiEntityKey";
+import { ENTITY_KEY_TAG_MAX, normalizeKeyTag } from "@/lib/entityKey";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { dedupeTags } from "@/lib/noteTags";
 import { taskGroupSchema } from "@/lib/schemas";
@@ -13,6 +15,7 @@ const createBody = z.object({
   description: z.string().optional().default(""),
   tags: z.array(z.string()).optional().default([]),
   projectId: z.string().uuid().nullable().optional(),
+  keyTag: z.string().max(ENTITY_KEY_TAG_MAX).optional(),
 });
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -48,6 +51,7 @@ export async function POST(req: Request, ctx: Ctx) {
   }
   const group = taskGroupSchema.parse({
     id: randomUUID(),
+    key: nextEntityKey(normalizeKeyTag(parsed.data.keyTag, "EPC")),
     ownerId,
     projectId,
     name: parsed.data.name,

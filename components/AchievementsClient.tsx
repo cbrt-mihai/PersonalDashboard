@@ -15,10 +15,17 @@ import {
   type BragGroupBy,
   type BragTaskRow,
 } from "@/lib/achievements";
+import {
+  aggregateWorklogAchievementStats,
+  buildAchievementsWorklogSummaryHtml,
+  filterWorklogsForAchievements,
+  WORKLOG_KIND_LABEL,
+} from "@/lib/achievementsWorklogs";
 import { isArchived } from "@/lib/archive";
+import { formatJiraDuration } from "@/lib/jiraDuration";
 import { markdownExcerpt } from "@/lib/markdownExcerpt";
 import { tagOptionsFromEntries } from "@/lib/noteTags";
-import type { Owner, Project, Task, TaskGroup } from "@/lib/schemas";
+import type { Owner, OwnerEntry, Project, Task, TaskGroup, Worklog } from "@/lib/schemas";
 import { TASK_FORM_PRIORITIES, TASK_FORM_TYPES } from "@/lib/taskFormOptions";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -90,6 +97,8 @@ export function AchievementsClient() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [groups, setGroups] = useState<TaskGroup[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [entries, setEntries] = useState<OwnerEntry[]>([]);
+  const [worklogs, setWorklogs] = useState<Worklog[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -97,25 +106,38 @@ export function AchievementsClient() {
     setLoading(true);
     setErr(null);
     try {
-      const [pr, pj, gr, tk] = await Promise.all([
+      const { from: rf, to: rt } = normalizeDateRange(from, to);
+      const wlParams = new URLSearchParams({ from: rf, to: rt });
+      const [pr, pj, gr, tk, en, wl] = await Promise.all([
         fetch("/api/owners").then((r) => r.json()),
         fetch("/api/projects").then((r) => r.json()),
         fetch("/api/groups").then((r) => r.json()),
         fetch("/api/tasks").then((r) => r.json()),
+        fetch("/api/entries").then((r) => r.json()),
+        fetch(`/api/worklogs?${wlParams}`).then((r) => r.json()),
       ]);
-      if (!Array.isArray(pr) || !Array.isArray(pj) || !Array.isArray(gr) || !Array.isArray(tk)) {
+      if (
+        !Array.isArray(pr) ||
+        !Array.isArray(pj) ||
+        !Array.isArray(gr) ||
+        !Array.isArray(tk) ||
+        !Array.isArray(en) ||
+        !Array.isArray(wl)
+      ) {
         throw new Error("Bad response");
       }
       setOwners(pr);
       setProjects(pj);
       setGroups(gr);
       setTasks(tk);
+      setEntries(en);
+      setWorklogs(wl);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to load");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [from, to]);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -225,6 +247,28 @@ export function AchievementsClient() {
     [tasks, showArchived],
   );
 
+  const achievementWorklogs = useMemo(
+    () =>
+      filterWorklogsForAchievements(
+        worklogs,
+        tasks,
+        groups,
+        projects,
+        owners,
+        entries,
+        filters,
+        statusMap,
+      ),
+    [worklogs, tasks, groups, projects, owners, entries, filters, statusMap],
+  );
+
+  const worklogStats = useMemo(
+    () => aggregateWorklogAchievementStats(achievementWorklogs),
+    [achievementWorklogs],
+  );
+
+  const mpd = settings?.worklogMinutesPerDay ?? 1440;
+
   const { from: rf, to: rt } = normalizeDateRange(from, to);
 
   const downloadHtml = () => {
@@ -233,6 +277,14 @@ export function AchievementsClient() {
       rf && rt
         ? `Task dates ${rf} through ${rt}`
         : "Tasks matching your filters (date range optional)";
+    const worklogSummaryHtml = buildAchievementsWorklogSummaryHtml({
+      from: rf,
+      to: rt,
+      totalMinutes: worklogStats.totalMinutes,
+      entryCount: worklogStats.entryCount,
+      byKind: worklogStats.byKind,
+      minutesPerDay: mpd,
+    });
     const html = buildAchievementsHtmlDocument({
       title,
       subtitle,
@@ -242,6 +294,7 @@ export function AchievementsClient() {
       taskTypeLabels: types,
       taskPriorityLabels: priorities,
       sectionsAllStatuses: sections,
+      worklogSummaryHtml,
     });
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -263,8 +316,11 @@ export function AchievementsClient() {
         </h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Build a shareable summary of tasks in a date range. Filter by owner, project, epic, type,
-          status, priority, and tags. The exported HTML has two tabs — terminal work and every matching
-          task — plus extra filters inside the file. Print or save from the browser.
+          status, priority, and tags. Worklog totals use the same date range on{" "}
+          <strong>worklog start dates</strong> and respect your structural filters (task-type worklogs
+          also follow type, status, priority, and tag filters). The exported HTML has two task tabs —
+          terminal work and every matching task — a worklog summary, and extra filters inside the file.
+          Print or save from the browser.
         </p>
 
         {err ? (
@@ -286,6 +342,63 @@ export function AchievementsClient() {
             Download HTML
           </button>
         </div>
+
+        <section className="mt-6 rounded-xl border border-zinc-200 bg-white/80 p-4 dark:border-zinc-800 dark:bg-zinc-950/60">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Worklogs</h2>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            Started between {rf} and {rt}, matching filters below. Task rows count tasks by{" "}
+            <em>task date</em>; this block uses <em>worklog start date</em> on the same calendar range.
+          </p>
+          {loading ? (
+            <p className="mt-3 text-sm text-zinc-500">Loading…</p>
+          ) : (
+            <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-zinc-900/40">
+                <dt className="text-xs font-medium tracking-wide text-zinc-500 uppercase">Entries</dt>
+                <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+                  {worklogStats.entryCount}
+                </dd>
+              </div>
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-zinc-900/40">
+                <dt className="text-xs font-medium tracking-wide text-zinc-500 uppercase">Total time</dt>
+                <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+                  {formatJiraDuration(worklogStats.totalMinutes, { minutesPerDay: mpd })}
+                </dd>
+              </div>
+            </dl>
+          )}
+          {!loading && worklogStats.byKind.length > 0 ? (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[16rem] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-200 text-xs text-zinc-500 uppercase dark:border-zinc-700">
+                    <th className="py-2 pr-2 font-medium">Target</th>
+                    <th className="py-2 pr-2 font-medium">Entries</th>
+                    <th className="py-2 font-medium">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {worklogStats.byKind.map((row) => (
+                    <tr
+                      key={row.kind}
+                      className="border-b border-zinc-100 dark:border-zinc-800/80"
+                    >
+                      <td className="py-2 pr-2 text-zinc-800 dark:text-zinc-200">
+                        {WORKLOG_KIND_LABEL[row.kind]}
+                      </td>
+                      <td className="py-2 pr-2 tabular-nums text-zinc-700 dark:text-zinc-300">
+                        {row.entries}
+                      </td>
+                      <td className="py-2 tabular-nums text-zinc-700 dark:text-zinc-300">
+                        {formatJiraDuration(row.minutes, { minutesPerDay: mpd })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </section>
 
         <section className="mt-8 space-y-4 rounded-xl border border-zinc-200 bg-white/80 p-4 dark:border-zinc-800 dark:bg-zinc-950/60">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Filters</h2>

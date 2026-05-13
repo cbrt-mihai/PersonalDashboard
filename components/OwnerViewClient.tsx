@@ -22,6 +22,8 @@ import {
   tagOptionsFromEntries,
 } from "@/lib/noteTags";
 import { DetailCollapsibleSection } from "./DetailCollapsibleSection";
+import { EntityKeyTagInput } from "./EntityKeyTagInput";
+import { WorklogSection } from "./WorklogSection";
 import { EntityArchivedBadge, EntityArchivedBanner } from "./EntityArchivedMark";
 import { CollapsibleMarkdown } from "./CollapsibleMarkdown";
 import { MarkdownField } from "./MarkdownField";
@@ -56,6 +58,7 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
 
   const [epicCreateOpen, setEpicCreateOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupKeyTag, setNewGroupKeyTag] = useState("");
   const [newGroupDesc, setNewGroupDesc] = useState("");
   const [newGroupTags, setNewGroupTags] = useState<string[]>([]);
 
@@ -75,6 +78,7 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
     date: "",
     priority: "Medium",
     tags: [] as string[],
+    keyTag: "",
   });
 
   const [entryCreateOpen, setEntryCreateOpen] = useState(false);
@@ -148,6 +152,7 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
       date: new Date().toISOString().slice(0, 10),
       priority: "Medium",
       tags: [],
+      keyTag: "",
     });
   }
 
@@ -163,6 +168,7 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
       date: taskForm.date,
       priority: taskForm.priority,
       tags: taskForm.tags,
+      keyTag: taskForm.keyTag,
     };
     if (!payload.name) return;
     const r = await fetch("/api/tasks", {
@@ -184,10 +190,12 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
         name: newGroupName.trim(),
         description: newGroupDesc,
         tags: newGroupTags,
+        keyTag: newGroupKeyTag,
       }),
     });
     if (!r.ok) setErr("Could not create epic");
     setNewGroupName("");
+    setNewGroupKeyTag("");
     setNewGroupDesc("");
     setNewGroupTags([]);
     setEpicCreateOpen(false);
@@ -608,7 +616,13 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
         <div className="flex flex-wrap justify-end gap-2">
           <button
             type="button"
-            onClick={() => setEpicCreateOpen(true)}
+            onClick={() => {
+              setNewGroupName("");
+              setNewGroupKeyTag("");
+              setNewGroupDesc("");
+              setNewGroupTags([]);
+              setEpicCreateOpen(true);
+            }}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             Add epic
@@ -994,6 +1008,10 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
         ) : null}
       </DetailCollapsibleSection>
 
+      {owner ? (
+        <WorklogSection target={{ kind: "owner", ownerId: owner.id }} disabled={isArchived(owner)} />
+      ) : null}
+
       {taskCreateOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 dark:bg-zinc-950">
@@ -1024,6 +1042,11 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
                   className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 dark:border-zinc-600 dark:bg-zinc-900"
                 />
               </label>
+              <EntityKeyTagInput
+                value={taskForm.keyTag}
+                onChange={(keyTag) => setTaskForm((f) => ({ ...f, keyTag }))}
+                defaultTag="TSK"
+              />
               <label className="text-sm">
                 Type
                 <select
@@ -1116,6 +1139,11 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
                   placeholder="Epic name"
                 />
               </label>
+              <EntityKeyTagInput
+                value={newGroupKeyTag}
+                onChange={setNewGroupKeyTag}
+                defaultTag="EPC"
+              />
               <MarkdownField
                 label="Description (optional)"
                 value={newGroupDesc}
@@ -1131,6 +1159,7 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
                 onClick={() => {
                   setEpicCreateOpen(false);
                   setNewGroupName("");
+                  setNewGroupKeyTag("");
                   setNewGroupDesc("");
                   setNewGroupTags([]);
                 }}
@@ -1263,6 +1292,11 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 dark:bg-zinc-950">
             <h3 className="text-lg font-semibold">New note</h3>
+            <p className="mt-1 text-sm text-zinc-500">
+              The public key extends this owner’s key (for example{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">OWN-1203-456</code>
+              ). If you also pick a project, the owner still determines the prefix.
+            </p>
             <div className="mt-4 flex flex-col gap-3">
               <label className="text-sm">
                 Title

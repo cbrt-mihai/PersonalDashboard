@@ -33,6 +33,7 @@ import {
   type StatusDef,
 } from "@/lib/statusConfig";
 import { entryMatchesTagKeys, tagOptionsFromEntries } from "@/lib/noteTags";
+import { EntityKeyTagInput } from "@/components/EntityKeyTagInput";
 import { FilterMultiDropdown } from "./FilterMultiDropdown";
 import { MarkdownView } from "./MarkdownView";
 import { ProgressBar } from "./ProgressBar";
@@ -170,6 +171,7 @@ export function HomeClient() {
     date: "",
     priority: "Medium",
     tags: [] as string[],
+    keyTag: "",
   });
 
   const load = useCallback(async () => {
@@ -471,6 +473,7 @@ export function HomeClient() {
       date: new Date().toISOString().slice(0, 10),
       priority: "Medium",
       tags: [],
+      keyTag: "",
     });
   }
 
@@ -486,6 +489,7 @@ export function HomeClient() {
       date: form.date,
       priority: form.priority,
       tags: form.tags,
+      keyTag: form.keyTag,
     };
     try {
       const r = await fetch("/api/tasks", {
@@ -1128,6 +1132,11 @@ export function HomeClient() {
                   className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 dark:border-zinc-600 dark:bg-zinc-900"
                 />
               </label>
+              <EntityKeyTagInput
+                value={form.keyTag}
+                onChange={(keyTag) => setForm((f) => ({ ...f, keyTag }))}
+                defaultTag="TSK"
+              />
               <label className="text-sm">
                 <span className="text-zinc-500">Type</span>
                 <select

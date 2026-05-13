@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { appendAudit, auditDetailForCreate } from "@/lib/auditLog";
+import { nextEntityKey } from "@/lib/apiEntityKey";
+import { ENTITY_KEY_TAG_MAX, normalizeKeyTag } from "@/lib/entityKey";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { dedupeTags } from "@/lib/noteTags";
 import { projectSchema, ownerSchema } from "@/lib/schemas";
@@ -14,6 +16,7 @@ const createBody = z.object({
   iconDataUrl: z.string().optional().nullable(),
   description: z.string().optional().default(""),
   tags: z.array(z.string()).optional().default([]),
+  keyTag: z.string().max(ENTITY_KEY_TAG_MAX).optional(),
 });
 
 export async function GET() {
@@ -42,6 +45,7 @@ export async function POST(req: Request) {
   }
   const project = projectSchema.parse({
     id: randomUUID(),
+    key: nextEntityKey(normalizeKeyTag(parsed.data.keyTag, "PRJ")),
     name: parsed.data.name.trim(),
     color: colorCheck.data,
     iconDataUrl: iconCheck.data ?? null,

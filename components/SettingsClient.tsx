@@ -283,6 +283,40 @@ export function SettingsClient() {
       )}
 
       {section(
+        "Worklogs",
+        <>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Jira-style durations use <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">d</code> for a
+            &quot;day&quot; of this many minutes (default 1440 = 24h). Example: 480 = 8h working day.
+          </p>
+          <label className="flex max-w-xs flex-col gap-1 text-sm">
+            <span className="text-zinc-700 dark:text-zinc-300">Minutes per day</span>
+            <input
+              type="number"
+              min={60}
+              max={2880}
+              step={30}
+              value={draft.worklogMinutesPerDay}
+              onChange={(e) =>
+                setDraft((d) =>
+                  d
+                    ? {
+                        ...d,
+                        worklogMinutesPerDay: Math.min(
+                          2880,
+                          Math.max(60, Math.round(Number(e.target.value)) || 1440),
+                        ),
+                      }
+                    : d,
+                )
+              }
+              className="rounded-lg border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+            />
+          </label>
+        </>,
+      )}
+
+      {section(
         "Appearance",
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">

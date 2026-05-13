@@ -11,6 +11,7 @@ import type { Owner, Project, Task, TaskGroup } from "@/lib/schemas";
 import { NAMED_OWNER_COLOR_PRESETS } from "@/lib/presetColors";
 import { isArchived } from "@/lib/archive";
 import { EntityArchivedBadge } from "@/components/EntityArchivedMark";
+import { EntityKeyTagInput } from "@/components/EntityKeyTagInput";
 
 export function OwnersListClient() {
   const { settings } = useDashboardConfig();
@@ -25,6 +26,7 @@ export function OwnersListClient() {
   const [q, setQ] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [name, setName] = useState("");
+  const [keyTag, setKeyTag] = useState("");
   const [color, setColor] = useState<string>(NAMED_OWNER_COLOR_PRESETS[0]!.color);
   const [iconDataUrl, setIconDataUrl] = useState<string | null>(null);
   const [iconErr, setIconErr] = useState<string | null>(null);
@@ -57,9 +59,10 @@ export function OwnersListClient() {
     await fetch("/api/owners", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim(), color, iconDataUrl }),
+      body: JSON.stringify({ name: name.trim(), color, iconDataUrl, keyTag }),
     });
     setName("");
+    setKeyTag("");
     setIconDataUrl(null);
     setIconErr(null);
     await load();
@@ -151,6 +154,9 @@ export function OwnersListClient() {
             placeholder="Acme Corp"
           />
         </label>
+        <div className="min-w-[14rem] flex-1">
+          <EntityKeyTagInput value={keyTag} onChange={setKeyTag} defaultTag="OWN" />
+        </div>
         <div className="text-sm">
           <span className="text-zinc-500">Color</span>
           <div className="mt-2">

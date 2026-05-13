@@ -3,6 +3,7 @@ import { z } from "zod";
 import { appendAudit, auditDetailForDelete, auditDetailForUpdate } from "@/lib/auditLog";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { dedupeTags } from "@/lib/noteTags";
+import { findTaskGroupByIdOrKey } from "@/lib/resolveEntityId";
 import { taskGroupSchema } from "@/lib/schemas";
 
 const EPIC_UPDATE_AUDIT_KEYS = [
@@ -33,14 +34,14 @@ const patchBody = z.object({
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
-  const g = readStore().taskGroups.find((x) => x.id === id);
+  const { id: idOrKey } = await ctx.params;
+  const g = findTaskGroupByIdOrKey(readStore(), idOrKey);
   if (!g) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(g);
 }
 
 export async function PATCH(req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
+  const { id: idOrKey } = await ctx.params;
   let body: unknown;
   try {
     body = await req.json();
@@ -60,6 +61,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Unknown projectId" }, { status: 400 });
   }
 
+  const row = findTaskGroupByIdOrKey(readStore(), idOrKey);
+  if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const id = row.id;
   let updated = false;
   const group = mutateStore((s) => {
     const i = s.taskGroups.findIndex((x) => x.id === id);
@@ -86,11 +90,11 @@ export async function PATCH(req: Request, ctx: Ctx) {
 }
 
 export async function DELETE(_req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
+  const { id: idOrKey } = await ctx.params;
   const store = readStore();
-  if (!store.taskGroups.some((x) => x.id === id)) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+  const row = findTaskGroupByIdOrKey(store, idOrKey);
+  if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const id = row.id;
   mutateStore((s) => {
     const g = s.taskGroups.find((x) => x.id === id);
     if (g) {

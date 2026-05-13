@@ -15,6 +15,7 @@ const SETTINGS_AUDIT_KEYS = [
   "noteTypes",
   "taskStatuses",
   "noteStatuses",
+  "worklogMinutesPerDay",
 ] as const;
 
 const hexColor = z
@@ -70,6 +71,7 @@ const patchBody = z
     noteTypes: z.array(z.string().min(1).max(64)).min(1).max(40).optional(),
     taskStatuses: z.array(taskStatusRowPatch).min(1).max(40).optional(),
     noteStatuses: z.array(taskStatusRowPatch).min(1).max(40).optional(),
+    worklogMinutesPerDay: z.number().int().min(60).max(2880).optional(),
   })
   .strict();
 

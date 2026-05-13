@@ -8,8 +8,10 @@ import { normalizeTagKey } from "@/lib/noteTags";
 import { noteEntrySwatchFromEntities } from "@/lib/noteEntryAttributionDisplay";
 import { noteEntryEditHref, noteWikiLinkSyntax } from "@/lib/noteEntryPaths";
 import type { Owner, OwnerEntry, Project } from "@/lib/schemas";
+import { isArchived } from "@/lib/archive";
 import { OwnerSwatch } from "@/components/OwnerSwatch";
 import { EntityArchivedBanner } from "./EntityArchivedMark";
+import { WorklogSection } from "./WorklogSection";
 import { StatusBadge } from "./StatusBadge";
 import { TaskDetailsMarkdown } from "./TaskDetailsMarkdown";
 import { TrashIcon } from "./icons";
@@ -252,6 +254,8 @@ export function OwnerEntryViewClient({
           )}
         </div>
       </section>
+
+      <WorklogSection target={{ kind: "note", entryId: entry.id }} disabled={isArchived(entry)} />
 
       <p className="text-sm">
         {scopedOwnerId ? (

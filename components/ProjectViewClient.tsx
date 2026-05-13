@@ -23,6 +23,7 @@ import {
 } from "@/lib/noteTags";
 import { normalizeStatusKey, statusDef } from "@/lib/statusConfig";
 import { DetailCollapsibleSection } from "./DetailCollapsibleSection";
+import { WorklogSection } from "./WorklogSection";
 import { EntityArchivedBadge, EntityArchivedBanner } from "./EntityArchivedMark";
 import { FilterMultiDropdown } from "./FilterMultiDropdown";
 import { SearchableSingleSelect } from "./SearchableSingleSelect";
@@ -1004,13 +1005,22 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
         )}
       </DetailCollapsibleSection>
 
+      {project ? (
+        <WorklogSection
+          target={{ kind: "project", projectId: project.id }}
+          disabled={isArchived(project)}
+        />
+      ) : null}
+
       {entryCreateOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 dark:bg-zinc-950">
             <h3 className="text-lg font-semibold">New note</h3>
             <p className="mt-1 text-sm text-zinc-500">
               This note is created for project <strong>{project.name}</strong>. Optionally link an
-              owner.
+              owner. The public key is assigned automatically: if you pick an owner, it extends that
+              owner’s key; otherwise it extends this project’s key (for example{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">PRJ-1234-567</code>).
             </p>
             <div className="mt-4 flex flex-col gap-3">
               <label className="text-sm">

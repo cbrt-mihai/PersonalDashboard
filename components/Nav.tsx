@@ -6,6 +6,7 @@ import ExpandedThemeBox from "@/components/ExpandedThemeBox";
 import { LandscapeThemeToggle } from "@/components/LandscapeThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { dashboardMuiTheme } from "@/lib/muiDashboardTheme";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 function NavThemeSwitch() {
   const { setTheme, resolvedDark, themeNavToggle } = useTheme();
@@ -24,7 +25,7 @@ function NavThemeSwitch() {
 
 export function Nav() {
   return (
-    <header className="border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
+    <header className="relative z-50 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3">
         <div className="flex flex-wrap items-center gap-6">
           <Link
@@ -65,6 +66,12 @@ export function Nav() {
               Owners
             </Link>
             <Link
+              href="/worklogs"
+              className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+            >
+              Worklogs
+            </Link>
+            <Link
               href="/achievements"
               className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
             >
@@ -90,7 +97,10 @@ export function Nav() {
             </Link>
           </nav>
         </div>
-        <NavThemeSwitch />
+        <div className="flex flex-wrap items-center gap-3">
+          <GlobalSearch />
+          <NavThemeSwitch />
+        </div>
       </div>
     </header>
   );

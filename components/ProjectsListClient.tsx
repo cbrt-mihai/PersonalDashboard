@@ -12,6 +12,7 @@ import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import { NAMED_OWNER_COLOR_PRESETS } from "@/lib/presetColors";
 import { isArchived } from "@/lib/archive";
 import { EntityArchivedBadge } from "@/components/EntityArchivedMark";
+import { EntityKeyTagInput } from "@/components/EntityKeyTagInput";
 
 export function ProjectsListClient() {
   const { settings } = useDashboardConfig();
@@ -28,6 +29,7 @@ export function ProjectsListClient() {
   const [q, setQ] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [name, setName] = useState("");
+  const [keyTag, setKeyTag] = useState("");
   const [color, setColor] = useState<string>(NAMED_OWNER_COLOR_PRESETS[0]!.color);
   const [iconDataUrl, setIconDataUrl] = useState<string | null>(null);
   const [iconErr, setIconErr] = useState<string | null>(null);
@@ -66,10 +68,11 @@ export function ProjectsListClient() {
       const r = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), color, iconDataUrl, description }),
+        body: JSON.stringify({ name: name.trim(), color, iconDataUrl, description, keyTag }),
       });
       if (!r.ok) throw new Error("Could not create project");
       setName("");
+      setKeyTag("");
       setColor(NAMED_OWNER_COLOR_PRESETS[0]!.color);
       setIconDataUrl(null);
       setIconErr(null);
@@ -169,6 +172,7 @@ export function ProjectsListClient() {
               placeholder="Personal growth"
             />
           </label>
+          <EntityKeyTagInput value={keyTag} onChange={setKeyTag} defaultTag="PRJ" />
           <div className="text-sm">
             <span className="text-zinc-500">Color</span>
             <div className="mt-2">

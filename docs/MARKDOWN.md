@@ -1,6 +1,8 @@
 # Markdown in Personal dashboard
 
-This app renders Markdown in **task descriptions**, **note bodies**, **epic descriptions**, and other fields using [CommonMark](https://commonmark.org/) plus **GitHub Flavored Markdown (GFM)** and several **Obsidian-style** conveniences. Content is sanitized for safety (no scripts, limited HTML).
+This app renders Markdown in **task descriptions**, **project and epic descriptions**, **note bodies**, **owner entry bodies**, and similar fields using [CommonMark](https://commonmark.org/) plus **GitHub Flavored Markdown (GFM)** and several **Obsidian-style** conveniences. Content is sanitized for safety (no scripts, limited HTML).
+
+Processing order for those fields: **YAML frontmatter** (if present at the very start) is stripped first, then **wiki links** `[[…]]` are expanded, then the Markdown parser runs.
 
 ---
 
@@ -148,16 +150,18 @@ Real content starts here.
 
 ## Wiki links
 
-Bare `[[…]]` links are preprocessed **before** Markdown runs:
+Bare `[[…]]` links are preprocessed **after** frontmatter removal and **before** Markdown runs. Each segment can be a **UUID** or a **public entity key** (for example `TSK-592` or legacy `TAG-ABC12D`); use the values shown in the UI or in your local `data/store.json`. In the table below, placeholders like `{id}` mean “that entity’s UUID or key,” with **no spaces** inside the brackets.
 
-| Form | Result |
-|------|--------|
-| `[[partner:UUID]]` | Owner link to `/owners/UUID` (syntax still uses `partner`) |
-| `[[task:UUID]]` | Link to `/tasks/UUID` |
-| `[[note:partnerUUID:entryUUID]]` | Link to that note |
-| Any other `[[text]]` | Shown as a small inline code chip `` `⟦text⟧` `` (not a link) |
-
-Use the UUIDs from your app or `store.json`.
+| Form | Resolves to | Examples |
+|------|-------------|----------|
+| `[[owner:id]]` | `/owners/{id}` | `[[owner:f47ac10b-58cc-4372-a567-0e02b2c3d479]]`, `[[owner:TEAM-15]]` |
+| `[[project:id]]` | `/projects/{id}` | `[[project:a1111111-b222-c333-d444-eeeeeeeeeeee]]`, `[[project:PROJ-100]]` |
+| `[[epic:id]]` | `/epics/{id}` | `[[epic:b2222222-c333-d444-e555-ffffffffffff]]`, `[[epic:GROWTH-8]]` |
+| `[[task:id]]` | `/tasks/{id}` | `[[task:c3333333-d444-e555-f666-111111111111]]`, `[[task:BUG-240]]` |
+| `[[note:entry:entryId]]` | `/notes/{entryId}` | `[[note:entry:d4444444-e555-f666-a777-222222222222]]`, `[[note:entry:LOG-5-99]]` |
+| `[[note:project:projectId:entryId]]` | `/notes/{entryId}` | `[[note:project:a1111111-b222-c333-d444-eeeeeeeeeeee:d4444444-e555-f666-a777-222222222222]]` |
+| `[[note:ownerId:entryId]]` | `/owners/{ownerId}/entries/{entryId}` | `[[note:f47ac10b-58cc-4372-a567-0e02b2c3d479:d4444444-e555-f666-a777-222222222222]]`, `[[note:TEAM-15:LOG-5-99]]` |
+| Any other `[[text]]` | Inline chip (not a link) | `[[partner:acme]]` (old prefix, ignored), `[[owner]]` (missing id), `[[note:entry]]` (missing id), `[[just some words]]` |
 
 ---
 

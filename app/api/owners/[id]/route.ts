@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { appendAudit, auditDetailForDelete, auditDetailForUpdate } from "@/lib/auditLog";
 import { mutateStore, readStore } from "@/lib/jsonStore";
+import { findOwnerByIdOrKey } from "@/lib/resolveEntityId";
 import { ownerEntrySchema, ownerSchema } from "@/lib/schemas";
 
 const OWNER_UPDATE_AUDIT_KEYS = ["name", "archivedAt", "color", "iconDataUrl"] as const;
@@ -17,14 +18,14 @@ const patchBody = z.object({
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
-  const p = readStore().owners.find((x) => x.id === id);
+  const { id: idOrKey } = await ctx.params;
+  const p = findOwnerByIdOrKey(readStore(), idOrKey);
   if (!p) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(p);
 }
 
 export async function PATCH(req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
+  const { id: idOrKey } = await ctx.params;
   let body: unknown;
   try {
     body = await req.json();
@@ -35,6 +36,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
+  const row = findOwnerByIdOrKey(readStore(), idOrKey);
+  if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const id = row.id;
   let updated = false;
   const owner = mutateStore((s) => {
     const i = s.owners.findIndex((x) => x.id === id);
@@ -60,11 +64,11 @@ export async function PATCH(req: Request, ctx: Ctx) {
 }
 
 export async function DELETE(_req: Request, ctx: Ctx) {
-  const { id } = await ctx.params;
+  const { id: idOrKey } = await ctx.params;
   const store = readStore();
-  if (!store.owners.some((x) => x.id === id)) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+  const row = findOwnerByIdOrKey(store, idOrKey);
+  if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const id = row.id;
   if (store.tasks.some((t) => t.ownerId === id)) {
     return NextResponse.json(
       { error: "Owner has tasks; delete or reassign tasks first." },

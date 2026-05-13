@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Owner, Project, Task, TaskGroup, TaskSubtask } from "@/lib/schemas";
 import { isArchived } from "@/lib/archive";
 import { DetailCollapsibleSection } from "./DetailCollapsibleSection";
+import { WorklogSection } from "./WorklogSection";
 import { EntityArchivedBanner } from "./EntityArchivedMark";
 import { StatusBadge } from "./StatusBadge";
 import { TaskDetailsMarkdown } from "./TaskDetailsMarkdown";
@@ -156,7 +157,11 @@ export function TaskViewClient({ taskId }: { taskId: string }) {
             </div>
           ) : null}
           <p className="mt-2 text-xs text-zinc-500">
-            Wiki link:{" "}
+            Key <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">{task.key}</code>
+            {" · "}
+            Wiki:{" "}
+            <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">{`[[task:${task.key}]]`}</code>{" "}
+            or{" "}
             <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">{`[[task:${task.id}]]`}</code>
           </p>
         </div>
@@ -327,6 +332,8 @@ export function TaskViewClient({ taskId }: { taskId: string }) {
           ) : null}
         </section>
       ) : null}
+
+      <WorklogSection target={{ kind: "task", taskId: task.id }} disabled={archived} />
 
       <DetailCollapsibleSection title="Activity" titleClassName="text-base font-semibold text-zinc-900 dark:text-zinc-50">
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
