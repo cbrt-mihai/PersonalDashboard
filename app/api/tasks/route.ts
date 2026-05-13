@@ -8,6 +8,11 @@ import { mutateStore, readStore } from "@/lib/jsonStore";
 import { dedupeTags } from "@/lib/noteTags";
 import { taskSchema, taskSubtaskSchema } from "@/lib/schemas";
 import {
+  parseListPagination,
+  sliceToPage,
+  wantsPaginatedList,
+} from "@/lib/apiPagination";
+import {
   TASK_FORM_TYPES,
   canonicalPriorityLabel,
   taskPriorityKnownLabels,
@@ -48,6 +53,10 @@ export async function GET(req: Request) {
     tasks = tasks.filter((t) => t.groupId === null);
   } else if (groupId) {
     tasks = tasks.filter((t) => t.groupId === groupId);
+  }
+  if (wantsPaginatedList(searchParams)) {
+    const { page, pageSize } = parseListPagination(searchParams);
+    return NextResponse.json(sliceToPage(tasks, page, pageSize));
   }
   return NextResponse.json(tasks);
 }

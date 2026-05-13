@@ -114,6 +114,8 @@ export function migrateLegacyStoreJson(raw: unknown): unknown {
         x.ownerId = x.partnerId;
         delete x.partnerId;
       }
+      if (!("taskId" in x)) x.taskId = null;
+      if (!("taskGroupId" in x)) x.taskGroupId = null;
       return x;
     });
   }

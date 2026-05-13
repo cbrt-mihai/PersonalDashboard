@@ -4,7 +4,7 @@ import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { archiveNowIso, isArchived } from "@/lib/archive";
-import type { Owner, OwnerEntry, Project } from "@/lib/schemas";
+import type { Owner, OwnerEntry, Project, Task, TaskGroup } from "@/lib/schemas";
 import { EditPageArchiveField } from "./EditPageArchiveField";
 import { EntityArchivedBanner } from "./EntityArchivedMark";
 import { NOTE_ENTRY_TYPES } from "@/lib/noteEntryFormOptions";
@@ -42,11 +42,15 @@ export function OwnerEntryEditClient({
   const [entry, setEntry] = useState<OwnerEntry | null>(null);
   const [owners, setOwners] = useState<Owner[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [groups, setGroups] = useState<TaskGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
   const [attribOwnerId, setAttribOwnerId] = useState("");
   const [attribProjectId, setAttribProjectId] = useState("");
+  const [attribTaskId, setAttribTaskId] = useState("");
+  const [attribGroupId, setAttribGroupId] = useState("");
 
   const [metaEdit, setMetaEdit] = useState(false);
   const [bodyEdit, setBodyEdit] = useState(false);
@@ -64,10 +68,12 @@ export function OwnerEntryEditClient({
     setLoading(true);
     setErr(null);
     try {
-      const [er, paList, pjList] = await Promise.all([
+      const [er, paList, pjList, tkList, grList] = await Promise.all([
         fetch(`/api/entries/${entryId}`),
         fetch("/api/owners"),
         fetch("/api/projects"),
+        fetch("/api/tasks"),
+        fetch("/api/groups"),
       ]);
       if (!er.ok) throw new Error("Note not found");
       const en: OwnerEntry = await er.json();
@@ -85,17 +91,23 @@ export function OwnerEntryEditClient({
       setBody(en.body);
       setAttribOwnerId(en.ownerId ?? "");
       setAttribProjectId(en.projectId ?? "");
+      setAttribTaskId(en.taskId ?? "");
+      setAttribGroupId(en.taskGroupId ?? "");
       const pals = paList.ok ? await paList.json() : [];
       const pjs = pjList.ok ? await pjList.json() : [];
+      const tks = tkList.ok ? await tkList.json() : [];
+      const grs = grList.ok ? await grList.json() : [];
       setOwners(Array.isArray(pals) ? pals : []);
       setProjects(Array.isArray(pjs) ? pjs : []);
+      setTasks(Array.isArray(tks) ? tks : []);
+      setGroups(Array.isArray(grs) ? grs : []);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to load");
       setEntry(null);
     } finally {
       setLoading(false);
     }
-  }, [ownerId, entryId, defaultNoteStatus]);
+  }, [ownerId, entryId, defaultNoteStatus, setBody]);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -112,6 +124,8 @@ export function OwnerEntryEditClient({
     setTags(entry.tags ?? []);
     setAttribOwnerId(entry.ownerId ?? "");
     setAttribProjectId(entry.projectId ?? "");
+    setAttribTaskId(entry.taskId ?? "");
+    setAttribGroupId(entry.taskGroupId ?? "");
     setMetaEdit(false);
   }
 
@@ -125,8 +139,10 @@ export function OwnerEntryEditClient({
     if (!entry || !title.trim()) return;
     const nextOwnerId = attribOwnerId || null;
     const nextProjectId = attribProjectId || null;
-    if (nextOwnerId == null && nextProjectId == null) {
-      setErr("Choose at least one owner or one project.");
+    const nextTaskId = attribTaskId || null;
+    const nextGroupId = attribGroupId || null;
+    if (nextOwnerId == null && nextProjectId == null && nextTaskId == null && nextGroupId == null) {
+      setErr("Link the note to at least one owner, project, task, or epic.");
       return;
     }
     setSavingMeta(true);
@@ -143,6 +159,8 @@ export function OwnerEntryEditClient({
           tags: dedupeTags(tags),
           ownerId: nextOwnerId,
           projectId: nextProjectId,
+          taskId: nextTaskId,
+          taskGroupId: nextGroupId,
         }),
       });
       if (!r.ok) throw new Error("Could not save");
@@ -150,6 +168,8 @@ export function OwnerEntryEditClient({
       setEntry(next);
       setAttribOwnerId(next.ownerId ?? "");
       setAttribProjectId(next.projectId ?? "");
+      setAttribTaskId(next.taskId ?? "");
+      setAttribGroupId(next.taskGroupId ?? "");
       setMetaEdit(false);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Save failed");
@@ -243,6 +263,34 @@ export function OwnerEntryEditClient({
           ) : (
             "Project: —"
           )}
+          {" · "}
+          {entry.taskId ? (
+            <>
+              Task:{" "}
+              <Link
+                href={`/tasks/${entry.taskId}`}
+                className="text-blue-600 hover:underline dark:text-blue-400"
+              >
+                {tasks.find((t) => t.id === entry.taskId)?.name ?? entry.taskId}
+              </Link>
+            </>
+          ) : (
+            "Task: —"
+          )}
+          {" · "}
+          {entry.taskGroupId ? (
+            <>
+              Epic:{" "}
+              <Link
+                href={`/epics/${entry.taskGroupId}`}
+                className="text-blue-600 hover:underline dark:text-blue-400"
+              >
+                {groups.find((g) => g.id === entry.taskGroupId)?.name ?? entry.taskGroupId}
+              </Link>
+            </>
+          ) : (
+            "Epic: —"
+          )}
         </p>
         <p className="mt-2 text-sm text-zinc-500">
           Use <strong>Edit details</strong> for title, status, type, priority, and tags. Use{" "}
@@ -300,6 +348,28 @@ export function OwnerEntryEditClient({
                 {entry.projectId
                   ? projects.find((p) => p.id === entry.projectId)?.name ?? entry.projectId
                   : "—"}
+                {" · "}
+                {entry.taskId ? (
+                  <Link
+                    href={`/tasks/${entry.taskId}`}
+                    className="text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    {tasks.find((t) => t.id === entry.taskId)?.name ?? entry.taskId}
+                  </Link>
+                ) : (
+                  "—"
+                )}
+                {" · "}
+                {entry.taskGroupId ? (
+                  <Link
+                    href={`/epics/${entry.taskGroupId}`}
+                    className="text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    {groups.find((g) => g.id === entry.taskGroupId)?.name ?? entry.taskGroupId}
+                  </Link>
+                ) : (
+                  "—"
+                )}
               </dd>
             </div>
             <div>
@@ -351,7 +421,7 @@ export function OwnerEntryEditClient({
         ) : (
           <div className="mt-4 flex flex-col gap-4">
             <SearchableSingleSelect
-              label="Owner (optional if project set)"
+              label="Owner (optional)"
               value={attribOwnerId}
               onChange={setAttribOwnerId}
               placeholder="None"
@@ -361,13 +431,39 @@ export function OwnerEntryEditClient({
               ]}
             />
             <SearchableSingleSelect
-              label="Project (optional if owner set)"
+              label="Project (optional)"
               value={attribProjectId}
               onChange={setAttribProjectId}
               placeholder="None"
               options={[
                 { value: "", label: "None" },
                 ...projects.map((p) => ({ value: p.id, label: p.name })),
+              ]}
+            />
+            <SearchableSingleSelect
+              label="Task (optional)"
+              value={attribTaskId}
+              onChange={setAttribTaskId}
+              placeholder="None"
+              options={[
+                { value: "", label: "None" },
+                ...tasks
+                  .slice()
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((t) => ({ value: t.id, label: `${t.name} (${t.key})` })),
+              ]}
+            />
+            <SearchableSingleSelect
+              label="Epic (optional)"
+              value={attribGroupId}
+              onChange={setAttribGroupId}
+              placeholder="None"
+              options={[
+                { value: "", label: "None" },
+                ...groups
+                  .slice()
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((g) => ({ value: g.id, label: `${g.name} (${g.key})` })),
               ]}
             />
             <label className="text-sm">

@@ -11,6 +11,9 @@ import { fileToOwnerIconDataUrl } from "@/lib/ownerIconDataUrl";
 import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import { NAMED_OWNER_COLOR_PRESETS } from "@/lib/presetColors";
 import { isArchived } from "@/lib/archive";
+import { useDashboardLocalPager } from "@/lib/useDashboardLocalPager";
+import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
+import { DashboardPager } from "@/components/DashboardPager";
 import { EntityArchivedBadge } from "@/components/EntityArchivedMark";
 import { EntityKeyTagInput } from "@/components/EntityKeyTagInput";
 
@@ -96,6 +99,7 @@ export function ProjectsListClient() {
   }
 
   const projectMeta = useMemo(() => {
+    const ql = q.trim().toLowerCase();
     const filtered = projects.filter((p) => {
       if (!isArchived(p)) return true;
       return showArchived;
@@ -112,8 +116,27 @@ export function ProjectsListClient() {
           summary: markdownExcerpt(p.description ?? "", 140),
         };
       })
+      .filter(
+        ({ p, summary }) =>
+          !ql ||
+          p.name.toLowerCase().includes(ql) ||
+          (p.description ?? "").toLowerCase().includes(ql) ||
+          summary.toLowerCase().includes(ql),
+      )
       .sort((a, b) => a.p.name.localeCompare(b.p.name));
   }, [groups, projects, q, showArchived, tasks]);
+
+  const projectPagerResetKey = useMemo(
+    () => JSON.stringify({ q, showArchived }),
+    [q, showArchived],
+  );
+
+  const projectPager = useDashboardLocalPager(projectMeta.length, projectPagerResetKey);
+
+  const pagedProjectMeta = useMemo(
+    () => projectPager.slice(projectMeta),
+    [projectPager, projectMeta],
+  );
 
   if (loading) return <p className="text-zinc-500">Loading…</p>;
 
@@ -134,7 +157,8 @@ export function ProjectsListClient() {
         </div>
       ) : null}
 
-      <div className="grid gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-2">
+      <DashboardFilterDisclosure>
+        <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-500">Search</span>
           <input
@@ -156,7 +180,8 @@ export function ProjectsListClient() {
           />
           Show archived
         </label>
-      </div>
+        </div>
+      </DashboardFilterDisclosure>
 
       <form
         onSubmit={(e) => void createProject(e)}
@@ -236,8 +261,16 @@ export function ProjectsListClient() {
         </div>
       </form>
 
+      <DashboardPager
+        page={projectPager.page}
+        pageCount={projectPager.pageCount}
+        total={projectPager.total}
+        pageSize={projectPager.pageSize}
+        onPageChange={projectPager.setPage}
+      />
+
       <ul className="grid gap-4 sm:grid-cols-2">
-        {projectMeta.map(({ p, epicCount, taskCount, summary }) => (
+        {pagedProjectMeta.map(({ p, epicCount, taskCount, summary }) => (
           <li
             key={p.id}
             className="flex flex-col rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"

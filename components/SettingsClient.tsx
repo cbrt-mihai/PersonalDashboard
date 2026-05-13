@@ -12,6 +12,11 @@ import {
 import type { DashboardSettings, TaskStatusRow } from "@/lib/schemas";
 import { STATUS_BG_SWATCHES, STATUS_TEXT_COLOR_SWATCHES } from "@/lib/presetColors";
 import type { ThemeMode } from "@/lib/themeStorage";
+import {
+  formatWorkdayMinutesForSettingsInput,
+  JiraDurationParseError,
+  parseWorkdayMinutesFromSettingsInput,
+} from "@/lib/jiraDuration";
 
 function confirmRemoveItem(label: string): boolean {
   return typeof window !== "undefined" && confirm(`Remove ${label}?`);
@@ -37,6 +42,7 @@ export function SettingsClient() {
   const { theme, setTheme, themeNavToggle, setThemeNavToggle } = useTheme();
   const { settings, reload, loading } = useDashboardConfig();
   const [draft, setDraft] = useState<DashboardSettings | null>(null);
+  const [worklogDayInput, setWorklogDayInput] = useState("24h");
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -48,6 +54,11 @@ export function SettingsClient() {
     if (!settings) return;
     queueMicrotask(() => setDraft(settings));
   }, [settings]);
+
+  useEffect(() => {
+    if (!draft) return;
+    setWorklogDayInput(formatWorkdayMinutesForSettingsInput(draft.worklogMinutesPerDay));
+  }, [draft?.worklogMinutesPerDay]);
 
   const exportAllData = useCallback(async () => {
     setExporting(true);
@@ -121,11 +132,20 @@ export function SettingsClient() {
     if (!draft) return;
     setSaving(true);
     setMsg(null);
+    let body: DashboardSettings;
+    try {
+      const mpd = parseWorkdayMinutesFromSettingsInput(worklogDayInput);
+      body = { ...draft, worklogMinutesPerDay: mpd };
+    } catch (e) {
+      setMsg(e instanceof JiraDurationParseError ? e.message : "Invalid workday length");
+      setSaving(false);
+      return;
+    }
     try {
       const r = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(draft),
+        body: JSON.stringify(body),
       });
       if (!r.ok) {
         const j = await r.json().catch(() => ({}));
@@ -139,7 +159,7 @@ export function SettingsClient() {
     } finally {
       setSaving(false);
     }
-  }, [draft, reload]);
+  }, [draft, reload, worklogDayInput]);
 
   const resetDefaults = useCallback(async () => {
     if (!confirm("Reset all lists, colors, and task statuses to built-in defaults?")) return;
@@ -287,30 +307,31 @@ export function SettingsClient() {
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Jira-style durations use <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">d</code> for a
-            &quot;day&quot; of this many minutes (default 1440 = 24h). Example: 480 = 8h working day.
+            &quot;day&quot; of this many minutes. Use <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">h</code>{" "}
+            and <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">m</code> (e.g.{" "}
+            <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">8h</code>,{" "}
+            <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">7h 30m</code>) or a minute count
+            60–2880. Example: 8h = one working day for <code className="rounded bg-zinc-200 px-1 text-xs dark:bg-zinc-800">1d</code> in
+            worklog strings.
           </p>
-          <label className="flex max-w-xs flex-col gap-1 text-sm">
+          <label className="flex max-w-md flex-col gap-1 text-sm">
             <span className="text-zinc-700 dark:text-zinc-300">Minutes per day</span>
             <input
-              type="number"
-              min={60}
-              max={2880}
-              step={30}
-              value={draft.worklogMinutesPerDay}
-              onChange={(e) =>
-                setDraft((d) =>
-                  d
-                    ? {
-                        ...d,
-                        worklogMinutesPerDay: Math.min(
-                          2880,
-                          Math.max(60, Math.round(Number(e.target.value)) || 1440),
-                        ),
-                      }
-                    : d,
-                )
-              }
-              className="rounded-lg border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+              type="text"
+              value={worklogDayInput}
+              onChange={(e) => setWorklogDayInput(e.target.value)}
+              onBlur={() => {
+                try {
+                  const n = parseWorkdayMinutesFromSettingsInput(worklogDayInput);
+                  setDraft((d) => (d ? { ...d, worklogMinutesPerDay: n } : d));
+                  setWorklogDayInput(formatWorkdayMinutesForSettingsInput(n));
+                } catch {
+                  /* keep text; save will surface error */
+                }
+              }}
+              spellCheck={false}
+              className="rounded-lg border border-zinc-300 px-2 py-1.5 font-mono text-sm dark:border-zinc-600 dark:bg-zinc-900"
+              placeholder="8h or 480"
             />
           </label>
         </>,
@@ -375,10 +396,10 @@ export function SettingsClient() {
       )}
 
       {section(
-        "Owner color presets",
+        "Suggested color presets",
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Named colors shown when creating or editing owners. Choose each with the color
+            Named colors shown when creating or editing owners and projects. Choose each with the color
             picker only (no preset chips here).
           </p>
           {draft.ownerColorPresets.map((row, i) => (
@@ -773,10 +794,10 @@ export function SettingsClient() {
       )}
 
       {section(
-        "Owner note types",
+        "Note types",
         <>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Order matches note type dropdowns. Use the arrows to reorder.
+            Default note types for every note (any owner or project). Order matches note type dropdowns. Use the arrows to reorder.
           </p>
           {draft.noteTypes.map((t, i) => (
             <div key={i} className="flex items-center gap-2">

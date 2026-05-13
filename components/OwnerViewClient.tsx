@@ -14,6 +14,7 @@ import {
   statusDef,
 } from "@/lib/statusConfig";
 import { FilterMultiDropdown } from "@/components/FilterMultiDropdown";
+import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
 import { NoteTagsEditor } from "@/components/NoteTagsEditor";
 import { isArchived } from "@/lib/archive";
 import {
@@ -628,7 +629,8 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
             Add epic
           </button>
         </div>
-        <div className="mt-4 grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-800 dark:bg-zinc-900/40 sm:grid-cols-2">
+        <DashboardFilterDisclosure className="mt-4" title="Epic search & filters">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm sm:col-span-2">
             <span className="text-zinc-500">Search epics</span>
             <input
@@ -645,6 +647,7 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
             onChange={(next) => setEpicStateFilters(next as EpicStateFilter[])}
           />
         </div>
+        </DashboardFilterDisclosure>
         <p className="mt-3 text-sm text-zinc-500">
           {filteredEpicRows.length} epic{filteredEpicRows.length === 1 ? "" : "s"} in current filters
         </p>
@@ -769,7 +772,8 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
               Add task
             </button>
         </div>
-        <div className="mt-4 grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-800 dark:bg-zinc-900/40 sm:grid-cols-2 lg:grid-cols-3">
+        <DashboardFilterDisclosure className="mt-4" title="Task search & filters">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-3">
             <span className="text-zinc-500">Search tasks</span>
             <input
@@ -810,6 +814,7 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
             onChange={setTaskTagKeys}
           />
         </div>
+        </DashboardFilterDisclosure>
         <p className="mt-3 text-sm text-zinc-500">
           {filteredTasks.length} task{filteredTasks.length === 1 ? "" : "s"} in current filters
         </p>
@@ -918,7 +923,8 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
               Add note
             </button>
         </div>
-        <div className="mt-4 grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-800 dark:bg-zinc-900/40 sm:grid-cols-2">
+        <DashboardFilterDisclosure className="mt-4" title="Note search & filters">
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm sm:col-span-2">
             <span className="text-zinc-500">Search notes (this owner)</span>
             <input
@@ -935,6 +941,7 @@ export function OwnerViewClient({ ownerId }: { ownerId: string }) {
             onChange={setNoteTagKeys}
           />
         </div>
+        </DashboardFilterDisclosure>
         <ul className="mt-4 flex flex-col gap-4">
           {filteredEntries.map((e) => (
             <li

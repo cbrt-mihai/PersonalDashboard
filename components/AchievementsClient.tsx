@@ -1,6 +1,8 @@
 "use client";
 
 import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
+import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
+import { DashboardPager } from "@/components/DashboardPager";
 import { FilterMultiDropdown } from "@/components/FilterMultiDropdown";
 import { StatusBadge } from "@/components/StatusBadge";
 import { TaskTypeBadge } from "@/components/TaskMetaBadges";
@@ -27,7 +29,9 @@ import { markdownExcerpt } from "@/lib/markdownExcerpt";
 import { tagOptionsFromEntries } from "@/lib/noteTags";
 import type { Owner, OwnerEntry, Project, Task, TaskGroup, Worklog } from "@/lib/schemas";
 import { TASK_FORM_PRIORITIES, TASK_FORM_TYPES } from "@/lib/taskFormOptions";
+import { paginateGroupedSections } from "@/lib/paginateGroupedSections";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDashboardLocalPager } from "@/lib/useDashboardLocalPager";
 
 function BragTaskCard({ row }: { row: BragTaskRow }) {
   const { task, ownerName, projectName, epicName } = row;
@@ -308,6 +312,43 @@ export function AchievementsClient() {
 
   const totalCount = bragRows.length;
 
+  const achPagerResetKey = useMemo(
+    () =>
+      JSON.stringify({
+        from,
+        to,
+        ownerIds,
+        projectIds,
+        epicIds,
+        selectedTypes,
+        selectedStatuses,
+        selectedPriorities,
+        selectedTagKeys,
+        showArchived,
+        groupBy,
+      }),
+    [
+      from,
+      to,
+      ownerIds,
+      projectIds,
+      epicIds,
+      selectedTypes,
+      selectedStatuses,
+      selectedPriorities,
+      selectedTagKeys,
+      showArchived,
+      groupBy,
+    ],
+  );
+
+  const achPager = useDashboardLocalPager(totalCount, achPagerResetKey);
+
+  const pagedAchSections = useMemo(
+    () => paginateGroupedSections(sections, achPager.page, achPager.pageSize),
+    [sections, achPager.page, achPager.pageSize],
+  );
+
   return (
     <div className="mx-auto max-w-4xl">
       <div className="print:hidden">
@@ -402,6 +443,7 @@ export function AchievementsClient() {
 
         <section className="mt-8 space-y-4 rounded-xl border border-zinc-200 bg-white/80 p-4 dark:border-zinc-800 dark:bg-zinc-950/60">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Filters</h2>
+          <DashboardFilterDisclosure title="Date range, grouping, and task filters">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-zinc-500">From (task date)</span>
@@ -422,7 +464,7 @@ export function AchievementsClient() {
               />
             </label>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <FilterMultiDropdown
               label="Owner"
               options={ownerFilterOptions}
@@ -479,7 +521,7 @@ export function AchievementsClient() {
               </select>
             </label>
           </div>
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+          <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
             <input
               type="checkbox"
               checked={showArchived}
@@ -488,6 +530,7 @@ export function AchievementsClient() {
             />
             Include archived tasks
           </label>
+          </DashboardFilterDisclosure>
         </section>
       </div>
 
@@ -516,24 +559,35 @@ export function AchievementsClient() {
             No tasks match these filters. Try widening the date range or clearing filters.
           </p>
         ) : (
-          sections.map((sec) =>
-            sec.rows.length === 0 ? null : (
-              <div key={sec.heading || "__all__"} className="mb-8">
-                {sec.heading ? (
-                  <h3 className="mb-3 border-b border-zinc-200 pb-1 text-base font-semibold text-zinc-800 dark:border-zinc-700 dark:text-zinc-100">
-                    {sec.heading}
-                  </h3>
-                ) : null}
-                <ul className="flex flex-col gap-3">
-                  {sec.rows.map((row) => (
-                    <li key={row.task.id}>
-                      <BragTaskCard row={row} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ),
-          )
+          <>
+            <div className="mb-4 print:hidden">
+              <DashboardPager
+                page={achPager.page}
+                pageCount={achPager.pageCount}
+                total={achPager.total}
+                pageSize={achPager.pageSize}
+                onPageChange={achPager.setPage}
+              />
+            </div>
+            {pagedAchSections.sections.map((sec) =>
+              sec.rows.length === 0 ? null : (
+                <div key={sec.heading || "__all__"} className="mb-8">
+                  {sec.heading ? (
+                    <h3 className="mb-3 border-b border-zinc-200 pb-1 text-base font-semibold text-zinc-800 dark:border-zinc-700 dark:text-zinc-100">
+                      {sec.heading}
+                    </h3>
+                  ) : null}
+                  <ul className="flex flex-col gap-3">
+                    {sec.rows.map((row) => (
+                      <li key={row.task.id}>
+                        <BragTaskCard row={row} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ),
+            )}
+          </>
         )}
       </section>
     </div>

@@ -33,7 +33,9 @@ import {
   type StatusDef,
 } from "@/lib/statusConfig";
 import { entryMatchesTagKeys, tagOptionsFromEntries } from "@/lib/noteTags";
-import { EntityKeyTagInput } from "@/components/EntityKeyTagInput";
+import { CreateTaskDialog } from "@/components/CreateTaskDialog";
+import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
+import { DashboardPager } from "@/components/DashboardPager";
 import { FilterMultiDropdown } from "./FilterMultiDropdown";
 import { MarkdownView } from "./MarkdownView";
 import { ProgressBar } from "./ProgressBar";
@@ -41,10 +43,11 @@ import { SubtaskProgressBar } from "./SubtaskProgressBar";
 import { TaskStatusSelect } from "./TaskStatusSelect";
 import { TaskTypeBadge } from "./TaskMetaBadges";
 import { OwnerSwatch } from "./OwnerSwatch";
-import { NoteTagsEditor } from "./NoteTagsEditor";
 import { EntityArchivedBadge } from "./EntityArchivedMark";
 import { TableCellSlot, TableClampCell } from "./TableClampCell";
 import { TrashIcon } from "./icons";
+import { useDashboardLocalPager } from "@/lib/useDashboardLocalPager";
+import { TableColumnResizeHandle, useTableColumnWidths } from "@/lib/useTableColumnWidths";
 
 type SortKey =
   | "name"
@@ -161,18 +164,6 @@ export function HomeClient() {
   const [savingTaskEdits, setSavingTaskEdits] = useState<Record<string, boolean>>({});
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [form, setForm] = useState({
-    ownerId: "",
-    groupId: "" as string,
-    name: "",
-    description: "",
-    type: "Task",
-    status: "open",
-    date: "",
-    priority: "Medium",
-    tags: [] as string[],
-    keyTag: "",
-  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -383,6 +374,74 @@ export function HomeClient() {
     return arr;
   }, [filtered, sortKey, sortDir, owners, groups, priorityRows]);
 
+  const taskPagerResetKey = useMemo(
+    () =>
+      JSON.stringify({
+        q,
+        showArchived,
+        ownerIds,
+        projectIds,
+        groupIds,
+        selectedTypes,
+        selectedStatuses,
+        selectedPriorities,
+        selectedTagKeys,
+        sortKey,
+        sortDir,
+      }),
+    [
+      q,
+      showArchived,
+      ownerIds,
+      projectIds,
+      groupIds,
+      selectedTypes,
+      selectedStatuses,
+      selectedPriorities,
+      selectedTagKeys,
+      sortKey,
+      sortDir,
+    ],
+  );
+
+  const taskPager = useDashboardLocalPager(sorted.length, taskPagerResetKey);
+
+  const pagedTasks = useMemo(() => taskPager.slice(sorted), [taskPager, sorted]);
+
+  const defaultTaskColWidth = useCallback((k: string) => {
+    const d: Record<string, number> = {
+      __lead: 56,
+      name: 260,
+      owner: 132,
+      project: 168,
+      epic: 160,
+      type: 92,
+      status: 128,
+      date: 104,
+      priority: 108,
+      tags: 160,
+      summary: 240,
+      __actions: 140,
+    };
+    return d[k] ?? 120;
+  }, []);
+
+  const resizableTaskColKeys = useMemo(
+    () =>
+      [
+        "__lead",
+        ...TABLE_COLUMNS.filter((c) => tableColumns[c.id]).map((c) => c.id),
+        "__actions",
+      ] as string[],
+    [tableColumns],
+  );
+
+  const { ColGroup, startResize } = useTableColumnWidths(
+    "pd-home-task-col-widths",
+    resizableTaskColKeys,
+    defaultTaskColWidth,
+  );
+
   const progress = useMemo(() => {
     const total = filtered.length;
     const done = filtered.filter((t) => isTerminalStatus(t.status, statusMap)).length;
@@ -462,47 +521,6 @@ export function HomeClient() {
 
   function openCreate() {
     setCreateModalOpen(true);
-    const defaultStatus = statusKeys[0] ?? "open";
-    setForm({
-      ownerId: owners[0]?.id ?? "",
-      groupId: "",
-      name: "",
-      description: "",
-      type: "Task",
-      status: defaultStatus,
-      date: new Date().toISOString().slice(0, 10),
-      priority: "Medium",
-      tags: [],
-      keyTag: "",
-    });
-  }
-
-  async function saveTask() {
-    if (!form.ownerId || !form.name.trim()) return;
-    const payload = {
-      ownerId: form.ownerId,
-      groupId: form.groupId ? form.groupId : null,
-      name: form.name.trim(),
-      description: form.description,
-      type: form.type,
-      status: form.status,
-      date: form.date,
-      priority: form.priority,
-      tags: form.tags,
-      keyTag: form.keyTag,
-    };
-    try {
-      const r = await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!r.ok) throw new Error(await r.text());
-      setCreateModalOpen(false);
-      await load();
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Save failed");
-    }
   }
 
   async function deleteTask(id: string) {
@@ -539,11 +557,6 @@ export function HomeClient() {
       setSavingTaskEdits((m) => ({ ...m, [id]: false }));
     }
   }
-
-  const ownerGroups = useMemo(() => {
-    if (!form.ownerId) return [];
-    return groups.filter((g) => g.ownerId === form.ownerId);
-  }, [groups, form.ownerId]);
 
   if (loading) {
     return <p className="text-zinc-500">Loading…</p>;
@@ -600,7 +613,8 @@ export function HomeClient() {
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-2 lg:grid-cols-4">
+      <DashboardFilterDisclosure>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-500">Search</span>
           <input
@@ -661,7 +675,8 @@ export function HomeClient() {
           />
           Show archived tasks and epics
         </label>
-      </div>
+        </div>
+      </DashboardFilterDisclosure>
 
       {owners.length === 0 ? (
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -710,15 +725,23 @@ export function HomeClient() {
               </div>
             </details>
           </div>
+          <DashboardPager
+            page={taskPager.page}
+            pageCount={taskPager.pageCount}
+            total={taskPager.total}
+            pageSize={taskPager.pageSize}
+            onPageChange={taskPager.setPage}
+          />
           <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-            <table className="w-full min-w-[88rem] table-auto text-left text-sm">
+            <table className="w-full min-w-0 table-fixed text-left text-sm">
+              <ColGroup />
               <thead className="bg-zinc-50 text-xs uppercase text-zinc-500 dark:bg-zinc-900/80 dark:text-zinc-400">
                 <tr>
-                  <th className="w-px min-w-0 p-0" aria-hidden />
+                  <th className="relative w-px min-w-0 p-0" aria-hidden />
                   {TABLE_COLUMNS.filter((c) => tableColumns[c.id]).map((col) => {
                     const colSort = col.sortKey;
                     return (
-                      <th key={col.id} className="px-3 py-2">
+                      <th key={col.id} className="relative px-3 py-2">
                         {colSort ? (
                           <button
                             type="button"
@@ -735,14 +758,15 @@ export function HomeClient() {
                         ) : (
                           <span className="font-semibold">{col.label}</span>
                         )}
+                        <TableColumnResizeHandle columnKey={col.id} onStart={startResize} />
                       </th>
                     );
                   })}
-                  <th className="px-3 py-2"> </th>
+                  <th className="relative px-3 py-2"> </th>
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((t) => {
+                {pagedTasks.map((t) => {
                   const p = owners.find((x) => x.id === t.ownerId);
                   const color = p?.color ?? "#64748b";
                   const statusRow = statusDef(t.status, statusMap);
@@ -1084,141 +1108,18 @@ export function HomeClient() {
         </div>
       )}
 
-      {createModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-950">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">New task</h2>
-            <div className="mt-4 flex flex-col gap-3">
-              <label className="text-sm">
-                <span className="text-zinc-500">Owner</span>
-                <select
-                  value={form.ownerId}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      ownerId: e.target.value,
-                      groupId: "",
-                    }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 dark:border-zinc-600 dark:bg-zinc-900"
-                >
-                  {owners.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm">
-                <span className="text-zinc-500">Epic (optional)</span>
-                <select
-                  value={form.groupId}
-                  onChange={(e) => setForm((f) => ({ ...f, groupId: e.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 dark:border-zinc-600 dark:bg-zinc-900"
-                >
-                  <option value="">None</option>
-                  {ownerGroups.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm">
-                <span className="text-zinc-500">Name</span>
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 dark:border-zinc-600 dark:bg-zinc-900"
-                />
-              </label>
-              <EntityKeyTagInput
-                value={form.keyTag}
-                onChange={(keyTag) => setForm((f) => ({ ...f, keyTag }))}
-                defaultTag="TSK"
-              />
-              <label className="text-sm">
-                <span className="text-zinc-500">Type</span>
-                <select
-                  value={form.type}
-                  onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 dark:border-zinc-600 dark:bg-zinc-900"
-                >
-                  {types.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm">
-                <span className="text-zinc-500">Status</span>
-                <TaskStatusSelect
-                  value={form.status}
-                  onChange={(v) => setForm((f) => ({ ...f, status: v }))}
-                  className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 dark:border-zinc-600 dark:bg-zinc-900"
-                />
-              </label>
-              <label className="text-sm">
-                <span className="text-zinc-500">Date</span>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 dark:border-zinc-600 dark:bg-zinc-900"
-                />
-              </label>
-              <label className="text-sm">
-                <span className="text-zinc-500">Priority</span>
-                <select
-                  value={form.priority}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, priority: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 dark:border-zinc-600 dark:bg-zinc-900"
-                >
-                  {priorities.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm">
-                <span className="text-zinc-500">Description (Markdown)</span>
-                <textarea
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, description: e.target.value }))
-                  }
-                  rows={6}
-                  className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 font-mono text-xs dark:border-zinc-600 dark:bg-zinc-900"
-                />
-              </label>
-              <NoteTagsEditor
-                tags={form.tags}
-                onChange={(tags) => setForm((f) => ({ ...f, tags }))}
-              />
-            </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-600"
-                onClick={() => setCreateModalOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                onClick={() => void saveTask()}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <CreateTaskDialog
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSaved={() => {
+          void load();
+        }}
+        owners={owners}
+        groups={groups}
+        types={types}
+        priorities={priorities}
+        defaultOwnerId={owners[0]?.id ?? ""}
+      />
     </div>
   );
 }

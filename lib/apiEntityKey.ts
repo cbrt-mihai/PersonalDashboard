@@ -29,7 +29,12 @@ export function nextEntityKey(tag: DefaultEntityKeyTag | string): string {
  */
 export function nextOwnerEntryKey(
   store: Store,
-  opts: { ownerId: string | null; projectId: string | null },
+  opts: {
+    ownerId: string | null;
+    projectId: string | null;
+    taskId?: string | null;
+    taskGroupId?: string | null;
+  },
 ): string {
   const used = collectEntityKeysFromStorePieces({
     owners: store.owners,
@@ -39,6 +44,18 @@ export function nextOwnerEntryKey(
     ownerEntries: store.ownerEntries,
     worklogs: store.worklogs,
   });
+  const taskId = opts.taskId ?? null;
+  const taskGroupId = opts.taskGroupId ?? null;
+  if (taskId) {
+    const t = store.tasks.find((x) => x.id === taskId);
+    const k = t?.key;
+    if (k && isValidEntityKey(k) && !isNoteChildKey(k)) return allocateNoteEntryKey(k, used);
+  }
+  if (taskGroupId) {
+    const g = store.taskGroups.find((x) => x.id === taskGroupId);
+    const k = g?.key;
+    if (k && isValidEntityKey(k) && !isNoteChildKey(k)) return allocateNoteEntryKey(k, used);
+  }
   let parent: string | undefined;
   if (opts.ownerId) {
     const o = store.owners.find((x) => x.id === opts.ownerId);

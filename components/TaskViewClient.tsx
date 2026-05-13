@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import type { Owner, Project, Task, TaskGroup, TaskSubtask } from "@/lib/schemas";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import type { Owner, OwnerEntry, Project, Task, TaskGroup, TaskSubtask } from "@/lib/schemas";
 import { isArchived } from "@/lib/archive";
 import { DetailCollapsibleSection } from "./DetailCollapsibleSection";
 import { WorklogSection } from "./WorklogSection";
@@ -14,6 +14,7 @@ import { normalizeTagKey } from "@/lib/noteTags";
 import { TaskPriorityBadge, TaskTypeBadge } from "./TaskMetaBadges";
 import { OwnerSwatch } from "./OwnerSwatch";
 import { TrashIcon } from "./icons";
+import { noteEntryEditHref, noteEntryViewHref } from "@/lib/noteEntryPaths";
 import { SubtaskProgressBar } from "./SubtaskProgressBar";
 
 export function TaskViewClient({ taskId }: { taskId: string }) {
@@ -25,6 +26,10 @@ export function TaskViewClient({ taskId }: { taskId: string }) {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [subtaskSavingId, setSubtaskSavingId] = useState<string | null>(null);
+  const [taskNotes, setTaskNotes] = useState<OwnerEntry[]>([]);
+  const [noteTitle, setNoteTitle] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteErr, setNoteErr] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -51,6 +56,17 @@ export function TaskViewClient({ taskId }: { taskId: string }) {
         setGroup(null);
         setProject(null);
       }
+      const enr = await fetch(`/api/entries?taskId=${encodeURIComponent(t.id)}`);
+      const enraw: unknown = enr.ok ? await enr.json() : [];
+      const list = Array.isArray(enraw)
+        ? enraw
+        : enraw &&
+            typeof enraw === "object" &&
+            "items" in enraw &&
+            Array.isArray((enraw as { items: unknown }).items)
+          ? (enraw as { items: OwnerEntry[] }).items
+          : [];
+      setTaskNotes(list);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to load");
       setTask(null);
@@ -85,6 +101,47 @@ export function TaskViewClient({ taskId }: { taskId: string }) {
       await load();
     } finally {
       setSubtaskSavingId(null);
+    }
+  }
+
+  async function createTaskNote(ev: FormEvent) {
+    ev.preventDefault();
+    if (!task || isArchived(task)) return;
+    const title = noteTitle.trim();
+    if (!title) {
+      setNoteErr("Title is required.");
+      return;
+    }
+    setNoteErr(null);
+    setNoteSaving(true);
+    try {
+      const r = await fetch("/api/entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          taskId: task.id,
+          ownerId: task.ownerId,
+          projectId: project?.id ?? null,
+          taskGroupId: task.groupId ?? null,
+        }),
+      });
+      const payload = (await r.json().catch(() => null)) as OwnerEntry | { error?: unknown } | null;
+      if (!r.ok) {
+        const er = payload && typeof payload === "object" && "error" in payload ? payload.error : null;
+        setNoteErr(typeof er === "string" ? er : "Could not create note.");
+        return;
+      }
+      if (!payload || typeof payload !== "object" || !("id" in payload)) {
+        setNoteErr("Invalid response from server.");
+        return;
+      }
+      const entry = payload as OwnerEntry;
+      setNoteTitle("");
+      router.push(noteEntryEditHref(entry));
+      router.refresh();
+    } finally {
+      setNoteSaving(false);
     }
   }
 
@@ -334,6 +391,71 @@ export function TaskViewClient({ taskId }: { taskId: string }) {
       ) : null}
 
       <WorklogSection target={{ kind: "task", taskId: task.id }} disabled={archived} />
+
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Notes</h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          Notes linked to this task. Open the{" "}
+          <Link href="/notes" className="text-blue-600 hover:underline dark:text-blue-400">
+            Notes
+          </Link>{" "}
+          dashboard to browse all.
+        </p>
+        {noteErr ? (
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">{noteErr}</p>
+        ) : null}
+        {!archived ? (
+          <form className="mt-4 flex flex-wrap items-end gap-2" onSubmit={(e) => void createTaskNote(e)}>
+            <label className="min-w-[12rem] flex-1 text-sm text-zinc-700 dark:text-zinc-200">
+              <span className="text-zinc-500">New note title</span>
+              <input
+                value={noteTitle}
+                onChange={(e) => setNoteTitle(e.target.value)}
+                placeholder="e.g. Meeting recap"
+                className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 dark:border-zinc-600 dark:bg-zinc-900"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={noteSaving}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {noteSaving ? "Creating…" : "Add note"}
+            </button>
+          </form>
+        ) : (
+          <p className="mt-3 text-sm text-zinc-500 italic">Archived task — notes are read-only here.</p>
+        )}
+        <ul className="mt-4 list-none space-y-2 p-0">
+          {taskNotes.map((n) => (
+            <li
+              key={n.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-100 px-3 py-2 text-sm dark:border-zinc-800"
+            >
+              <div className="min-w-0 flex-1">
+                <Link
+                  href={noteEntryViewHref(n)}
+                  className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  {n.title}
+                </Link>
+                <div className="mt-1">
+                  <StatusBadge variant="note" status={n.status ?? "open"} />
+                </div>
+              </div>
+              <Link
+                href={noteEntryEditHref(n)}
+                className="shrink-0 text-blue-600 hover:underline dark:text-blue-400"
+              >
+                Edit
+              </Link>
+            </li>
+          ))}
+        </ul>
+        {taskNotes.length === 0 ? (
+          <p className="mt-2 text-sm text-zinc-500">No notes on this task yet.</p>
+        ) : null}
+      </section>
 
       <DetailCollapsibleSection title="Activity" titleClassName="text-base font-semibold text-zinc-900 dark:text-zinc-50">
         <p className="text-sm text-zinc-600 dark:text-zinc-400">

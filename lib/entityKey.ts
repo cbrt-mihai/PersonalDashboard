@@ -1,8 +1,8 @@
 /**
  * Public reference keys (never UUID-shaped):
- * - Standard: `TAG-<digits>` — 2–16 letters, hyphen, then **1–32** digits (e.g. `ONE-3`, `RBRAND-435343`).
+ * - Standard: `TAG-<digits>` — 2–16 alphanumeric tag, hyphen, then **1–32** digits (e.g. `ONE-3`, `3UK-12`, `RBRAND-435343`).
  * - Note: parent’s full key + hyphen + **1–32** digits (e.g. `ONE-3435-44`).
- * - Legacy: `TAG-ABC12D` — 2–16 letters, hyphen, exactly 6 chars from the old alphabet (still accepted).
+ * - Legacy: `TAG-ABC12D` — 2–16 alphanumeric tag, hyphen, exactly 6 chars from the old alphabet (still accepted).
  */
 import { ENTITY_KEY_TAG_MAX, ENTITY_KEY_TAG_MIN } from "./entityKeyNormalize";
 
@@ -16,7 +16,7 @@ export {
 /** Max length of a digit-only suffix (avoids pathological keys; still generous for imports). */
 export const ENTITY_KEY_DIGIT_SUFFIX_MAX = 32;
 
-const tagSeg = `[A-Z]{${ENTITY_KEY_TAG_MIN},${ENTITY_KEY_TAG_MAX}}`;
+const tagSeg = `[A-Z0-9]{${ENTITY_KEY_TAG_MIN},${ENTITY_KEY_TAG_MAX}}`;
 export const ENTITY_KEY_TAG_REGEX = new RegExp(`^${tagSeg}$`);
 
 const LEGACY_BODY = new RegExp(`^${tagSeg}-[A-Z0-9]{6}$`);

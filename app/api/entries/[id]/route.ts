@@ -3,7 +3,7 @@ import { z } from "zod";
 import { appendAudit, auditDetailForDelete, auditDetailForUpdate } from "@/lib/auditLog";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { closedAtAfterNoteStatusChange } from "@/lib/noteClosedAt";
-import { validateNoteAttribution } from "@/lib/noteAttribution";
+import { normalizeNoteAnchors } from "@/lib/noteAttribution";
 import { dedupeTags } from "@/lib/noteTags";
 import { findOwnerEntryByIdOrKey } from "@/lib/resolveEntityId";
 import { ownerEntrySchema } from "@/lib/schemas";
@@ -13,6 +13,8 @@ const NOTE_UPDATE_AUDIT_KEYS = [
   "archivedAt",
   "ownerId",
   "projectId",
+  "taskId",
+  "taskGroupId",
   "title",
   "body",
   "status",
@@ -24,6 +26,8 @@ const NOTE_UPDATE_AUDIT_KEYS = [
 const NOTE_DELETE_AUDIT_KEYS = [
   "ownerId",
   "projectId",
+  "taskId",
+  "taskGroupId",
   "archivedAt",
   "title",
   "status",
@@ -38,6 +42,8 @@ const patchBody = z.object({
   archivedAt: z.string().nullable().optional(),
   ownerId: z.string().uuid().nullable().optional(),
   projectId: z.string().uuid().nullable().optional(),
+  taskId: z.string().uuid().nullable().optional(),
+  taskGroupId: z.string().uuid().nullable().optional(),
   title: z.string().min(1).optional(),
   body: z.string().optional(),
   status: z.string().min(1).max(64).optional(),
@@ -80,10 +86,18 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const next = { ...cur, ...patch };
   const nextOwnerId = next.ownerId ?? null;
   const nextProjectId = next.projectId ?? null;
-  const v = validateNoteAttribution(nextOwnerId, nextProjectId, store);
+  const nextTaskId = next.taskId ?? null;
+  const nextTaskGroupId = next.taskGroupId ?? null;
+  const v = normalizeNoteAnchors(store, {
+    ownerId: nextOwnerId,
+    projectId: nextProjectId,
+    taskId: nextTaskId,
+    taskGroupId: nextTaskGroupId,
+  });
   if (!v.ok) {
     return NextResponse.json({ error: v.error }, { status: v.status });
   }
+  const mergedAnchors = v.anchors;
   let updated = false;
   const entry = mutateStore((s) => {
     const i = s.ownerEntries.findIndex((x) => x.id === id);
@@ -94,16 +108,17 @@ export async function PATCH(req: Request, ctx: Ctx) {
       patchInner.tags = dedupeTags(patchInner.tags);
     }
     const mergedBase = { ...curInner, ...patchInner };
+    const withAnchors = { ...mergedBase, ...mergedAnchors };
     const noteMap = buildStatusMapFromRows(s.settings.noteStatuses);
     const nowIso = new Date().toISOString();
     const closedAt = closedAtAfterNoteStatusChange({
       prevStatus: curInner.status,
       prevClosedAt: curInner.closedAt ?? null,
-      nextStatus: mergedBase.status,
+      nextStatus: withAnchors.status,
       map: noteMap,
       nowIso,
     });
-    const merged = { ...mergedBase, closedAt };
+    const merged = { ...withAnchors, closedAt };
     s.ownerEntries[i] = ownerEntrySchema.parse(merged);
     updated = true;
     const e = s.ownerEntries[i]!;

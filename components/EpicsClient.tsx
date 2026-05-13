@@ -10,6 +10,8 @@ import { isArchived } from "@/lib/archive";
 import { epicRollupStateFromTasks, type EpicRollupState } from "@/lib/epicRollupState";
 import { isTerminalStatus, statusDef } from "@/lib/statusConfig";
 import { entryMatchesTagKeys, tagOptionsFromEntries } from "@/lib/noteTags";
+import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
+import { DashboardPager } from "@/components/DashboardPager";
 import { FilterMultiDropdown } from "./FilterMultiDropdown";
 import { MarkdownField } from "./MarkdownField";
 import { MarkdownView } from "./MarkdownView";
@@ -22,6 +24,8 @@ import { EntityArchivedBadge } from "./EntityArchivedMark";
 import { EntityKeyTagInput } from "./EntityKeyTagInput";
 import { TableCellSlot, TableClampCell } from "./TableClampCell";
 import { TrashIcon } from "./icons";
+import { useDashboardLocalPager } from "@/lib/useDashboardLocalPager";
+import { TableColumnResizeHandle, useTableColumnWidths } from "@/lib/useTableColumnWidths";
 
 type EpicStateFilter = EpicRollupState;
 type SortKey = "name" | "owner" | "project" | "progress" | "tasks" | "state";
@@ -301,6 +305,56 @@ export function EpicsClient() {
     return arr;
   }, [filteredRows, sortDir, sortKey, statusMap]);
 
+  const epicPagerResetKey = useMemo(
+    () =>
+      JSON.stringify({
+        q,
+        showArchived,
+        ownerIds,
+        projectIds,
+        tagKeys,
+        stateFilters,
+        sortKey,
+        sortDir,
+      }),
+    [q, showArchived, ownerIds, projectIds, tagKeys, stateFilters, sortKey, sortDir],
+  );
+
+  const epicPager = useDashboardLocalPager(sortedRows.length, epicPagerResetKey);
+
+  const pagedEpicRows = useMemo(() => epicPager.slice(sortedRows), [epicPager, sortedRows]);
+
+  const defaultEpicColWidth = useCallback((k: string) => {
+    const d: Record<string, number> = {
+      __lead: 56,
+      name: 220,
+      owner: 128,
+      project: 172,
+      state: 104,
+      tasks: 80,
+      progress: 128,
+      summary: 220,
+      __actions: 168,
+    };
+    return d[k] ?? 120;
+  }, []);
+
+  const resizableEpicColKeys = useMemo(
+    () =>
+      [
+        "__lead",
+        ...TABLE_COLUMNS.filter((c) => tableColumns[c.id]).map((c) => c.id),
+        "__actions",
+      ] as string[],
+    [tableColumns],
+  );
+
+  const { ColGroup, startResize } = useTableColumnWidths(
+    "pd-epics-table-col-widths",
+    resizableEpicColKeys,
+    defaultEpicColWidth,
+  );
+
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else {
@@ -399,7 +453,8 @@ export function EpicsClient() {
         </button>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-2 lg:grid-cols-4">
+      <DashboardFilterDisclosure>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-500">Search</span>
           <input
@@ -442,7 +497,8 @@ export function EpicsClient() {
           />
           Show archived epics
         </label>
-      </div>
+        </div>
+      </DashboardFilterDisclosure>
 
       {groups.length === 0 ? (
         <p className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/50 px-4 py-8 text-center text-sm text-zinc-500 dark:border-zinc-600 dark:bg-zinc-900/30">
@@ -482,15 +538,24 @@ export function EpicsClient() {
             </details>
           </div>
 
+          <DashboardPager
+            page={epicPager.page}
+            pageCount={epicPager.pageCount}
+            total={epicPager.total}
+            pageSize={epicPager.pageSize}
+            onPageChange={epicPager.setPage}
+          />
+
           <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-          <table className="w-full min-w-[72rem] table-auto text-left text-sm">
+          <table className="w-full min-w-0 table-fixed text-left text-sm">
+            <ColGroup />
             <thead className="bg-zinc-50 text-xs uppercase text-zinc-500 dark:bg-zinc-900/80 dark:text-zinc-400">
               <tr>
-                <th className="w-px min-w-0 p-0" aria-hidden />
+                <th className="relative w-px min-w-0 p-0" aria-hidden />
                 {TABLE_COLUMNS.filter((c) => tableColumns[c.id]).map((col) => {
                   const colSort = col.sortKey;
                   return (
-                    <th key={col.id} className="px-3 py-2">
+                    <th key={col.id} className="relative px-3 py-2">
                       {colSort ? (
                         <button
                           type="button"
@@ -503,14 +568,15 @@ export function EpicsClient() {
                       ) : (
                         <span className="font-semibold">{col.label}</span>
                       )}
+                      <TableColumnResizeHandle columnKey={col.id} onStart={startResize} />
                     </th>
                   );
                 })}
-                <th className="px-3 py-2"> </th>
+                <th className="relative px-3 py-2"> </th>
               </tr>
             </thead>
             <tbody>
-              {sortedRows.map(({ g, owner, proj, accent, total, state }) => {
+              {pagedEpicRows.map(({ g, owner, proj, accent, total, state }) => {
                 const isOpen = !!expanded[g.id];
                 const summary = markdownExcerpt(g.description ?? "", 140);
                 const detailColSpan = 1 + TABLE_COLUMNS.filter((c) => tableColumns[c.id]).length + 1;

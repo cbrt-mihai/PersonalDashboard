@@ -8,6 +8,11 @@ import { JiraDurationParseError, parseJiraDuration } from "@/lib/jiraDuration";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { filterWorklogs } from "@/lib/worklogs";
 import { worklogSchema, worklogTargetSchema } from "@/lib/schemas";
+import {
+  parseListPagination,
+  sliceToPage,
+  wantsPaginatedList,
+} from "@/lib/apiPagination";
 
 const WORKLOG_CREATE_AUDIT_KEYS = [
   "key",
@@ -66,6 +71,10 @@ export async function GET(req: Request) {
     to: searchParams.get("to"),
   });
   list.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  if (wantsPaginatedList(searchParams)) {
+    const { page, pageSize } = parseListPagination(searchParams);
+    return NextResponse.json(sliceToPage(list, page, pageSize));
+  }
   return NextResponse.json(list);
 }
 

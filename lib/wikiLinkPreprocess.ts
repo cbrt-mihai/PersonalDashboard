@@ -15,7 +15,7 @@ import { ENTITY_KEY_DIGIT_SUFFIX_MAX } from "./entityKey";
 import { ENTITY_KEY_TAG_MAX, ENTITY_KEY_TAG_MIN } from "./entityKeyNormalize";
 
 /** UUID, legacy `TAG-XXXXXX`, digit standard `TAG-<1–N digits>`, or note child with an extra `-<digits>`. */
-const ID_OR_KEY = `(?:[0-9a-fA-F-]{36}|[A-Z]{${ENTITY_KEY_TAG_MIN},${ENTITY_KEY_TAG_MAX}}-(?:[A-Z0-9]{6}|\\d{1,${ENTITY_KEY_DIGIT_SUFFIX_MAX}})(?:-\\d{1,${ENTITY_KEY_DIGIT_SUFFIX_MAX}})?)`;
+const ID_OR_KEY = `(?:[0-9a-fA-F-]{36}|[A-Z0-9]{${ENTITY_KEY_TAG_MIN},${ENTITY_KEY_TAG_MAX}}-(?:[A-Z0-9]{6}|\\d{1,${ENTITY_KEY_DIGIT_SUFFIX_MAX}})(?:-\\d{1,${ENTITY_KEY_DIGIT_SUFFIX_MAX}})?)`;
 
 export function preprocessWikiLinks(md: string): string {
   return md.replace(/\[\[([^\]]+)]]/g, (_full, inner: string) => {

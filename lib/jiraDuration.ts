@@ -59,6 +59,50 @@ export function parseJiraDuration(
   return Math.floor(total);
 }
 
+/** Format minutes for the Settings “minutes per day” text field (h/m only, no d/w). */
+export function formatWorkdayMinutesForSettingsInput(totalMinutes: number): string {
+  if (!Number.isFinite(totalMinutes)) return "24h";
+  const clamped = Math.min(2880, Math.max(60, Math.floor(totalMinutes)));
+  if (clamped % 60 === 0) return `${clamped / 60}h`;
+  const h = Math.floor(clamped / 60);
+  const m = clamped % 60;
+  return `${h}h ${m}m`;
+}
+
+/**
+ * Parse Settings workday length: plain integer (60–2880) = minutes, or `h`/`m` tokens only
+ * (e.g. `8h`, `30m`, `7h 30m`). No `d`/`w` (avoids circular “day” definition).
+ */
+export function parseWorkdayMinutesFromSettingsInput(input: string): number {
+  const s = input.trim();
+  if (!s) throw new JiraDurationParseError("Empty value");
+  if (/^\d+$/.test(s)) {
+    const n = parseInt(s, 10);
+    if (!Number.isFinite(n) || n < 60 || n > 2880) {
+      throw new JiraDurationParseError("Enter 60–2880 minutes, or use h/m (e.g. 8h or 7h 30m)");
+    }
+    return n;
+  }
+  if (!/^\s*(\d+\s*[hm]\s*)+$/i.test(s)) {
+    throw new JiraDurationParseError(
+      "Use h and m only (e.g. 8h, 30m, 7h 30m), or a minute count between 60 and 2880",
+    );
+  }
+  let total = 0;
+  for (const m of s.matchAll(/(\d+)\s*([hm])/gi)) {
+    const n = Number(m[1]);
+    const u = m[2]!.toLowerCase();
+    if (!Number.isFinite(n) || n < 0) throw new JiraDurationParseError("Invalid number");
+    if (n > 9999) throw new JiraDurationParseError("Value too large");
+    if (u === "h") total += n * 60;
+    else total += n;
+  }
+  if (total < 60 || total > 2880) {
+    throw new JiraDurationParseError("Total must be between 1h (60m) and 48h (2880m)");
+  }
+  return Math.floor(total);
+}
+
 /** Format minutes as compact Jira-style using `w`, `d`, `h`, `m`. */
 export function formatJiraDuration(
   totalMinutes: number,

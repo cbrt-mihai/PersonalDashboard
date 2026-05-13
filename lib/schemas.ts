@@ -199,12 +199,27 @@ export const ownerEntrySchema = z
       (v) => (v === null || v === undefined ? [] : v),
       z.array(z.string().min(1).max(48)).max(24).default([]),
     ),
+    /** When set, note is linked to this task (e.g. from task page). */
+    taskId: z.preprocess(
+      (v) => (v === undefined || v === null || v === "" ? null : v),
+      z.string().uuid().nullable(),
+    ),
+    /** When set, note is linked to this epic / task group. */
+    taskGroupId: z.preprocess(
+      (v) => (v === undefined || v === null || v === "" ? null : v),
+      z.string().uuid().nullable(),
+    ),
   })
   .superRefine((e, ctx) => {
-    if (e.ownerId == null && e.projectId == null) {
+    const has =
+      e.ownerId != null ||
+      e.projectId != null ||
+      e.taskId != null ||
+      e.taskGroupId != null;
+    if (!has) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Note must belong to at least one owner or one project",
+        message: "Note must be linked to at least one owner, project, task, or epic",
         path: ["ownerId"],
       });
     }

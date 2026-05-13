@@ -23,6 +23,7 @@ import {
 } from "@/lib/noteTags";
 import { normalizeStatusKey, statusDef } from "@/lib/statusConfig";
 import { DetailCollapsibleSection } from "./DetailCollapsibleSection";
+import { DashboardFilterDisclosure } from "./DashboardFilterDisclosure";
 import { WorklogSection } from "./WorklogSection";
 import { EntityArchivedBadge, EntityArchivedBanner } from "./EntityArchivedMark";
 import { FilterMultiDropdown } from "./FilterMultiDropdown";
@@ -582,32 +583,34 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
           Notes linked to this project, optionally also to an owner. Open or edit uses the best URL
           (owner page when an owner is set, otherwise the global note URL).
         </p>
-        <div className="mt-4 grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-800 dark:bg-zinc-900/40 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-            <span className="text-zinc-500">Search notes (this project)</span>
-            <input
-              value={noteQ}
-              onChange={(e) => setNoteQ(e.target.value)}
-              placeholder="Title or body"
-              className="rounded-lg border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+        <DashboardFilterDisclosure className="mt-4" title="Note search & filters">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+              <span className="text-zinc-500">Search notes (this project)</span>
+              <input
+                value={noteQ}
+                onChange={(e) => setNoteQ(e.target.value)}
+                placeholder="Title or body"
+                className="rounded-lg border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+              />
+            </label>
+            <FilterMultiDropdown
+              label="Tags (any match)"
+              options={noteTagFilterOptions}
+              selected={noteTagKeys}
+              onChange={setNoteTagKeys}
             />
-          </label>
-          <FilterMultiDropdown
-            label="Tags (any match)"
-            options={noteTagFilterOptions}
-            selected={noteTagKeys}
-            onChange={setNoteTagKeys}
-          />
-          <label className="flex items-center gap-2 text-sm text-zinc-700 sm:col-span-2 dark:text-zinc-200">
-            <input
-              type="checkbox"
-              checked={noteShowArchived}
-              onChange={(e) => setNoteShowArchived(e.target.checked)}
-              className="rounded border-zinc-300 dark:border-zinc-600"
-            />
-            Show archived notes
-          </label>
-        </div>
+            <label className="flex items-center gap-2 text-sm text-zinc-700 sm:col-span-2 dark:text-zinc-200">
+              <input
+                type="checkbox"
+                checked={noteShowArchived}
+                onChange={(e) => setNoteShowArchived(e.target.checked)}
+                className="rounded border-zinc-300 dark:border-zinc-600"
+              />
+              Show archived notes
+            </label>
+          </div>
+        </DashboardFilterDisclosure>
         <ul className="mt-4 flex flex-col gap-4">
           {filteredProjectNotes.map((e) => {
             const sw = noteEntryAttributionForSwatch(e, owners, projectsForNoteSwatch);
@@ -718,38 +721,40 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
       </DetailCollapsibleSection>
 
       <DetailCollapsibleSection title="Epics">
-        <div className="mt-0 grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-800 dark:bg-zinc-900/40 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-3">
-            <span className="text-zinc-500">Search epics</span>
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Epic name or description"
-              className="rounded-lg border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+        <DashboardFilterDisclosure className="mt-0" title="Epic search & filters">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-3">
+              <span className="text-zinc-500">Search epics</span>
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Epic name or description"
+                className="rounded-lg border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+              />
+            </label>
+            <FilterMultiDropdown
+              label="Owner"
+              options={ownerFilterOptions}
+              selected={ownerIds}
+              onChange={setOwnerIds}
             />
-          </label>
-          <FilterMultiDropdown
-            label="Owner"
-            options={ownerFilterOptions}
-            selected={ownerIds}
-            onChange={setOwnerIds}
-          />
-        <FilterMultiDropdown
-          label="Tags (any match)"
-          options={tagFilterOptions}
-          selected={tagKeys}
-          onChange={setTagKeys}
-        />
-        <label className="flex items-center gap-2 text-sm text-zinc-700 sm:col-span-2 lg:col-span-3 dark:text-zinc-200">
-          <input
-            type="checkbox"
-            checked={showArchived}
-            onChange={(e) => setShowArchived(e.target.checked)}
-            className="rounded border-zinc-300 dark:border-zinc-600"
-          />
-          Show archived epics
-        </label>
-      </div>
+            <FilterMultiDropdown
+              label="Tags (any match)"
+              options={tagFilterOptions}
+              selected={tagKeys}
+              onChange={setTagKeys}
+            />
+            <label className="flex items-center gap-2 text-sm text-zinc-700 sm:col-span-2 lg:col-span-3 dark:text-zinc-200">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+                className="rounded border-zinc-300 dark:border-zinc-600"
+              />
+              Show archived epics
+            </label>
+          </div>
+        </DashboardFilterDisclosure>
 
         <p className="mt-3 text-sm text-zinc-500">
           {filteredRows.length} epic{filteredRows.length === 1 ? "" : "s"} in current filters
@@ -861,56 +866,58 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
           Tasks whose epic belongs to this project (any epic state). Use filters and{" "}
           <strong>Show archived tasks</strong> to include archived work items.
         </p>
-        <div className="mt-4 grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-800 dark:bg-zinc-900/40 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-3">
-            <span className="text-zinc-500">Search tasks</span>
-            <input
-              value={taskQ}
-              onChange={(e) => setTaskQ(e.target.value)}
-              placeholder="Name, description, or tag"
-              className="rounded-lg border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+        <DashboardFilterDisclosure className="mt-4" title="Task search & filters">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-3">
+              <span className="text-zinc-500">Search tasks</span>
+              <input
+                value={taskQ}
+                onChange={(e) => setTaskQ(e.target.value)}
+                placeholder="Name, description, or tag"
+                className="rounded-lg border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
+              />
+            </label>
+            <FilterMultiDropdown
+              label="Owner"
+              options={taskOwnerFilterOptions}
+              selected={taskOwnerIds}
+              onChange={setTaskOwnerIds}
             />
-          </label>
-          <FilterMultiDropdown
-            label="Owner"
-            options={taskOwnerFilterOptions}
-            selected={taskOwnerIds}
-            onChange={setTaskOwnerIds}
-          />
-          <FilterMultiDropdown
-            label="Status"
-            options={taskStatusFilterOptions}
-            selected={taskStatusKeys}
-            onChange={setTaskStatusKeys}
-          />
-          <FilterMultiDropdown
-            label="Type"
-            options={taskTypeOptions}
-            selected={taskTypes}
-            onChange={setTaskTypes}
-          />
-          <FilterMultiDropdown
-            label="Priority"
-            options={taskPriorityOptions}
-            selected={taskPriorities}
-            onChange={setTaskPriorities}
-          />
-          <FilterMultiDropdown
-            label="Tags (any match)"
-            options={taskTagFilterOptions}
-            selected={taskTagKeys}
-            onChange={setTaskTagKeys}
-          />
-          <label className="flex items-center gap-2 text-sm text-zinc-700 sm:col-span-2 lg:col-span-3 dark:text-zinc-200">
-            <input
-              type="checkbox"
-              checked={showArchivedTasks}
-              onChange={(e) => setShowArchivedTasks(e.target.checked)}
-              className="rounded border-zinc-300 dark:border-zinc-600"
+            <FilterMultiDropdown
+              label="Status"
+              options={taskStatusFilterOptions}
+              selected={taskStatusKeys}
+              onChange={setTaskStatusKeys}
             />
-            Show archived tasks
-          </label>
-        </div>
+            <FilterMultiDropdown
+              label="Type"
+              options={taskTypeOptions}
+              selected={taskTypes}
+              onChange={setTaskTypes}
+            />
+            <FilterMultiDropdown
+              label="Priority"
+              options={taskPriorityOptions}
+              selected={taskPriorities}
+              onChange={setTaskPriorities}
+            />
+            <FilterMultiDropdown
+              label="Tags (any match)"
+              options={taskTagFilterOptions}
+              selected={taskTagKeys}
+              onChange={setTaskTagKeys}
+            />
+            <label className="flex items-center gap-2 text-sm text-zinc-700 sm:col-span-2 lg:col-span-3 dark:text-zinc-200">
+              <input
+                type="checkbox"
+                checked={showArchivedTasks}
+                onChange={(e) => setShowArchivedTasks(e.target.checked)}
+                className="rounded border-zinc-300 dark:border-zinc-600"
+              />
+              Show archived tasks
+            </label>
+          </div>
+        </DashboardFilterDisclosure>
         <p className="mt-3 text-sm text-zinc-500">
           {filteredProjectTasks.length} task{filteredProjectTasks.length === 1 ? "" : "s"} in current
           filters ({tasksInProject.length} total in project)

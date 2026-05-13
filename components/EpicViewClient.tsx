@@ -2,22 +2,25 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { isArchived } from "@/lib/archive";
-import type { Owner, Project, Task, TaskGroup } from "@/lib/schemas";
+import type { Owner, OwnerEntry, Project, Task, TaskGroup } from "@/lib/schemas";
 import { DetailCollapsibleSection } from "./DetailCollapsibleSection";
 import { WorklogSection } from "./WorklogSection";
 import { EntityArchivedBadge, EntityArchivedBanner } from "./EntityArchivedMark";
 import { useDashboardConfig } from "./DashboardSettingsProvider";
 import { entryMatchesTagKeys, normalizeTagKey, tagOptionsFromEntries } from "@/lib/noteTags";
 import { TASK_FORM_PRIORITIES, TASK_FORM_TYPES } from "@/lib/taskFormOptions";
+import { DashboardFilterDisclosure } from "./DashboardFilterDisclosure";
 import { FilterMultiDropdown } from "./FilterMultiDropdown";
 import { StatusBadge } from "./StatusBadge";
 import { TaskPriorityBadge, TaskTypeBadge } from "./TaskMetaBadges";
 import { MarkdownView } from "./MarkdownView";
 import { normalizeStatusKey, statusDef } from "@/lib/statusConfig";
 import { OwnerSwatch } from "./OwnerSwatch";
+import { CreateTaskDialog } from "./CreateTaskDialog";
 import { TrashIcon } from "./icons";
+import { noteEntryEditHref, noteEntryViewHref } from "@/lib/noteEntryPaths";
 
 export function EpicViewClient({ epicId }: { epicId: string }) {
   const { settings, statusMap, statusKeys } = useDashboardConfig();
@@ -35,6 +38,11 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
   const [taskTypeFilters, setTaskTypeFilters] = useState<string[]>([]);
   const [taskPriorityFilters, setTaskPriorityFilters] = useState<string[]>([]);
   const [taskTagKeys, setTaskTagKeys] = useState<string[]>([]);
+  const [createTaskOpen, setCreateTaskOpen] = useState(false);
+  const [epicNotes, setEpicNotes] = useState<OwnerEntry[]>([]);
+  const [epicNoteTitle, setEpicNoteTitle] = useState("");
+  const [epicNoteSaving, setEpicNoteSaving] = useState(false);
+  const [epicNoteErr, setEpicNoteErr] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -58,6 +66,17 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
       } else {
         setProject(null);
       }
+      const enr = await fetch(`/api/entries?taskGroupId=${encodeURIComponent(g.id)}`);
+      const enraw: unknown = enr.ok ? await enr.json() : [];
+      const list = Array.isArray(enraw)
+        ? enraw
+        : enraw &&
+            typeof enraw === "object" &&
+            "items" in enraw &&
+            Array.isArray((enraw as { items: unknown }).items)
+          ? (enraw as { items: OwnerEntry[] }).items
+          : [];
+      setEpicNotes(list);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to load");
       setEpic(null);
@@ -71,6 +90,46 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
       void load();
     });
   }, [load]);
+
+  async function createEpicNote(ev: FormEvent) {
+    ev.preventDefault();
+    if (!epic || isArchived(epic)) return;
+    const title = epicNoteTitle.trim();
+    if (!title) {
+      setEpicNoteErr("Title is required.");
+      return;
+    }
+    setEpicNoteErr(null);
+    setEpicNoteSaving(true);
+    try {
+      const r = await fetch("/api/entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          taskGroupId: epic.id,
+          ownerId: epic.ownerId,
+          projectId: epic.projectId ?? null,
+        }),
+      });
+      const payload = (await r.json().catch(() => null)) as OwnerEntry | { error?: unknown } | null;
+      if (!r.ok) {
+        const er = payload && typeof payload === "object" && "error" in payload ? payload.error : null;
+        setEpicNoteErr(typeof er === "string" ? er : "Could not create note.");
+        return;
+      }
+      if (!payload || typeof payload !== "object" || !("id" in payload)) {
+        setEpicNoteErr("Invalid response from server.");
+        return;
+      }
+      const entry = payload as OwnerEntry;
+      setEpicNoteTitle("");
+      router.push(noteEntryEditHref(entry));
+      router.refresh();
+    } finally {
+      setEpicNoteSaving(false);
+    }
+  }
 
   async function onDelete() {
     if (!epic || !confirm("Delete this epic? Tasks will become ungrouped.")) return;
@@ -143,6 +202,20 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
       settings?.taskPriorities
         ? settings.taskPriorities.map((p) => ({ value: p.label, label: p.label }))
         : TASK_FORM_PRIORITIES.map((label) => ({ value: label, label })),
+    [settings],
+  );
+
+  const taskPrioritiesList = useMemo(
+    () =>
+      settings?.taskPriorities?.length
+        ? settings.taskPriorities.map((r) => r.label)
+        : [...TASK_FORM_PRIORITIES],
+    [settings],
+  );
+
+  const taskTypesList = useMemo(
+    () =>
+      settings?.taskTypes?.length ? settings.taskTypes.map((r) => r.label) : [...TASK_FORM_TYPES],
     [settings],
   );
 
@@ -361,6 +434,15 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
 
       <DetailCollapsibleSection title="Tasks">
         <div className="flex flex-wrap justify-end gap-2">
+          {owner && epic && !isArchived(epic) ? (
+            <button
+              type="button"
+              onClick={() => setCreateTaskOpen(true)}
+              className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              New task
+            </button>
+          ) : null}
           {owner ? (
             <Link
               href={`/owners/${owner.id}#epic-${epic.id}`}
@@ -370,7 +452,8 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
             </Link>
           ) : null}
         </div>
-        <div className="mt-4 grid gap-3 rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-800 dark:bg-zinc-900/40 sm:grid-cols-2 lg:grid-cols-4">
+        <DashboardFilterDisclosure className="mt-4" title="Task search & filters">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-4">
             <span className="text-zinc-500">Search tasks</span>
             <input
@@ -414,6 +497,7 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
             Show archived tasks
           </label>
         </div>
+        </DashboardFilterDisclosure>
 
         <p className="mt-3 text-sm text-zinc-500">
           {filteredTasks.length} task{filteredTasks.length === 1 ? "" : "s"} in current filters
@@ -471,9 +555,86 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
         ) : null}
       </DetailCollapsibleSection>
 
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Epic notes</h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          Notes on this epic (not tied to a single task). Task-specific notes appear on each task page.
+        </p>
+        {epicNoteErr ? (
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">{epicNoteErr}</p>
+        ) : null}
+        {!isArchived(epic) ? (
+          <form className="mt-4 flex flex-wrap items-end gap-2" onSubmit={(e) => void createEpicNote(e)}>
+            <label className="min-w-[12rem] flex-1 text-sm text-zinc-700 dark:text-zinc-200">
+              <span className="text-zinc-500">New note title</span>
+              <input
+                value={epicNoteTitle}
+                onChange={(e) => setEpicNoteTitle(e.target.value)}
+                placeholder="e.g. Scope decisions"
+                className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-2 dark:border-zinc-600 dark:bg-zinc-900"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={epicNoteSaving}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {epicNoteSaving ? "Creating…" : "Add note"}
+            </button>
+          </form>
+        ) : (
+          <p className="mt-3 text-sm text-zinc-500 italic">Archived epic — notes are read-only here.</p>
+        )}
+        <ul className="mt-4 list-none space-y-2 p-0">
+          {epicNotes.map((n) => (
+            <li
+              key={n.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-100 px-3 py-2 text-sm dark:border-zinc-800"
+            >
+              <div className="min-w-0 flex-1">
+                <Link
+                  href={noteEntryViewHref(n)}
+                  className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  {n.title}
+                </Link>
+                <div className="mt-1">
+                  <StatusBadge variant="note" status={n.status ?? "open"} />
+                </div>
+              </div>
+              <Link
+                href={noteEntryEditHref(n)}
+                className="shrink-0 text-blue-600 hover:underline dark:text-blue-400"
+              >
+                Edit
+              </Link>
+            </li>
+          ))}
+        </ul>
+        {epicNotes.length === 0 ? (
+          <p className="mt-2 text-sm text-zinc-500">No epic-level notes yet.</p>
+        ) : null}
+      </section>
+
       {epic ? (
         <WorklogSection target={{ kind: "epic", groupId: epic.id }} disabled={isArchived(epic)} />
       ) : null}
+
+      <CreateTaskDialog
+        open={createTaskOpen}
+        onClose={() => setCreateTaskOpen(false)}
+        onSaved={() => {
+          void load();
+        }}
+        owners={owner ? [owner] : []}
+        groups={epic ? [epic] : []}
+        types={taskTypesList}
+        priorities={taskPrioritiesList}
+        defaultOwnerId={epic?.ownerId ?? owner?.id ?? ""}
+        defaultGroupId={epic?.id ?? ""}
+        lockOwner
+        lockGroup
+      />
     </div>
   );
 }

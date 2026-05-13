@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
+import { DashboardPager } from "@/components/DashboardPager";
 import { FilterMultiDropdown } from "@/components/FilterMultiDropdown";
 import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -22,7 +24,7 @@ import {
 import { isArchived } from "@/lib/archive";
 import { noteEntryAttributionForSwatch } from "@/lib/noteEntryAttributionDisplay";
 import { noteEntryEditHref, noteEntryViewHref } from "@/lib/noteEntryPaths";
-import type { Owner, OwnerEntry, Project } from "@/lib/schemas";
+import type { Owner, OwnerEntry, Project, Task, TaskGroup } from "@/lib/schemas";
 import { OwnerSwatch } from "@/components/OwnerSwatch";
 import { EntityArchivedBadge } from "./EntityArchivedMark";
 import { TrashIcon } from "@/components/icons";
@@ -30,7 +32,9 @@ import { MarkdownField } from "@/components/MarkdownField";
 import { NoteStatusSelect } from "@/components/NoteStatusSelect";
 import { NoteTagsEditor } from "@/components/NoteTagsEditor";
 import { SearchableSingleSelect } from "@/components/SearchableSingleSelect";
+import { useDashboardLocalPager } from "@/lib/useDashboardLocalPager";
 import { TableCellSlot, TableClampCell } from "@/components/TableClampCell";
+import { TableColumnResizeHandle, useTableColumnWidths } from "@/lib/useTableColumnWidths";
 
 function ownerName(owners: Owner[], id: string | null) {
   if (id == null) return "—";
@@ -42,9 +46,36 @@ function projectName(projects: Project[], id: string | null) {
   return projects.find((p) => p.id === id)?.name ?? id;
 }
 
+function listFromApi<T>(raw: unknown): T[] {
+  if (Array.isArray(raw)) return raw as T[];
+  if (
+    raw &&
+    typeof raw === "object" &&
+    "items" in raw &&
+    Array.isArray((raw as { items: unknown }).items)
+  ) {
+    return (raw as { items: T[] }).items;
+  }
+  return [];
+}
+
+function taskLabel(tasks: Task[], id: string | null | undefined) {
+  if (id == null) return "—";
+  const t = tasks.find((x) => x.id === id);
+  return t ? `${t.name} (${t.key})` : id;
+}
+
+function epicLabel(groups: TaskGroup[], id: string | null | undefined) {
+  if (id == null) return "—";
+  const g = groups.find((x) => x.id === id);
+  return g ? `${g.name} (${g.key})` : id;
+}
+
 type NotesTableColumnId =
   | "owner"
   | "project"
+  | "task"
+  | "epic"
   | "title"
   | "tags"
   | "type"
@@ -53,13 +84,24 @@ type NotesTableColumnId =
   | "created"
   | "summary";
 
-type SortKey = "owner" | "project" | "title" | "type" | "status" | "priority" | "created";
+type SortKey =
+  | "owner"
+  | "project"
+  | "task"
+  | "epic"
+  | "title"
+  | "type"
+  | "status"
+  | "priority"
+  | "created";
 
 const NOTES_TABLE_COLUMN_STORAGE_KEY = "pd-notes-table-columns";
 
 const DEFAULT_NOTES_TABLE_COLUMNS: Record<NotesTableColumnId, boolean> = {
   owner: true,
   project: true,
+  task: true,
+  epic: true,
   title: true,
   tags: true,
   type: true,
@@ -77,6 +119,8 @@ const NOTES_TABLE_COLUMNS: {
   { id: "title", label: "Title", sortKey: "title" },
   { id: "owner", label: "Owner", sortKey: "owner" },
   { id: "project", label: "Project", sortKey: "project" },
+  { id: "task", label: "Task", sortKey: "task" },
+  { id: "epic", label: "Epic", sortKey: "epic" },
   { id: "tags", label: "Tags" },
   { id: "type", label: "Type", sortKey: "type" },
   { id: "status", label: "Status", sortKey: "status" },
@@ -109,6 +153,8 @@ export function NotesClient() {
 
   const [owners, setOwners] = useState<Owner[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [groups, setGroups] = useState<TaskGroup[]>([]);
   const [entries, setEntries] = useState<OwnerEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -117,6 +163,8 @@ export function NotesClient() {
   const [showArchived, setShowArchived] = useState(false);
   const [ownerIds, setOwnerIds] = useState<string[]>([]);
   const [projectIds, setProjectIds] = useState<string[]>([]);
+  const [taskIds, setTaskIds] = useState<string[]>([]);
+  const [epicIds, setEpicIds] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
@@ -141,21 +189,27 @@ export function NotesClient() {
     tags: [] as string[],
     ownerId: "",
     projectId: "",
+    taskId: "",
+    taskGroupId: "",
   });
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
     setErr(null);
     try {
-      const [pr, pj, en] = await Promise.all([
+      const [pr, pj, en, tk, gr] = await Promise.all([
         fetch("/api/owners").then((r) => r.json()),
         fetch("/api/projects").then((r) => r.json()),
         fetch("/api/entries").then((r) => r.json()),
+        fetch("/api/tasks").then((r) => r.json()),
+        fetch("/api/groups").then((r) => r.json()),
       ]);
       if (!Array.isArray(pr) || !Array.isArray(en)) throw new Error("Bad response");
       setOwners(pr);
       setProjects(Array.isArray(pj) ? pj : []);
       setEntries(en);
+      setTasks(listFromApi<Task>(tk));
+      setGroups(listFromApi<TaskGroup>(gr));
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to load");
     } finally {
@@ -184,6 +238,8 @@ export function NotesClient() {
       tags: [],
       ownerId: "",
       projectId: "",
+      taskId: "",
+      taskGroupId: "",
     });
     setNoteCreateOpen(true);
   }
@@ -193,8 +249,13 @@ export function NotesClient() {
       setNoteCreateErr("Title is required.");
       return;
     }
-    if (!noteCreateForm.ownerId.trim() && !noteCreateForm.projectId.trim()) {
-      setNoteCreateErr("Choose at least one owner or one project.");
+    if (
+      !noteCreateForm.ownerId.trim() &&
+      !noteCreateForm.projectId.trim() &&
+      !noteCreateForm.taskId.trim() &&
+      !noteCreateForm.taskGroupId.trim()
+    ) {
+      setNoteCreateErr("Link to at least one owner, project, task, or epic.");
       return;
     }
     setNoteCreateErr(null);
@@ -212,6 +273,8 @@ export function NotesClient() {
           tags: noteCreateForm.tags,
           ownerId: noteCreateForm.ownerId.trim() ? noteCreateForm.ownerId : null,
           projectId: noteCreateForm.projectId.trim() ? noteCreateForm.projectId : null,
+          taskId: noteCreateForm.taskId.trim() ? noteCreateForm.taskId : null,
+          taskGroupId: noteCreateForm.taskGroupId.trim() ? noteCreateForm.taskGroupId : null,
         }),
       });
       const payload = (await r.json().catch(() => null)) as
@@ -312,6 +375,30 @@ export function NotesClient() {
     [entries, showArchived],
   );
 
+  const taskFilterOptions = useMemo(
+    () => [
+      { value: "__no_task__", label: "No task" },
+      ...tasks
+        .filter((t) => showArchived || !isArchived(t))
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((t) => ({ value: t.id, label: `${t.name} (${t.key})` })),
+    ],
+    [tasks, showArchived],
+  );
+
+  const epicFilterOptions = useMemo(
+    () => [
+      { value: "__no_epic__", label: "No epic" },
+      ...groups
+        .filter((g) => showArchived || !isArchived(g))
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((g) => ({ value: g.id, label: `${g.name} (${g.key})` })),
+    ],
+    [groups, showArchived],
+  );
+
   const filtered = useMemo(() => {
     let list = entries;
     if (!showArchived) list = list.filter((e) => !isArchived(e));
@@ -329,6 +416,22 @@ export function NotesClient() {
         projectIds.some((id) => {
           if (id === "__no_project__") return x.projectId == null;
           return x.projectId === id;
+        }),
+      );
+    }
+    if (taskIds.length) {
+      list = list.filter((x) =>
+        taskIds.some((id) => {
+          if (id === "__no_task__") return x.taskId == null;
+          return x.taskId === id;
+        }),
+      );
+    }
+    if (epicIds.length) {
+      list = list.filter((x) =>
+        epicIds.some((id) => {
+          if (id === "__no_epic__") return x.taskGroupId == null;
+          return x.taskGroupId === id;
         }),
       );
     }
@@ -358,10 +461,25 @@ export function NotesClient() {
         const inProject =
           x.projectId != null &&
           projectName(projects, x.projectId).toLowerCase().includes(ql);
+        const inTask =
+          x.taskId != null && taskLabel(tasks, x.taskId).toLowerCase().includes(ql);
+        const inEpic =
+          x.taskGroupId != null &&
+          epicLabel(groups, x.taskGroupId).toLowerCase().includes(ql);
         const uuidish = /^[0-9a-f-]{8,}$/i.test(ql);
         const inOwnerId = uuidish && x.ownerId != null && x.ownerId.toLowerCase().includes(ql);
         const inProjectId = uuidish && x.projectId != null && x.projectId.toLowerCase().includes(ql);
-        return inTitle || inBody || inTags || inOwner || inProject || inOwnerId || inProjectId;
+        return (
+          inTitle ||
+          inBody ||
+          inTags ||
+          inOwner ||
+          inProject ||
+          inTask ||
+          inEpic ||
+          inOwnerId ||
+          inProjectId
+        );
       });
     }
     return list;
@@ -376,8 +494,12 @@ export function NotesClient() {
     selectedTagKeys,
     defaultNoteStatus,
     projectIds,
+    taskIds,
+    epicIds,
     owners,
     projects,
+    tasks,
+    groups,
   ]);
 
   function toggleSort(key: SortKey) {
@@ -400,6 +522,12 @@ export function NotesClient() {
           break;
         case "project":
           cmp = projectName(projects, a.projectId).localeCompare(projectName(projects, b.projectId));
+          break;
+        case "task":
+          cmp = taskLabel(tasks, a.taskId).localeCompare(taskLabel(tasks, b.taskId));
+          break;
+        case "epic":
+          cmp = epicLabel(groups, a.taskGroupId).localeCompare(epicLabel(groups, b.taskGroupId));
           break;
         case "title":
           cmp = a.title.localeCompare(b.title);
@@ -451,7 +579,80 @@ export function NotesClient() {
     priorities,
     defaultNoteStatus,
     noteStatusMap,
+    tasks,
+    groups,
   ]);
+
+  const notePagerResetKey = useMemo(
+    () =>
+      JSON.stringify({
+        q,
+        showArchived,
+        ownerIds,
+        projectIds,
+        taskIds,
+        epicIds,
+        selectedTypes,
+        selectedStatuses,
+        selectedPriorities,
+        selectedTagKeys,
+        sortKey,
+        sortDir,
+      }),
+    [
+      q,
+      showArchived,
+      ownerIds,
+      projectIds,
+      taskIds,
+      epicIds,
+      selectedTypes,
+      selectedStatuses,
+      selectedPriorities,
+      selectedTagKeys,
+      sortKey,
+      sortDir,
+    ],
+  );
+
+  const notePager = useDashboardLocalPager(sorted.length, notePagerResetKey);
+
+  const pagedNotes = useMemo(() => notePager.slice(sorted), [notePager, sorted]);
+
+  const defaultNoteColWidth = useCallback((k: string) => {
+    const d: Record<string, number> = {
+      __lead: 56,
+      title: 200,
+      owner: 120,
+      project: 132,
+      task: 168,
+      epic: 168,
+      tags: 128,
+      type: 88,
+      status: 104,
+      priority: 100,
+      created: 148,
+      summary: 200,
+      __actions: 128,
+    };
+    return d[k] ?? 112;
+  }, []);
+
+  const resizableNoteColKeys = useMemo(
+    () =>
+      [
+        "__lead",
+        ...NOTES_TABLE_COLUMNS.filter((c) => tableColumns[c.id]).map((c) => c.id),
+        "__actions",
+      ] as string[],
+    [tableColumns],
+  );
+
+  const { ColGroup, startResize } = useTableColumnWidths(
+    "pd-notes-table-col-widths",
+    resizableNoteColKeys,
+    defaultNoteColWidth,
+  );
 
   if (loading) return <p className="text-zinc-500">Loading…</p>;
 
@@ -469,10 +670,11 @@ export function NotesClient() {
             Notes
           </h1>
           <p className="mt-1 text-sm text-zinc-500">
-            All notes in one place. Use the Project column (and Columns menu) to show or hide it.
-            Filter by owner, project—including <strong>No owner</strong> /{" "}
-            <strong>No project</strong>—and tags; search matches title, body, tags, owner or project
-            names, and partial owner/project IDs. For note body formatting, see{" "}
+            All notes in one place. Columns include owner, project, linked task, and epic where set.
+            Filter by owner, project, task, epic—including <strong>No owner</strong>,{" "}
+            <strong>No project</strong>, <strong>No task</strong>, and <strong>No epic</strong>
+            —and tags; search matches title, body, tags, owner, project, task, or epic labels, and
+            partial owner/project IDs. For note body formatting, see{" "}
             <Link href="/docs/markdown" className="text-blue-600 underline dark:text-blue-400">
               Markdown
             </Link>
@@ -490,13 +692,14 @@ export function NotesClient() {
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-2 lg:grid-cols-3">
-        <label className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-3">
+      <DashboardFilterDisclosure>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-4">
           <span className="text-zinc-500">Search (all notes)</span>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Title, body, tags, owner or project name, or ID fragment"
+            placeholder="Title, body, tags, owner, project, task, epic, or ID fragment"
             className="rounded-lg border border-zinc-300 px-2 py-1.5 dark:border-zinc-600 dark:bg-zinc-900"
           />
         </label>
@@ -511,6 +714,18 @@ export function NotesClient() {
           options={projectFilterOptions}
           selected={projectIds}
           onChange={setProjectIds}
+        />
+        <FilterMultiDropdown
+          label="Task"
+          options={taskFilterOptions}
+          selected={taskIds}
+          onChange={setTaskIds}
+        />
+        <FilterMultiDropdown
+          label="Epic"
+          options={epicFilterOptions}
+          selected={epicIds}
+          onChange={setEpicIds}
         />
         <FilterMultiDropdown
           label="Tags (any match)"
@@ -536,7 +751,7 @@ export function NotesClient() {
           selected={selectedPriorities}
           onChange={setSelectedPriorities}
         />
-        <label className="flex items-center gap-2 text-sm text-zinc-700 sm:col-span-2 lg:col-span-3 dark:text-zinc-200">
+        <label className="flex items-center gap-2 text-sm text-zinc-700 sm:col-span-2 lg:col-span-4 dark:text-zinc-200">
           <input
             type="checkbox"
             checked={showArchived}
@@ -545,7 +760,8 @@ export function NotesClient() {
           />
           Show archived notes
         </label>
-      </div>
+        </div>
+      </DashboardFilterDisclosure>
 
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center justify-end gap-2">
@@ -573,15 +789,23 @@ export function NotesClient() {
             </div>
           </details>
         </div>
+        <DashboardPager
+          page={notePager.page}
+          pageCount={notePager.pageCount}
+          total={notePager.total}
+          pageSize={notePager.pageSize}
+          onPageChange={notePager.setPage}
+        />
         <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-          <table className="w-full min-w-[80rem] text-left text-sm">
+          <table className="w-full min-w-0 table-fixed text-left text-sm">
+            <ColGroup />
             <thead className="bg-zinc-50 text-xs uppercase text-zinc-500 dark:bg-zinc-900/80 dark:text-zinc-400">
               <tr>
-                <th className="w-px min-w-0 p-0" aria-hidden />
+                <th className="relative w-px min-w-0 p-0" aria-hidden />
                 {NOTES_TABLE_COLUMNS.filter((c) => tableColumns[c.id]).map((col) => {
                   const colSort = col.sortKey;
                   return (
-                    <th key={col.id} className="px-3 py-2">
+                    <th key={col.id} className="relative px-3 py-2">
                       {colSort ? (
                         <button
                           type="button"
@@ -594,14 +818,15 @@ export function NotesClient() {
                       ) : (
                         <span className="font-semibold">{col.label}</span>
                       )}
+                      <TableColumnResizeHandle columnKey={col.id} onStart={startResize} />
                     </th>
                   );
                 })}
-                <th className="px-3 py-2"> </th>
+                <th className="relative px-3 py-2"> </th>
               </tr>
             </thead>
             <tbody>
-              {sorted.map((e) => {
+              {pagedNotes.map((e) => {
                 const p = e.ownerId ? owners.find((x) => x.id === e.ownerId) : null;
                 const proj = e.projectId ? projects.find((x) => x.id === e.projectId) : null;
                 const sw = noteEntryAttributionForSwatch(e, owners, projects);
@@ -708,6 +933,48 @@ export function NotesClient() {
                         )}
                       </td>
                     ) : null}
+                    {tableColumns.task ? (
+                      <td className="max-w-[12rem] align-middle px-3 py-2">
+                        {e.taskId ? (
+                          <TableClampCell
+                            className="min-w-0 text-sm"
+                            fullTitle={taskLabel(tasks, e.taskId)}
+                          >
+                            <Link
+                              href={`/tasks/${e.taskId}`}
+                              className="block min-w-0 text-blue-600 hover:underline dark:text-blue-400"
+                            >
+                              {taskLabel(tasks, e.taskId)}
+                            </Link>
+                          </TableClampCell>
+                        ) : (
+                          <TableCellSlot className="text-zinc-400">
+                            <span>—</span>
+                          </TableCellSlot>
+                        )}
+                      </td>
+                    ) : null}
+                    {tableColumns.epic ? (
+                      <td className="max-w-[12rem] align-middle px-3 py-2">
+                        {e.taskGroupId ? (
+                          <TableClampCell
+                            className="min-w-0 text-sm"
+                            fullTitle={epicLabel(groups, e.taskGroupId)}
+                          >
+                            <Link
+                              href={`/epics/${e.taskGroupId}`}
+                              className="block min-w-0 text-blue-600 hover:underline dark:text-blue-400"
+                            >
+                              {epicLabel(groups, e.taskGroupId)}
+                            </Link>
+                          </TableClampCell>
+                        ) : (
+                          <TableCellSlot className="text-zinc-400">
+                            <span>—</span>
+                          </TableCellSlot>
+                        )}
+                      </td>
+                    ) : null}
                     {tableColumns.tags ? (
                       <td className="max-w-[14rem] align-middle px-3 py-2 text-zinc-600 dark:text-zinc-300">
                         {tags.length ? (
@@ -800,9 +1067,8 @@ export function NotesClient() {
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 dark:bg-zinc-950">
             <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">New note</h3>
             <p className="mt-1 text-sm text-zinc-500">
-              Set at least one owner or one project. The public key is derived from that parent (for
-              example <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">ONE-3452-44</code>
-              ). You can change attribution later when editing.
+              Link to at least one of owner, project, task, or epic. The public key follows the most
+              specific parent (task → epic → owner → project). You can change links when editing.
             </p>
             {noteCreateErr ? (
               <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
@@ -865,7 +1131,7 @@ export function NotesClient() {
                 onChange={(tags) => setNoteCreateForm((f) => ({ ...f, tags }))}
               />
               <SearchableSingleSelect
-                label="Owner (optional if project set)"
+                label="Owner (optional)"
                 value={noteCreateForm.ownerId}
                 onChange={(v) => setNoteCreateForm((f) => ({ ...f, ownerId: v }))}
                 placeholder="None"
@@ -875,7 +1141,7 @@ export function NotesClient() {
                 ]}
               />
               <SearchableSingleSelect
-                label="Project (optional if owner set)"
+                label="Project (optional)"
                 value={noteCreateForm.projectId}
                 onChange={(v) => setNoteCreateForm((f) => ({ ...f, projectId: v }))}
                 placeholder="None"
@@ -885,6 +1151,32 @@ export function NotesClient() {
                     .slice()
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .map((p) => ({ value: p.id, label: p.name })),
+                ]}
+              />
+              <SearchableSingleSelect
+                label="Task (optional)"
+                value={noteCreateForm.taskId}
+                onChange={(v) => setNoteCreateForm((f) => ({ ...f, taskId: v }))}
+                placeholder="None"
+                options={[
+                  { value: "", label: "None" },
+                  ...tasks
+                    .slice()
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((t) => ({ value: t.id, label: `${t.name} (${t.key})` })),
+                ]}
+              />
+              <SearchableSingleSelect
+                label="Epic (optional)"
+                value={noteCreateForm.taskGroupId}
+                onChange={(v) => setNoteCreateForm((f) => ({ ...f, taskGroupId: v }))}
+                placeholder="None"
+                options={[
+                  { value: "", label: "None" },
+                  ...groups
+                    .slice()
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((g) => ({ value: g.id, label: `${g.name} (${g.key})` })),
                 ]}
               />
               <MarkdownField

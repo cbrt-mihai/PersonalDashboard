@@ -5,7 +5,7 @@ import { appendAudit, auditDetailForCreate } from "@/lib/auditLog";
 import { nextOwnerEntryKey } from "@/lib/apiEntityKey";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { closedAtForNewNote } from "@/lib/noteClosedAt";
-import { validateNoteAttribution } from "@/lib/noteAttribution";
+import { normalizeNoteAnchors } from "@/lib/noteAttribution";
 import { dedupeTags } from "@/lib/noteTags";
 import { ownerEntrySchema } from "@/lib/schemas";
 import { firstStatusIdByOrder } from "@/lib/statusConfig";
@@ -13,6 +13,8 @@ import { firstStatusIdByOrder } from "@/lib/statusConfig";
 const NOTE_CREATE_AUDIT_KEYS = [
   "ownerId",
   "projectId",
+  "taskId",
+  "taskGroupId",
   "title",
   "status",
   "type",
@@ -30,6 +32,8 @@ const createBody = z.object({
   priority: z.string().optional().default("Medium"),
   tags: z.array(z.string().min(1).max(48)).max(24).optional(),
   ownerId: z.string().uuid().nullable().optional(),
+  taskId: z.string().uuid().nullable().optional(),
+  taskGroupId: z.string().uuid().nullable().optional(),
 });
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -62,18 +66,53 @@ export async function POST(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
   const ownerId = parsed.data.ownerId ?? null;
-  const v = validateNoteAttribution(ownerId, projectId, store);
-  if (!v.ok) {
-    return NextResponse.json({ error: v.error }, { status: v.status });
+  const n = normalizeNoteAnchors(store, {
+    ownerId,
+    projectId,
+    taskId: parsed.data.taskId ?? null,
+    taskGroupId: parsed.data.taskGroupId ?? null,
+  });
+  if (!n.ok) {
+    return NextResponse.json({ error: n.error }, { status: n.status });
+  }
+  const { ownerId: oid, taskId, taskGroupId } = n.anchors;
+  const pid = projectId;
+  if (taskGroupId) {
+    const g = store.taskGroups.find((x) => x.id === taskGroupId);
+    if (g && g.projectId != null && g.projectId !== projectId) {
+      return NextResponse.json(
+        { error: "Epic does not belong to this project" },
+        { status: 400 },
+      );
+    }
+  }
+  if (taskId) {
+    const t = store.tasks.find((x) => x.id === taskId);
+    if (t?.groupId) {
+      const g = store.taskGroups.find((x) => x.id === t.groupId);
+      if (g && g.projectId != null && g.projectId !== projectId) {
+        return NextResponse.json(
+          { error: "Task epic does not belong to this project" },
+          { status: 400 },
+        );
+      }
+    }
   }
   const defaultStatus = firstStatusIdByOrder(store.settings.noteStatuses);
   const createdAt = new Date().toISOString();
   const status = parsed.data.status ?? defaultStatus;
   const entry = ownerEntrySchema.parse({
     id: randomUUID(),
-    key: nextOwnerEntryKey(store, { ownerId, projectId }),
-    ownerId,
-    projectId,
+    key: nextOwnerEntryKey(store, {
+      ownerId: oid,
+      projectId: pid,
+      taskId,
+      taskGroupId,
+    }),
+    ownerId: oid,
+    projectId: pid,
+    taskId,
+    taskGroupId,
     title: parsed.data.title,
     body: parsed.data.body ?? "",
     status,

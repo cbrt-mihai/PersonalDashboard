@@ -2,7 +2,14 @@
 
 import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+} from "react";
+import { useDashboardLocalPager } from "@/lib/useDashboardLocalPager";
 import { HexColorPickerRow } from "@/components/OwnerStyleColorPicker";
 import { OwnerSwatch } from "@/components/OwnerSwatch";
 import { TrashIcon } from "@/components/icons";
@@ -12,6 +19,8 @@ import { NAMED_OWNER_COLOR_PRESETS } from "@/lib/presetColors";
 import { isArchived } from "@/lib/archive";
 import { EntityArchivedBadge } from "@/components/EntityArchivedMark";
 import { EntityKeyTagInput } from "@/components/EntityKeyTagInput";
+import { DashboardFilterDisclosure } from "@/components/DashboardFilterDisclosure";
+import { DashboardPager } from "@/components/DashboardPager";
 
 export function OwnersListClient() {
   const { settings } = useDashboardConfig();
@@ -98,10 +107,21 @@ export function OwnersListClient() {
       .sort((a, b) => a.localeCompare(b));
   }
 
-  const filteredOwners = owners.filter((p) => {
-    if (!isArchived(p)) return true;
-    return showArchived;
-  });
+  const filteredOwners = useMemo(() => {
+    let list = owners.filter((p) => {
+      if (!isArchived(p)) return true;
+      return showArchived;
+    });
+    const ql = q.trim().toLowerCase();
+    if (ql) list = list.filter((p) => p.name.toLowerCase().includes(ql));
+    return list;
+  }, [owners, showArchived, q]);
+
+  const ownerPagerResetKey = useMemo(() => JSON.stringify({ q, showArchived }), [q, showArchived]);
+
+  const ownerPager = useDashboardLocalPager(filteredOwners.length, ownerPagerResetKey);
+
+  const pagedOwners = useMemo(() => ownerPager.slice(filteredOwners), [ownerPager, filteredOwners]);
 
   if (loading) return <p className="text-zinc-500">Loading…</p>;
 
@@ -117,7 +137,8 @@ export function OwnersListClient() {
         </p>
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-2">
+      <DashboardFilterDisclosure>
+        <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-500">Search</span>
           <input
@@ -139,7 +160,8 @@ export function OwnersListClient() {
           />
           Show archived
         </label>
-      </div>
+        </div>
+      </DashboardFilterDisclosure>
 
       <form
         onSubmit={(e) => void createOwner(e)}
@@ -207,8 +229,16 @@ export function OwnersListClient() {
         </button>
       </form>
 
+      <DashboardPager
+        page={ownerPager.page}
+        pageCount={ownerPager.pageCount}
+        total={ownerPager.total}
+        pageSize={ownerPager.pageSize}
+        onPageChange={ownerPager.setPage}
+      />
+
       <ul className="grid gap-4 sm:grid-cols-2">
-        {filteredOwners.map((p) => (
+        {pagedOwners.map((p) => (
           <li
             key={p.id}
             className="flex flex-col rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
@@ -254,6 +284,12 @@ export function OwnersListClient() {
                 className="font-medium text-blue-600 hover:underline dark:text-blue-400"
               >
                 Open
+              </Link>
+              <Link
+                href={`/owners/${p.id}/edit`}
+                className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+              >
+                Edit
               </Link>
               <button
                 type="button"

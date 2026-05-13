@@ -7,6 +7,11 @@ import { ENTITY_KEY_TAG_MAX, normalizeKeyTag } from "@/lib/entityKey";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { dedupeTags } from "@/lib/noteTags";
 import { projectSchema, ownerSchema } from "@/lib/schemas";
+import {
+  parseListPagination,
+  sliceToPage,
+  wantsPaginatedList,
+} from "@/lib/apiPagination";
 
 const PROJECT_CREATE_AUDIT_KEYS = ["name", "color", "iconDataUrl", "description", "tags"] as const;
 
@@ -19,8 +24,13 @@ const createBody = z.object({
   keyTag: z.string().max(ENTITY_KEY_TAG_MAX).optional(),
 });
 
-export async function GET() {
+export async function GET(req: Request) {
   const { projects } = readStore();
+  const { searchParams } = new URL(req.url);
+  if (wantsPaginatedList(searchParams)) {
+    const { page, pageSize } = parseListPagination(searchParams);
+    return NextResponse.json(sliceToPage(projects, page, pageSize));
+  }
   return NextResponse.json(projects);
 }
 

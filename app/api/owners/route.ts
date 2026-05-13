@@ -6,6 +6,11 @@ import { nextEntityKey } from "@/lib/apiEntityKey";
 import { ENTITY_KEY_TAG_MAX, normalizeKeyTag } from "@/lib/entityKey";
 import { mutateStore, readStore } from "@/lib/jsonStore";
 import { ownerSchema } from "@/lib/schemas";
+import {
+  parseListPagination,
+  sliceToPage,
+  wantsPaginatedList,
+} from "@/lib/apiPagination";
 
 const OWNER_CREATE_AUDIT_KEYS = ["name", "color", "iconDataUrl"] as const;
 
@@ -16,8 +21,13 @@ const createBody = z.object({
   keyTag: z.string().max(ENTITY_KEY_TAG_MAX).optional(),
 });
 
-export async function GET() {
+export async function GET(req: Request) {
   const { owners } = readStore();
+  const { searchParams } = new URL(req.url);
+  if (wantsPaginatedList(searchParams)) {
+    const { page, pageSize } = parseListPagination(searchParams);
+    return NextResponse.json(sliceToPage(owners, page, pageSize));
+  }
   return NextResponse.json(owners);
 }
 
