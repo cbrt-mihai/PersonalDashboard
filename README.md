@@ -1,6 +1,6 @@
 # Personal dashboard
 
-A **local-first** app for organizing your work in one place: people and areas you care about (**owners**), **projects**, **epics** (big buckets of work), **tasks**, **notes**, and **time you log** (**worklogs**). It runs on your machine; your data lives in a single file you control—no sign-up and no cloud database bundled in.
+A **local-first** app for organizing your work in one place: people and areas you care about (**owners**), **projects**, **epics** (big buckets of work), **tasks**, **notes**, **time you log** (**worklogs**), **achievements**, and an **audit log** of changes. It runs on your machine; your data lives in a single file you control—no sign-up and no cloud database bundled in.
 
 If you want architecture, APIs, and implementation detail, see **[README.technical.md](README.technical.md)**.
 
@@ -52,9 +52,11 @@ Think of the app as a small personal **command center**: you record who/what wor
 ### Home (dashboard)
 
 - See tasks in a **table** or grouped **by epic**.
-- **Filter** by owner, tags, status, type, priority, and more.
+- **Filter** by owner, tags, status, type, priority, and more (filters can be collapsed to save space on smaller screens).
+- **Paginate** long task lists so the dashboard stays responsive with large datasets.
 - **Create tasks** from the dashboard, open them to view or edit, and use **Markdown** for descriptions.
 - **Subtasks** help you split a task into smaller check-off steps.
+- **Layout width** is configurable (presets or a custom pixel max) so wide tables stay readable on large monitors.
 
 ### Owners
 
@@ -69,7 +71,8 @@ Think of the app as a small personal **command center**: you record who/what wor
 ### Epics (task groups)
 
 - An **epic** is a named group of related tasks (for example a milestone or theme).
-- You can browse epics across the app and drill into one epic’s tasks and progress.
+- Use the **Epics** section in the nav to browse **all epics** with progress, then open one for its tasks and details.
+- Epics also appear in context on **owner** and **project** pages.
 
 ### Tasks
 
@@ -81,7 +84,8 @@ Think of the app as a small personal **command center**: you record who/what wor
 
 - **Notes** are free-form entries (title, body, status, type, priority, tags).
 - You link a note to **at least one** owner and/or project so it stays findable in the right place.
-- Each note gets a **public reference code** derived from that parent (so related items share a recognizable prefix). The numeric part can be **very short or quite long** (for example `ONE-3`, `ONE-3435`, or `RBRAND-435343`), the same style as owners and projects.
+- Each note gets a **public reference code** derived from that parent (so related items share a recognizable prefix). The numeric part can be **very short or quite long** (for example `TSK-3`, `TSK-3435`, or `PROJ-435343`), the same style as owners, projects, epics, tasks, and worklogs when you create them.
+- When creating owners, projects, epics, tasks, or worklogs you can optionally set a **key tag** (letter prefix) so new keys match your naming scheme; notes inherit their prefix from the linked owner or project.
 
 ### Worklogs
 
@@ -95,13 +99,16 @@ Think of the app as a small personal **command center**: you record who/what wor
 
 ### Search
 
-- Use **Search** in the header or press **⌘K** (Mac) / **Ctrl+K** (Windows) to open a **quick search** across owners, projects, epics, tasks, and notes.
+- Use **Search** in the header or press **⌘K** (Mac) / **Ctrl+K** (Windows) to open a **quick search** across owners, projects, epics, tasks, notes, and worklogs.
 - The top menu stays visible while you scroll and highlights the section you are currently viewing.
 
 ### Language
 
-- Use the language dropdown in the header to switch platform text between **English** and **Romanian**.
-- The selection is saved in your browser cookie. User-authored content such as task names, notes, and custom status labels is not translated automatically.
+- Use the language control in the header to switch **platform chrome** (menus, buttons, empty states) between **English** and **Romanian**.
+- The choice is stored in a browser cookie (`pd-locale`) and matches the page `lang` attribute for accessibility.
+- **Your** content—task titles, note bodies, custom status names in Settings, and similar—is stored and shown exactly as you typed it; it is not machine-translated.
+
+For developers who want to add another language, see **[Adding new localizations](#adding-new-localizations)** below.
 
 ### Audit Log
 
@@ -110,12 +117,42 @@ Think of the app as a small personal **command center**: you record who/what wor
 
 ### Settings
 
-- Tune **task** statuses, types, and priorities; **note** statuses and types; **owner color** presets; **theme** behavior; and **worklog** defaults—so the vocabulary matches how you actually work.
+- Tune **task** statuses, types, and priorities; **note** statuses and types; **owner color** presets; **theme** behavior (light / dark and how the nav theme control looks); **worklog** defaults (including minutes per “day” for duration shortcuts); and **dashboard width**.
+- **Export** downloads the full `store.json` as a dated file for backups or moving machines; **import** replaces the live store with a chosen JSON file (the app validates the shape—keep backups before importing).
 
 ### Markdown and wiki-style links
 
 - Long text fields support **Markdown** (headings, lists, links, code, and more).
-- Special **wiki links** in double brackets can jump straight to an owner, project, epic, task, or note. There is an in-app **Markdown** help page under **Docs** and a longer reference in [`docs/MARKDOWN.md`](docs/MARKDOWN.md).
+- Special **wiki links** in double brackets can jump straight to an owner, project, epic, task, or note. There is an in-app **Markdown** help page under **Docs** (Romanian uses [`docs/MARKDOWN.ro.md`](docs/MARKDOWN.ro.md) when that locale is active) and a longer reference in [`docs/MARKDOWN.md`](docs/MARKDOWN.md).
+
+---
+
+## Adding new localizations
+
+Platform strings are **typed TypeScript objects**, not JSON bundles. **English** (`lib/i18n/locales/en.ts`) defines the full nested shape; every other locale must provide the **same keys** with translated string values.
+
+1. **Add a locale module**  
+   Copy `lib/i18n/locales/en.ts` to `lib/i18n/locales/<code>.ts` (use a short BCP 47-style code, e.g. `de` for German). Replace each string value with the translation. Do not rename or drop keys—TypeScript will error if the shape diverges from English.
+
+2. **Register the locale**  
+   In `lib/i18n/index.ts`, import your module and add it to the `LOCALES` object next to `en` and `ro`. `SupportedLocale` and `SUPPORTED_LOCALES` are derived from that map automatically.
+
+3. **Language picker labels**  
+   In `lib/i18n/locales/en.ts` (and every other locale file, including your new one), add entries under `language` for the new language’s **native** name, e.g. `german: "Deutsch"`. Then extend the `labels` map in `components/LanguageSelect.tsx` so the dropdown shows `t("language.german")` (or whatever keys you added) for the new code.
+
+4. **Flag icon**  
+   Add an SVG file at `public/flags/locale-<code>.svg`, then register that path in `components/LocaleFlagIcon.tsx`.
+
+5. **In-app Markdown help (optional)**  
+   `app/docs/markdown/MarkdownDocBody.tsx` only switches between the default file and Romanian today. For a third language, either add another imported markdown file and extend the `locale === …` logic, or rely on the English doc until you wire a translated file.
+
+6. **Placeholders**  
+   Strings may contain tokens like `{year}`, `{page}`, or `{total}`. Keep those token names **identical** across locales; only translate the surrounding text.
+
+7. **Server and cookie**  
+   No extra server wiring is required beyond step 2: `app/layout.tsx` and `lib/i18n/server.ts` already read the `pd-locale` cookie and pass the initial locale into `LocaleProvider`.
+
+See also the **Internationalization** subsection in [README.technical.md](README.technical.md).
 
 ---
 

@@ -1,9 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/components/LocaleProvider";
 import { useDashboardConfig } from "@/components/DashboardSettingsProvider";
+import { useDashboardWidth } from "@/components/DashboardWidthProvider";
 import { useTheme } from "@/components/ThemeProvider";
 import {
   expandHex,
@@ -13,6 +14,15 @@ import {
 import type { DashboardSettings, TaskStatusRow } from "@/lib/schemas";
 import { STATUS_BG_SWATCHES, STATUS_TEXT_COLOR_SWATCHES } from "@/lib/presetColors";
 import type { ThemeMode } from "@/lib/themeStorage";
+import {
+  DASHBOARD_WIDTH_PRESETS,
+  DEFAULT_DASHBOARD_WIDTH,
+  MAX_DASHBOARD_WIDTH_PX,
+  MIN_DASHBOARD_WIDTH_PX,
+  clampWidthPx,
+  findPresetByValue,
+  resolveDashboardWidthPx,
+} from "@/lib/dashboardWidthStorage";
 import {
   formatWorkdayMinutesForSettingsInput,
   JiraDurationParseError,
@@ -43,6 +53,19 @@ export function SettingsClient() {
   const { t } = useI18n();
   const { theme, setTheme, themeNavToggle, setThemeNavToggle } = useTheme();
   const { settings, reload, loading } = useDashboardConfig();
+  const { width: dashboardWidth, setWidth: setDashboardWidth, resetWidth: resetDashboardWidth } =
+    useDashboardWidth();
+  const activeWidthPreset = useMemo(() => findPresetByValue(dashboardWidth), [dashboardWidth]);
+  const dashboardWidthPx = useMemo(
+    () => resolveDashboardWidthPx(dashboardWidth),
+    [dashboardWidth],
+  );
+  const [widthCustomInput, setWidthCustomInput] = useState<string>("");
+  useEffect(() => {
+    queueMicrotask(() => {
+      setWidthCustomInput(dashboardWidthPx != null ? String(dashboardWidthPx) : "");
+    });
+  }, [dashboardWidthPx]);
   const [draft, setDraft] = useState<DashboardSettings | null>(null);
   const [worklogDayInput, setWorklogDayInput] = useState("24h");
   const [saving, setSaving] = useState(false);
@@ -391,6 +414,79 @@ export function SettingsClient() {
               </button>
             </div>
           </div>
+        </>,
+      )}
+
+      {section(
+        t("settings.dashboardWidth"),
+        <>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            {t("settings.dashboardWidthHelp")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {DASHBOARD_WIDTH_PRESETS.map((preset) => {
+              const active = activeWidthPreset?.id === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => setDashboardWidth(preset.value)}
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium ${
+                    active
+                      ? "border-blue-600 bg-blue-600 text-white"
+                      : "border-zinc-300 dark:border-zinc-600"
+                  }`}
+                >
+                  {t(preset.labelKey as Parameters<typeof t>[0])}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex max-w-xs flex-col gap-1 text-sm">
+              <span className="text-zinc-700 dark:text-zinc-300">
+                {t("settings.widthCustomPx")}
+              </span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={MIN_DASHBOARD_WIDTH_PX}
+                max={MAX_DASHBOARD_WIDTH_PX}
+                step={16}
+                value={widthCustomInput}
+                onChange={(e) => setWidthCustomInput(e.target.value)}
+                onBlur={() => {
+                  const n = Number.parseInt(widthCustomInput, 10);
+                  if (!Number.isFinite(n)) {
+                    setWidthCustomInput(
+                      dashboardWidthPx != null ? String(dashboardWidthPx) : "",
+                    );
+                    return;
+                  }
+                  const clamped = clampWidthPx(n);
+                  setDashboardWidth(`${clamped}px`);
+                  setWidthCustomInput(String(clamped));
+                }}
+                className="rounded-lg border border-zinc-300 px-2 py-1.5 font-mono text-sm dark:border-zinc-600 dark:bg-zinc-900"
+                placeholder={`${MIN_DASHBOARD_WIDTH_PX}-${MAX_DASHBOARD_WIDTH_PX}`}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => resetDashboardWidth()}
+              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
+            >
+              {t("settings.widthReset")}
+            </button>
+          </div>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            {t("settings.widthCurrent", {
+              value:
+                dashboardWidth === DEFAULT_DASHBOARD_WIDTH
+                  ? `${dashboardWidth} (${t("settings.widthNormal")})`
+                  : dashboardWidth,
+            })}
+          </p>
         </>,
       )}
 

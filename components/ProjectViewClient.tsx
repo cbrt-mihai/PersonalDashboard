@@ -188,6 +188,15 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
       });
   }, [visibleGroups, owners, statusMap, tasks]);
 
+  /** Distinct owners referenced by epics in this project (all epics, not filter-dependent). */
+  const projectEpicOwners = useMemo(() => {
+    const ids = [...new Set(groups.map((g) => g.ownerId))];
+    return ids
+      .map((id) => owners.find((o) => o.id === id))
+      .filter((o): o is Owner => o != null)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [groups, owners]);
+
   const overviewStats = useMemo(() => {
     const epicIds = new Set(visibleGroups.map((g) => g.id));
     const projectTasks = tasks.filter((t) => t.groupId && epicIds.has(t.groupId));
@@ -204,12 +213,10 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
       const st = epicRollupStateFromTasks(inG, statusMap);
       byRollup[st] += 1;
     }
-    const ownerIdSet = new Set(visibleGroups.map((g) => g.ownerId));
     return {
       epicCount: visibleGroups.length,
       taskCount: projectTasks.length,
       terminal,
-      uniqueOwners: ownerIdSet.size,
       byRollup: { ...byRollup },
     };
   }, [visibleGroups, tasks, statusMap]);
@@ -424,11 +431,33 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
               {project.name}
             </h1>
           </div>
-          <p className="mt-2 text-xs text-zinc-500">
-            Wiki link:{" "}
-            <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">
-              {`[[project:${project.id}]]`}
-            </code>
+          <p className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1 text-xs text-zinc-500">
+            <span>
+              Wiki link:{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">
+                {`[[project:${project.id}]]`}
+              </code>
+            </span>
+            <span aria-hidden className="text-zinc-400">
+              ·
+            </span>
+            <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span>{projectEpicOwners.length === 1 ? "Owner:" : "Owners:"}</span>
+              {projectEpicOwners.length === 0 ? (
+                <span className="font-normal text-zinc-500">— (no epics yet)</span>
+              ) : (
+                projectEpicOwners.map((o) => (
+                  <Link
+                    key={o.id}
+                    href={`/owners/${o.id}`}
+                    className="inline-flex items-center gap-1.5 font-medium text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    <OwnerSwatch owner={o} className="h-4 w-4 rounded" title={o.name} />
+                    {o.name}
+                  </Link>
+                ))
+              )}
+            </span>
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -499,10 +528,27 @@ export function ProjectViewClient({ projectId }: { projectId: string }) {
                   )})`}
             </dd>
           </div>
-          <div>
-            <dt className="text-zinc-500">Owners (in epics)</dt>
-            <dd className="mt-1 font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
-              {overviewStats.uniqueOwners}
+          <div className="sm:col-span-2 lg:col-span-4">
+            <dt className="text-zinc-500">
+              {projectEpicOwners.length === 1 ? "Owner" : "Owners"} (from epics)
+            </dt>
+            <dd className="mt-1">
+              {projectEpicOwners.length === 0 ? (
+                <span className="text-zinc-500">—</span>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {projectEpicOwners.map((o) => (
+                    <Link
+                      key={o.id}
+                      href={`/owners/${o.id}`}
+                      className="inline-flex items-center gap-2 font-medium text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                      <OwnerSwatch owner={o} className="h-7 w-7 rounded-lg" title={o.name} />
+                      {o.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </dd>
           </div>
           <div className="sm:col-span-2 lg:col-span-4">

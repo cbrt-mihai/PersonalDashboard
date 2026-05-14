@@ -4,11 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import type { Project, Task, TaskGroup } from "@/lib/schemas";
 import { markdownExcerpt } from "@/lib/markdownExcerpt";
-import {
-  dashboardIconBtnNeutralClass,
-  dashboardIconBtnPrimaryClass,
-} from "@/lib/dashboardTableActionClasses";
-import { ArrowTopRightOnSquareIcon, PencilIcon, TrashIcon } from "@/components/icons";
+import { dashboardIconBtnPrimaryClass } from "@/lib/dashboardTableActionClasses";
+import { EyeIcon, PencilIcon, TrashIcon } from "@/components/icons";
 import { HexColorPickerRow } from "@/components/OwnerStyleColorPicker";
 import { OwnerSwatch } from "@/components/OwnerSwatch";
 import { fileToOwnerIconDataUrl } from "@/lib/ownerIconDataUrl";
@@ -329,11 +326,11 @@ export function ProjectsListClient() {
             <div className="mt-4 flex flex-wrap gap-1 text-sm">
               <Link
                 href={`/projects/${p.id}`}
-                className={dashboardIconBtnNeutralClass}
+                className={dashboardIconBtnPrimaryClass}
                 aria-label="Open project"
                 title="Open project"
               >
-                <ArrowTopRightOnSquareIcon />
+                <EyeIcon />
               </Link>
               <Link
                 href={`/projects/${p.id}/edit`}

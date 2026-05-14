@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { AppProviders } from "@/components/AppProviders";
 import { Nav } from "@/components/Nav";
+import { INIT_DASHBOARD_WIDTH_SCRIPT } from "@/lib/dashboardWidthStorage";
 import { LOCALE_COOKIE_NAME, resolveLocale, translate } from "@/lib/i18n";
 import "./globals.css";
 
@@ -42,6 +43,7 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+        <script dangerouslySetInnerHTML={{ __html: INIT_DASHBOARD_WIDTH_SCRIPT }} />
         <AppProviders initialLocale={initialLocale}>
           <div className="flex min-h-full flex-1 flex-col">
             <Nav />

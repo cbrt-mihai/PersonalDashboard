@@ -4,7 +4,7 @@ export const ro = {
   app: {
     name: "Tablou de bord personal",
     description: "Sarcini, responsabili și notițe locale, salvate în JSON",
-    footer: "© {year} Tablou de bord personal. Toate drepturile rezervate.",
+    footer: "Copyright © {year} PersonalDashboard. Toate drepturile rezervate.",
   },
   nav: {
     dashboard: "Tablou de bord",
@@ -106,6 +106,13 @@ export const ro = {
     columns: "Coloane",
   },
   worklog: {
+    monday: "Lu",
+    tuesday: "Ma",
+    wednesday: "Mi",
+    thursday: "Jo",
+    friday: "Vi",
+    saturday: "Sâ",
+    sunday: "Du",
     logWork: "Pontează lucru",
     editWorklog: "Editează jurnalul de lucru",
     workLog: "Jurnal de lucru",
@@ -151,6 +158,22 @@ export const ro = {
     timeSpentLabel: "Timp petrecut (ex. 30m, 1h, 2d - 1d = {minutesPerDay}m)",
     comment: "Comentariu",
     timeSpentPlaceholder: "1h 30m",
+    tableColumns: "Coloane tabel",
+    columnOwnerGroup: "Responsabil (grup)",
+    columnOwnerTotal: "Total pe responsabil",
+    columnProject: "Proiect",
+    columnEntry: "Intrare",
+    columnRowTotal: "Total rând",
+    columnDays: "Detaliere zilnică",
+    filterByOwner: "Responsabil",
+    filterByProject: "Proiect",
+    filterByKind: "Tip țintă",
+    filterSearchList: "Caută în listă",
+    filterSearchPlaceholder: "Cheie, comentariu sau țintă…",
+    clearFilters: "Șterge filtrele",
+    noMatchesFilters: "Niciun jurnal nu corespunde filtrelor curente.",
+    kindProject: "Jurnal pe proiect",
+    kindOwner: "Jurnal pe responsabil",
   },
   achievements: {
     title: "Realizări",
@@ -253,6 +276,16 @@ export const ro = {
       "Alege controlul afișat în antet lângă linkurile paginii (salvat în acest browser).",
     classicSlider: "Slider clasic",
     scenicToggle: "Comutator scenic",
+    dashboardWidth: "Lățime tablou de bord",
+    dashboardWidthHelp:
+      "Setează lățimea maximă a tablourilor cu liste (Sarcini, Notițe, Epice, Proiecte, Responsabili, Jurnale, Realizări, Audit). Salvat în acest browser. Sfat: trage marginea dreaptă a oricărui tablou pentru ajustare fină; dublu-clic pe mâner pentru resetare.",
+    widthNormal: "Normal",
+    widthWide: "Lat",
+    widthExtraWide: "Foarte lat",
+    widthFull: "Ecran complet",
+    widthCustomPx: "Lățime personalizată (px)",
+    widthReset: "Resetează",
+    widthCurrent: "Actual: {value}",
     suggestedColorPresets: "Presetări de culori sugerate",
     taskTypeHelp: "Ordinea corespunde meniurilor din alte locuri (ex. sarcină nouă, editare sarcină). Folosește săgețile pentru reordonare.",
     taskTypes: "Tipuri de sarcini",
@@ -312,5 +345,9 @@ export const ro = {
   },
   mock: {
     copied: "Copiat {source} în {target}",
+  },
+  dashboardShell: {
+    resizeHandle:
+      "Redimensionează lățimea tabloului (trage, dublu-clic pentru resetare, săgeți pentru ajustare fină)",
   },
 } satisfies Messages;

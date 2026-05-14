@@ -88,7 +88,7 @@ Every major entity has:
 
 ### Formats ([`lib/entityKey.ts`](lib/entityKey.ts))
 
-1. **Standard (non-note):** `[A-Z]{2,16}-\d{1,N}` where **N = `ENTITY_KEY_DIGIT_SUFFIX_MAX`** (32) — e.g. `ONE-3`, `RBRAND-435343`, or a longer custom tag within that letter bound.
+1. **Standard (non-note):** `[A-Z]{2,16}-\d{1,N}` where **N = `ENTITY_KEY_DIGIT_SUFFIX_MAX`** (32) — e.g. `TSK-3`, `PROJ-435343`, or a longer custom tag within that letter bound.
 2. **Legacy (still accepted):** `[A-Z]{2,16}-[A-Z0-9]{6}` — six-character suffix from the older alphabet.
 3. **Note (child of owner/project):** parent’s full key + `-` + `\d{1,N}` — e.g. `ONE-3435-44` (parent must not already be a note-child key).
 

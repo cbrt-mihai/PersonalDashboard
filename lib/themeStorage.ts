@@ -40,9 +40,14 @@ export function applyDashboardTheme(theme: ThemeMode) {
   const reduceMotion =
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  type ViewTransitionLike = {
+    finished?: Promise<unknown>;
+    ready?: Promise<unknown>;
+    updateCallbackDone?: Promise<unknown>;
+  };
   const startVT = (
     document as Document & {
-      startViewTransition?: (callback: () => void) => unknown;
+      startViewTransition?: (callback: () => void) => ViewTransitionLike;
     }
   ).startViewTransition;
 
@@ -51,5 +56,13 @@ export function applyDashboardTheme(theme: ThemeMode) {
     return;
   }
 
-  startVT.call(document, apply);
+  // Skipped transitions (rapid toggle, HMR reload, navigation, etc.) reject
+  // .finished / .ready / .updateCallbackDone with AbortError: "Transition was
+  // skipped". Swallow them — the DOM was already updated synchronously inside
+  // `apply`, so the visual transition is purely cosmetic.
+  const transition = startVT.call(document, apply);
+  const swallow = () => {};
+  transition?.finished?.catch(swallow);
+  transition?.ready?.catch(swallow);
+  transition?.updateCallbackDone?.catch(swallow);
 }

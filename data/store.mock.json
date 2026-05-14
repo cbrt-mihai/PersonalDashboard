@@ -7,22 +7,65 @@
       "id": "10000000-0000-4000-8000-000000000001",
       "key": "OPS-1",
       "name": "Operations",
-      "color": "#2563eb",
-      "archivedAt": null
+      "color": "#1d4ed8",
+      "archivedAt": null,
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxZDRlZDgiLz48cGF0aCBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOTIiIGQ9Ik0zMiAxOGwyLjIgNC41IDQuOS43LTMuNSAzLjQuOCA0LjlMMzIgMjlsLTQuNCAyLjMuOC00LjktMy41LTMuNCA0LjktLjdMMzIgMTh6Ii8+PC9zdmc+"
     },
     {
       "id": "10000000-0000-4000-8000-000000000002",
       "key": "UX-2",
       "name": "UX Studio",
       "color": "#7c3aed",
-      "archivedAt": null
+      "archivedAt": null,
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiM3YzNhZWQiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMyIgb3BhY2l0eT0iLjkiIGQ9Ik0yMCAzOGM2LTE0IDE4LTE0IDI0IDAiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg=="
     },
     {
       "id": "10000000-0000-4000-8000-000000000003",
-      "key": "TEAM-3",
+      "key": "PLAT-3",
       "name": "Platform Team",
       "color": "#0f766e",
-      "archivedAt": null
+      "archivedAt": null,
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwZjc2NmUiLz48cGF0aCBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIgZD0iTTIyIDIyaDh2OGgtOHptMTIgMGg4djhoLTh6bS0xMiAxMmg4djhoLTh6bTEyIDBoOHY4aC04eiIvPjwvc3ZnPg=="
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000004",
+      "key": "SEC-4",
+      "name": "Security",
+      "color": "#b91c1c",
+      "archivedAt": null,
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNiOTFjMWMiLz48cGF0aCBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOTIiIGQ9Ik0zMiAyMGwxMiA2djljMCA3LTUgMTMtMTIgMTUtNy0yLTEyLTgtMTItMTV2LTlsMTItNnoiLz48L3N2Zz4="
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000005",
+      "key": "DATA-5",
+      "name": "Data & Analytics",
+      "color": "#c2410c",
+      "archivedAt": null,
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNjMjQxMGMiLz48cGF0aCBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIgZD0iTTIyIDQwVjI4aDZ2MTJ6bTgtMTZ2MTZoNlYyNHptOCA4djhoNnYtOHoiLz48L3N2Zz4="
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000006",
+      "key": "GROW-6",
+      "name": "Growth",
+      "color": "#047857",
+      "archivedAt": null,
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwNDc4NTciLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMyIgb3BhY2l0eT0iLjkyIiBkPSJNMjIgNDJsOC0xNCA2IDggNi0xOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000007",
+      "key": "FIN-7",
+      "name": "Finance Systems",
+      "color": "#4338ca",
+      "archivedAt": null,
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiM0MzM4Y2EiLz48cGF0aCBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIgZD0iTTMyIDIyYTEwIDEwIDAgMSAwIDAgMjAgMTAgMTAgMCAwIDAgMC0yMHptMCA0djEybDgtNi04LTZ6Ii8+PC9zdmc+"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000008",
+      "key": "SRE-8",
+      "name": "Site Reliability",
+      "color": "#0369a1",
+      "archivedAt": null,
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwMzY5YTEiLz48cGF0aCBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuODgiIGQ9Ik0zOCAyMmMtMiAwLTMgMS00IDItMy0yLTctMS05IDItMiAzLTEgNyAyIDlsLTIgNiA2LTJjMiAyIDUgMyA4IDEgMy0xIDUtNSA0LThzLTQtNS03LTVoMnoiLz48L3N2Zz4="
     }
   ],
   "projects": [
@@ -32,8 +75,13 @@
       "name": "Personal Dashboard polish",
       "archivedAt": null,
       "color": "#6366f1",
-      "description": "Improve the dashboard shell with language switching, persistent navigation, and friendlier audit details.",
-      "tags": ["i18n", "navigation", "audit"]
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiM2MzY2ZjEiLz48cGF0aCBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIgZD0iTTIyIDI0aDIwdjE2SDIyem00LTZoMTJ2NEgyNnoiLz48cGF0aCBmaWxsPSIjYzdkMmZlIiBkPSJNMjYgMjhoOHYyaC04em0wIDRoMTJ2MkgyNnptMCA0aDZ2MmgtNnoiLz48L3N2Zz4=",
+      "description": "Shell navigation, i18n, audit trail polish, and mock fixtures for local demos.",
+      "tags": [
+        "i18n",
+        "navigation",
+        "audit"
+      ]
     },
     {
       "id": "20000000-0000-4000-8000-000000000002",
@@ -41,8 +89,97 @@
       "name": "Documentation refresh",
       "archivedAt": null,
       "color": "#ea580c",
-      "description": "Make setup instructions clearer for macOS, Linux, and Windows users.",
-      "tags": ["docs", "windows"]
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNlYTU4MGMiLz48cGF0aCBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIgZD0iTTI0IDIwaDE0YTIgMiAwIDAgMSAyIDJ2MjJIMjZhMiAyIDAgMCAxLTItMlYyMHoiLz48cGF0aCBmaWxsPSIjZmVkN2FhIiBkPSJNMjggMjZoMTB2MkgyOHptMCA0aDEwdjJIMjh6bTAgNGg2djJoLTZ6Ii8+PC9zdmc+",
+      "description": "Cross-platform setup, troubleshooting, and contributor onboarding.",
+      "tags": [
+        "docs",
+        "windows",
+        "macos"
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000003",
+      "key": "APIGW-3",
+      "name": "API gateway hardening",
+      "archivedAt": null,
+      "color": "#0891b2",
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwODkxYjIiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMyIgb3BhY2l0eT0iLjkyIiBkPSJNMjIgMzJoOGw0LTggNCAxNiA0LThoOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+",
+      "description": "Rate limits, JWT validation, and canary routing for public endpoints.",
+      "tags": [
+        "api",
+        "security",
+        "edge"
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000004",
+      "key": "MOBIL-4",
+      "name": "Retail mobile app",
+      "archivedAt": null,
+      "color": "#be185d",
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNiZTE4NWQiLz48cmVjdCB4PSIyNCIgeT0iMTgiIHdpZHRoPSIxNiIgaGVpZ2h0PSIyOCIgcng9IjMiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii45MiIvPjxwYXRoIGZpbGw9IiNiZTE4NWQiIGQ9Ik0yOCAyMmg4djE4aC04eiIvPjwvc3ZnPg==",
+      "description": "Offline carts, push promos, and store-mode performance tuning.",
+      "tags": [
+        "mobile",
+        "retail",
+        "offline"
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000005",
+      "key": "MLPLT-5",
+      "name": "ML recommendations platform",
+      "archivedAt": null,
+      "color": "#7c3aed",
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiM3YzNhZWQiLz48Y2lyY2xlIGN4PSIyNCIgY3k9IjI4IiByPSI0IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMjIiIHI9IjQiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii43NSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMzgiIHI9IjQiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii43NSIvPjxwYXRoIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIuNiIgZD0iTTI3IDI5bDktNU0yOCAzMWw4IDVNMzIgMzJ2LTQiLz48L3N2Zz4=",
+      "description": "Feature store hygiene, model cards, and shadow traffic for ranking.",
+      "tags": [
+        "ml",
+        "recommendations",
+        "data"
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000006",
+      "key": "CPORT-6",
+      "name": "Customer portal",
+      "archivedAt": null,
+      "color": "#16a34a",
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMxNmEzNGEiLz48Y2lyY2xlIGN4PSIyNiIgY3k9IjI2IiByPSI1IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIvPjxjaXJjbGUgY3g9IjM4IiBjeT0iMjYiIHI9IjUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii43NSIvPjxwYXRoIGZpbGw9IiNiYmY3ZDAiIGQ9Ik0yMiAzOGMyLTQgNi02IDEwLTZzOCAyIDEwIDZ2MkgyMnYtMnoiLz48L3N2Zz4=",
+      "description": "SSO, invoices, and support ticket history for mid-market accounts.",
+      "tags": [
+        "portal",
+        "sso",
+        "billing"
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000007",
+      "key": "CMPLY-7",
+      "name": "SOC readiness",
+      "archivedAt": null,
+      "color": "#ca8a04",
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiNjYThhMDQiLz48cGF0aCBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIgZD0iTTI2IDIwaDEydjE2SDI2em0yIDRoOHYyaC04em0wIDRoOHYyaC04em0wIDRoNXYyaC01eiIvPjxwYXRoIGZpbGw9IiNmZWYwOGEiIGQ9Ik0yOCA0NGw0IDQgOC04LTItMi02IDYtMi0yeiIvPjwvc3ZnPg==",
+      "description": "Evidence collection, access reviews, and vendor questionnaire automation.",
+      "tags": [
+        "compliance",
+        "soc",
+        "audit"
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000008",
+      "key": "OBSRV-8",
+      "name": "Observability uplift",
+      "archivedAt": null,
+      "color": "#0ea5e9",
+      "iconDataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwZWE1ZTkiLz48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMyIgb3BhY2l0eT0iLjkyIiBkPSJNMjAgNDBsNi0xMCA2IDYgOC0xNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+",
+      "description": "SLO dashboards, trace sampling budgets, and noisy-alert burn-down.",
+      "tags": [
+        "sre",
+        "metrics",
+        "tracing"
+      ]
     }
   ],
   "taskGroups": [
@@ -53,18 +190,150 @@
       "projectId": "20000000-0000-4000-8000-000000000001",
       "archivedAt": null,
       "name": "Language support",
-      "description": "Typed dictionaries, placeholder replacement, and a small language selector.",
-      "tags": ["i18n"]
+      "description": "Locale files, RTL prep, and copy review workflow.",
+      "tags": [
+        "i18n"
+      ]
     },
     {
       "id": "30000000-0000-4000-8000-000000000002",
-      "key": "NAV-2",
+      "key": "NAVPO-2",
       "ownerId": "10000000-0000-4000-8000-000000000002",
       "projectId": "20000000-0000-4000-8000-000000000001",
       "archivedAt": null,
       "name": "Navigation polish",
-      "description": "Keep the menu visible and highlight the active tab.",
-      "tags": ["nav", "ux"]
+      "description": "Active routes, mobile overflow, keyboard shortcuts.",
+      "tags": [
+        "nav",
+        "ux"
+      ]
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000003",
+      "key": "WINPZ-3",
+      "ownerId": "10000000-0000-4000-8000-000000000001",
+      "projectId": "20000000-0000-4000-8000-000000000002",
+      "archivedAt": null,
+      "name": "Windows parity",
+      "description": "PowerShell scripts, path separators, and CI matrix rows.",
+      "tags": [
+        "windows",
+        "docs"
+      ]
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000004",
+      "key": "PUBSZ-4",
+      "ownerId": "10000000-0000-4000-8000-000000000004",
+      "projectId": "20000000-0000-4000-8000-000000000003",
+      "archivedAt": null,
+      "name": "Public surface controls",
+      "description": "WAF rules, bot scoring, and abuse playbooks.",
+      "tags": [
+        "security",
+        "api"
+      ]
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000005",
+      "key": "OFFLN-5",
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "projectId": "20000000-0000-4000-8000-000000000004",
+      "archivedAt": null,
+      "name": "Offline retail flows",
+      "description": "Queue sync, conflict resolution, and UX for flaky networks.",
+      "tags": [
+        "mobile",
+        "offline"
+      ]
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000006",
+      "key": "FEAST-6",
+      "ownerId": "10000000-0000-4000-8000-000000000005",
+      "projectId": "20000000-0000-4000-8000-000000000005",
+      "archivedAt": null,
+      "name": "Feature store",
+      "description": "Entity keys, TTL policies, and backfill jobs.",
+      "tags": [
+        "ml",
+        "data"
+      ]
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000007",
+      "key": "BILLG-7",
+      "ownerId": "10000000-0000-4000-8000-000000000007",
+      "projectId": "20000000-0000-4000-8000-000000000006",
+      "archivedAt": null,
+      "name": "Billing UX",
+      "description": "Proration display, tax lines, and dunning emails.",
+      "tags": [
+        "billing",
+        "portal"
+      ]
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000008",
+      "key": "EVIDC-8",
+      "ownerId": "10000000-0000-4000-8000-000000000004",
+      "projectId": "20000000-0000-4000-8000-000000000007",
+      "archivedAt": null,
+      "name": "Evidence lockers",
+      "description": "Immutable exports and signed URLs for auditors.",
+      "tags": [
+        "compliance"
+      ]
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000009",
+      "key": "ALERT-9",
+      "ownerId": "10000000-0000-4000-8000-000000000008",
+      "projectId": "20000000-0000-4000-8000-000000000008",
+      "archivedAt": null,
+      "name": "Alert budget",
+      "description": "SLO-based routing and on-call fatigue metrics.",
+      "tags": [
+        "sre",
+        "observability"
+      ]
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000010",
+      "key": "GROWA-10",
+      "ownerId": "10000000-0000-4000-8000-000000000006",
+      "projectId": "20000000-0000-4000-8000-000000000006",
+      "archivedAt": null,
+      "name": "Activation experiments",
+      "description": "A/B hooks, holdouts, and guardrail metrics.",
+      "tags": [
+        "growth",
+        "experiment"
+      ]
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000011",
+      "key": "BKLOG-11",
+      "ownerId": "10000000-0000-4000-8000-000000000003",
+      "projectId": null,
+      "archivedAt": null,
+      "name": "Platform backlog (unscoped)",
+      "description": "Tasks not yet tied to a delivery project.",
+      "tags": [
+        "backlog"
+      ]
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000012",
+      "key": "LEGAC-12",
+      "ownerId": "10000000-0000-4000-8000-000000000001",
+      "projectId": "20000000-0000-4000-8000-000000000002",
+      "archivedAt": "2025-12-01T10:00:00.000Z",
+      "name": "Legacy PDF export (archived epic)",
+      "description": "Superseded by web-first docs; kept for history.",
+      "tags": [
+        "archived"
+      ]
     }
   ],
   "tasks": [
@@ -75,26 +344,28 @@
       "groupId": "30000000-0000-4000-8000-000000000001",
       "archivedAt": null,
       "name": "Add English and Romanian dictionaries",
-      "description": "Use `.ts` locale files and placeholder replacement such as `{year}` or `{total}`.",
+      "description": "`.ts` locale modules and `{year}` style placeholders.",
       "type": "Task",
       "status": "done",
-      "date": "2026-05-13",
+      "date": "2026-05-10",
       "priority": "High",
-      "tags": ["i18n", "typescript"],
+      "tags": [
+        "i18n"
+      ],
       "subtasks": [
         {
           "id": "50000000-0000-4000-8000-000000000001",
-          "title": "Create base English schema",
+          "title": "English base schema",
           "done": true
         },
         {
           "id": "50000000-0000-4000-8000-000000000002",
-          "title": "Add Romanian locale",
+          "title": "Romanian strings QA",
           "done": true
         }
       ],
-      "createdAt": "2026-05-13T08:00:00.000Z",
-      "updatedAt": "2026-05-13T15:00:00.000Z"
+      "createdAt": "2026-05-09T08:00:00.000Z",
+      "updatedAt": "2026-05-10T16:00:00.000Z"
     },
     {
       "id": "40000000-0000-4000-8000-000000000002",
@@ -103,43 +374,259 @@
       "groupId": "30000000-0000-4000-8000-000000000002",
       "archivedAt": null,
       "name": "Make active menu state obvious",
-      "description": "Highlight the current area and keep the menu sticky while scrolling.",
+      "description": "Route-prefix match + sticky nav on long pages.",
       "type": "Task",
       "status": "in_progress",
       "date": "2026-05-14",
       "priority": "Medium",
-      "tags": ["nav", "ux"],
+      "tags": [
+        "nav"
+      ],
       "subtasks": [
         {
           "id": "50000000-0000-4000-8000-000000000003",
-          "title": "Add route-prefix matching",
+          "title": "Prefix matcher",
           "done": true
         },
         {
           "id": "50000000-0000-4000-8000-000000000004",
-          "title": "Check mobile wrapping",
+          "title": "Mobile wrap QA",
           "done": false
         }
       ],
-      "createdAt": "2026-05-13T09:00:00.000Z",
-      "updatedAt": "2026-05-13T16:30:00.000Z"
+      "createdAt": "2026-05-11T09:00:00.000Z",
+      "updatedAt": "2026-05-14T11:00:00.000Z"
     },
     {
       "id": "40000000-0000-4000-8000-000000000003",
       "key": "TASK-3",
       "ownerId": "10000000-0000-4000-8000-000000000001",
-      "groupId": null,
+      "groupId": "30000000-0000-4000-8000-000000000003",
       "archivedAt": null,
       "name": "Verify Windows setup instructions",
-      "description": "Run through PowerShell commands and make sure mock data loading does not depend on `cp`.",
+      "description": "PowerShell path, npm scripts, and mock copy command.",
       "type": "Task",
       "status": "open",
-      "date": "2026-05-15",
+      "date": "2026-05-16",
       "priority": "High",
-      "tags": ["windows", "docs"],
+      "tags": [
+        "windows",
+        "docs"
+      ],
       "subtasks": [],
-      "createdAt": "2026-05-13T10:00:00.000Z",
-      "updatedAt": "2026-05-13T10:00:00.000Z"
+      "createdAt": "2026-05-12T10:00:00.000Z",
+      "updatedAt": "2026-05-12T10:00:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000004",
+      "key": "TASK-4",
+      "ownerId": "10000000-0000-4000-8000-000000000004",
+      "groupId": "30000000-0000-4000-8000-000000000004",
+      "archivedAt": null,
+      "name": "Canary JWT validator rollout",
+      "description": "Shadow mode one week, then enforce.",
+      "type": "Spike",
+      "status": "in_progress",
+      "date": "2026-05-13",
+      "priority": "High",
+      "tags": [
+        "api",
+        "security"
+      ],
+      "subtasks": [
+        {
+          "id": "50000000-0000-4000-8000-000000000005",
+          "title": "Metrics board",
+          "done": true
+        },
+        {
+          "id": "50000000-0000-4000-8000-000000000006",
+          "title": "Cutover checklist",
+          "done": false
+        }
+      ],
+      "createdAt": "2026-05-08T14:00:00.000Z",
+      "updatedAt": "2026-05-13T09:00:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000005",
+      "key": "TASK-5",
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "groupId": "30000000-0000-4000-8000-000000000005",
+      "archivedAt": null,
+      "name": "Offline cart merge conflicts",
+      "description": "Last-write-wins vs manual resolve — product decision pending.",
+      "type": "Bug",
+      "status": "open",
+      "date": "2026-05-18",
+      "priority": "Critical",
+      "tags": [
+        "mobile",
+        "offline"
+      ],
+      "subtasks": [],
+      "createdAt": "2026-05-10T11:00:00.000Z",
+      "updatedAt": "2026-05-10T11:00:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000006",
+      "key": "TASK-6",
+      "ownerId": "10000000-0000-4000-8000-000000000005",
+      "groupId": "30000000-0000-4000-8000-000000000006",
+      "archivedAt": null,
+      "name": "Backfill user embeddings job",
+      "description": "Idempotent Spark job with checkpointing.",
+      "type": "Task",
+      "status": "done",
+      "date": "2026-05-01",
+      "priority": "Medium",
+      "tags": [
+        "ml",
+        "data"
+      ],
+      "subtasks": [
+        {
+          "id": "50000000-0000-4000-8000-000000000007",
+          "title": "Dry run",
+          "done": true
+        }
+      ],
+      "createdAt": "2026-04-28T07:00:00.000Z",
+      "updatedAt": "2026-05-01T18:00:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000007",
+      "key": "TASK-7",
+      "ownerId": "10000000-0000-4000-8000-000000000007",
+      "groupId": "30000000-0000-4000-8000-000000000007",
+      "archivedAt": null,
+      "name": "Proration line on invoice PDF",
+      "description": "Align with tax service v3 decimals.",
+      "type": "Task",
+      "status": "in_progress",
+      "date": "2026-05-15",
+      "priority": "Medium",
+      "tags": [
+        "billing"
+      ],
+      "subtasks": [],
+      "createdAt": "2026-05-12T13:00:00.000Z",
+      "updatedAt": "2026-05-14T08:30:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000008",
+      "key": "TASK-8",
+      "ownerId": "10000000-0000-4000-8000-000000000004",
+      "groupId": "30000000-0000-4000-8000-000000000008",
+      "archivedAt": null,
+      "name": "Signed URL expiry for auditor packs",
+      "description": "Max 24h; audit trail on regeneration.",
+      "type": "Task",
+      "status": "open",
+      "date": "2026-05-20",
+      "priority": "High",
+      "tags": [
+        "compliance"
+      ],
+      "subtasks": [],
+      "createdAt": "2026-05-11T16:00:00.000Z",
+      "updatedAt": "2026-05-11T16:00:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000009",
+      "key": "TASK-9",
+      "ownerId": "10000000-0000-4000-8000-000000000008",
+      "groupId": "30000000-0000-4000-8000-000000000009",
+      "archivedAt": null,
+      "name": "SLO burn rate alerts",
+      "description": "Multi-window, routing by severity.",
+      "type": "Task",
+      "status": "done",
+      "date": "2026-04-20",
+      "priority": "High",
+      "tags": [
+        "sre"
+      ],
+      "subtasks": [],
+      "createdAt": "2026-04-18T10:00:00.000Z",
+      "updatedAt": "2026-04-20T15:00:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000010",
+      "key": "TASK-10",
+      "ownerId": "10000000-0000-4000-8000-000000000006",
+      "groupId": "30000000-0000-4000-8000-000000000010",
+      "archivedAt": null,
+      "name": "Holdout group for onboarding tips",
+      "description": "Feature flag + analytics contract.",
+      "type": "Spike",
+      "status": "open",
+      "date": "2026-05-22",
+      "priority": "Low",
+      "tags": [
+        "growth"
+      ],
+      "subtasks": [],
+      "createdAt": "2026-05-13T12:00:00.000Z",
+      "updatedAt": "2026-05-13T12:00:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000011",
+      "key": "TASK-11",
+      "ownerId": "10000000-0000-4000-8000-000000000003",
+      "groupId": "30000000-0000-4000-8000-000000000011",
+      "archivedAt": null,
+      "name": "Upgrade Node LTS on build agents",
+      "description": "Blocked on vendor image; track here.",
+      "type": "Task",
+      "status": "open",
+      "date": "2026-06-01",
+      "priority": "Medium",
+      "tags": [
+        "infra"
+      ],
+      "subtasks": [],
+      "createdAt": "2026-05-01T09:00:00.000Z",
+      "updatedAt": "2026-05-05T10:00:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000012",
+      "key": "TASK-12",
+      "ownerId": "10000000-0000-4000-8000-000000000005",
+      "groupId": null,
+      "archivedAt": null,
+      "name": "Ad-hoc churn cohort export",
+      "description": "One-off for leadership review Friday.",
+      "type": "Task",
+      "status": "in_progress",
+      "date": "2026-05-14",
+      "priority": "High",
+      "tags": [
+        "data",
+        "adhoc"
+      ],
+      "subtasks": [],
+      "createdAt": "2026-05-13T07:00:00.000Z",
+      "updatedAt": "2026-05-14T06:00:00.000Z"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000013",
+      "key": "TASK-13",
+      "ownerId": "10000000-0000-4000-8000-000000000001",
+      "groupId": null,
+      "archivedAt": null,
+      "name": "Rotate on-call handoff template",
+      "description": "Add customer impact section.",
+      "type": "Task",
+      "status": "done",
+      "date": "2026-05-08",
+      "priority": "Low",
+      "tags": [
+        "ops"
+      ],
+      "subtasks": [],
+      "createdAt": "2026-05-07T17:00:00.000Z",
+      "updatedAt": "2026-05-08T09:00:00.000Z"
     }
   ],
   "ownerEntries": [
@@ -150,13 +637,15 @@
       "projectId": "20000000-0000-4000-8000-000000000001",
       "archivedAt": null,
       "title": "Translation rollout notes",
-      "body": "The first pass focuses on platform text. User-authored content stays as-is.\n\nRelated task: [[TASK-1]]",
-      "createdAt": "2026-05-13T12:00:00.000Z",
+      "body": "Platform chrome first; user-authored markdown unchanged.\n\nRelated: [[task:TASK-1]]",
+      "createdAt": "2026-05-10T12:00:00.000Z",
       "closedAt": null,
       "status": "todo",
       "type": "Note",
       "priority": "Medium",
-      "tags": ["i18n"],
+      "tags": [
+        "i18n"
+      ],
       "taskId": "40000000-0000-4000-8000-000000000001",
       "taskGroupId": "30000000-0000-4000-8000-000000000001"
     },
@@ -167,67 +656,397 @@
       "projectId": "20000000-0000-4000-8000-000000000002",
       "archivedAt": null,
       "title": "Windows README checklist",
-      "body": "- PowerShell quick start\n- Shared npm scripts\n- Ctrl+K shortcut callout\n- Mock fixture command",
-      "createdAt": "2026-05-13T13:00:00.000Z",
+      "body": "- PowerShell quick start\n- npm ci\n- mock fixture copy",
+      "createdAt": "2026-05-11T13:00:00.000Z",
       "closedAt": null,
       "status": "todo",
       "type": "Decision",
       "priority": "High",
-      "tags": ["docs", "windows"],
+      "tags": [
+        "docs"
+      ],
       "taskId": "40000000-0000-4000-8000-000000000003",
       "taskGroupId": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000003",
+      "key": "APIGW-3-1",
+      "ownerId": null,
+      "projectId": "20000000-0000-4000-8000-000000000003",
+      "archivedAt": null,
+      "title": "JWT shadow period",
+      "body": "Week of 2026-05-06: log only mismatches.",
+      "createdAt": "2026-05-06T09:00:00.000Z",
+      "closedAt": "2026-05-12T17:00:00.000Z",
+      "status": "done",
+      "type": "Note",
+      "priority": "Medium",
+      "tags": [
+        "security"
+      ],
+      "taskId": "40000000-0000-4000-8000-000000000004",
+      "taskGroupId": "30000000-0000-4000-8000-000000000004"
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000004",
+      "key": "MOBIL-4-1",
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "projectId": "20000000-0000-4000-8000-000000000004",
+      "archivedAt": null,
+      "title": "Offline UX principles",
+      "body": "Prefer clarity over speed of sync.",
+      "createdAt": "2026-05-09T15:00:00.000Z",
+      "closedAt": null,
+      "status": "todo",
+      "type": "Note",
+      "priority": "Low",
+      "tags": [
+        "ux"
+      ],
+      "taskId": null,
+      "taskGroupId": "30000000-0000-4000-8000-000000000005"
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000005",
+      "key": "MLPLT-5-1",
+      "ownerId": "10000000-0000-4000-8000-000000000005",
+      "projectId": "20000000-0000-4000-8000-000000000005",
+      "archivedAt": null,
+      "title": "Model card template",
+      "body": "Owner: Data & Analytics; refresh quarterly.",
+      "createdAt": "2026-04-30T10:00:00.000Z",
+      "closedAt": null,
+      "status": "in_progress",
+      "type": "Note",
+      "priority": "Medium",
+      "tags": [
+        "ml"
+      ],
+      "taskId": "40000000-0000-4000-8000-000000000006",
+      "taskGroupId": "30000000-0000-4000-8000-000000000006"
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000006",
+      "key": "CPORT-6-1",
+      "ownerId": "10000000-0000-4000-8000-000000000007",
+      "projectId": "20000000-0000-4000-8000-000000000006",
+      "archivedAt": null,
+      "title": "Tax rounding policy",
+      "body": "Match finance spreadsheet v9.",
+      "createdAt": "2026-05-12T08:00:00.000Z",
+      "closedAt": null,
+      "status": "todo",
+      "type": "Decision",
+      "priority": "High",
+      "tags": [
+        "billing"
+      ],
+      "taskId": "40000000-0000-4000-8000-000000000007",
+      "taskGroupId": "30000000-0000-4000-8000-000000000007"
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000007",
+      "key": "CMPLY-7-1",
+      "ownerId": "10000000-0000-4000-8000-000000000004",
+      "projectId": "20000000-0000-4000-8000-000000000007",
+      "archivedAt": null,
+      "title": "Auditor pack SLA",
+      "body": "Regenerate within 1 business hour when requested.",
+      "createdAt": "2026-05-01T11:00:00.000Z",
+      "closedAt": null,
+      "status": "todo",
+      "type": "Note",
+      "priority": "High",
+      "tags": [
+        "compliance"
+      ],
+      "taskId": "40000000-0000-4000-8000-000000000008",
+      "taskGroupId": "30000000-0000-4000-8000-000000000008"
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000008",
+      "key": "OBSRV-8-1",
+      "ownerId": "10000000-0000-4000-8000-000000000008",
+      "projectId": "20000000-0000-4000-8000-000000000008",
+      "archivedAt": null,
+      "title": "Burn rate playbook",
+      "body": "Link runbook in PagerDuty service.",
+      "createdAt": "2026-04-19T14:00:00.000Z",
+      "closedAt": "2026-04-21T09:00:00.000Z",
+      "status": "done",
+      "type": "Note",
+      "priority": "Medium",
+      "tags": [
+        "sre"
+      ],
+      "taskId": "40000000-0000-4000-8000-000000000009",
+      "taskGroupId": "30000000-0000-4000-8000-000000000009"
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000009",
+      "key": "TASK-2-1",
+      "ownerId": null,
+      "projectId": null,
+      "archivedAt": null,
+      "title": "Nav design QA notes",
+      "body": "Check contrast in dark mode for active tab.",
+      "createdAt": "2026-05-13T10:00:00.000Z",
+      "closedAt": null,
+      "status": "todo",
+      "type": "Note",
+      "priority": "Low",
+      "tags": [
+        "ux"
+      ],
+      "taskId": "40000000-0000-4000-8000-000000000002",
+      "taskGroupId": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000010",
+      "key": "GROW-6-1",
+      "ownerId": "10000000-0000-4000-8000-000000000006",
+      "projectId": null,
+      "archivedAt": null,
+      "title": "Experiment ethics checklist",
+      "body": "Signed by legal 2026-04-01.",
+      "createdAt": "2026-04-01T12:00:00.000Z",
+      "closedAt": null,
+      "status": "done",
+      "type": "Decision",
+      "priority": "Medium",
+      "tags": [
+        "growth"
+      ],
+      "taskId": "40000000-0000-4000-8000-000000000010",
+      "taskGroupId": "30000000-0000-4000-8000-000000000010"
     }
   ],
   "worklogs": [
     {
       "id": "70000000-0000-4000-8000-000000000001",
       "key": "LOG-1",
-      "startedAt": "2026-05-13T14:00:00.000Z",
+      "startedAt": "2026-05-10T14:00:00.000Z",
       "durationMinutes": 90,
-      "comment": "Drafted locale structure and Romanian labels.",
+      "comment": "Locale schema + Romanian first pass.",
       "target": {
         "kind": "task",
         "taskId": "40000000-0000-4000-8000-000000000001"
       },
       "targetEntryKey": "TASK-1",
       "targetEntryName": "Add English and Romanian dictionaries",
-      "createdAt": "2026-05-13T15:30:00.000Z",
-      "updatedAt": "2026-05-13T15:30:00.000Z"
+      "createdAt": "2026-05-10T15:30:00.000Z",
+      "updatedAt": "2026-05-10T15:30:00.000Z"
     },
     {
       "id": "70000000-0000-4000-8000-000000000002",
       "key": "LOG-2",
-      "startedAt": "2026-05-13T16:00:00.000Z",
+      "startedAt": "2026-05-11T16:00:00.000Z",
       "durationMinutes": 45,
-      "comment": "Reviewed README quick-start flow on Windows.",
+      "comment": "README Windows flow.",
       "target": {
         "kind": "project",
         "projectId": "20000000-0000-4000-8000-000000000002"
       },
       "targetEntryKey": "DOCS-2",
       "targetEntryName": "Documentation refresh",
-      "createdAt": "2026-05-13T16:45:00.000Z",
-      "updatedAt": "2026-05-13T16:45:00.000Z"
+      "createdAt": "2026-05-11T16:45:00.000Z",
+      "updatedAt": "2026-05-11T16:45:00.000Z"
+    },
+    {
+      "id": "70000000-0000-4000-8000-000000000003",
+      "key": "LOG-3",
+      "startedAt": "2026-05-14T09:00:00.000Z",
+      "durationMinutes": 120,
+      "comment": "Sticky nav prototype + route match tests.",
+      "target": {
+        "kind": "task",
+        "taskId": "40000000-0000-4000-8000-000000000002"
+      },
+      "targetEntryKey": "TASK-2",
+      "targetEntryName": "Make active menu state obvious",
+      "createdAt": "2026-05-14T11:00:00.000Z",
+      "updatedAt": "2026-05-14T11:00:00.000Z"
+    },
+    {
+      "id": "70000000-0000-4000-8000-000000000004",
+      "key": "LOG-4",
+      "startedAt": "2026-05-13T13:00:00.000Z",
+      "durationMinutes": 180,
+      "comment": "JWT shadow metrics dashboard.",
+      "target": {
+        "kind": "epic",
+        "groupId": "30000000-0000-4000-8000-000000000004"
+      },
+      "targetEntryKey": "PUBSZ-4",
+      "targetEntryName": "Public surface controls",
+      "createdAt": "2026-05-13T16:00:00.000Z",
+      "updatedAt": "2026-05-13T16:00:00.000Z"
+    },
+    {
+      "id": "70000000-0000-4000-8000-000000000005",
+      "key": "LOG-5",
+      "startedAt": "2026-05-12T10:00:00.000Z",
+      "durationMinutes": 60,
+      "comment": "Note review: offline UX principles.",
+      "target": {
+        "kind": "note",
+        "entryId": "60000000-0000-4000-8000-000000000004"
+      },
+      "targetEntryKey": "MOBIL-4-1",
+      "targetEntryName": "Offline UX principles",
+      "createdAt": "2026-05-12T10:30:00.000Z",
+      "updatedAt": "2026-05-12T10:30:00.000Z"
+    },
+    {
+      "id": "70000000-0000-4000-8000-000000000006",
+      "key": "LOG-6",
+      "startedAt": "2026-05-01T08:00:00.000Z",
+      "durationMinutes": 240,
+      "comment": "Embedding backfill dry run + prod.",
+      "target": {
+        "kind": "task",
+        "taskId": "40000000-0000-4000-8000-000000000006"
+      },
+      "targetEntryKey": "TASK-6",
+      "targetEntryName": "Backfill user embeddings job",
+      "createdAt": "2026-05-01T18:00:00.000Z",
+      "updatedAt": "2026-05-01T18:00:00.000Z"
+    },
+    {
+      "id": "70000000-0000-4000-8000-000000000007",
+      "key": "LOG-7",
+      "startedAt": "2026-05-14T07:00:00.000Z",
+      "durationMinutes": 90,
+      "comment": "Cohort SQL + sanity checks.",
+      "target": {
+        "kind": "task",
+        "taskId": "40000000-0000-4000-8000-000000000012"
+      },
+      "targetEntryKey": "TASK-12",
+      "targetEntryName": "Ad-hoc churn cohort export",
+      "createdAt": "2026-05-14T08:00:00.000Z",
+      "updatedAt": "2026-05-14T08:00:00.000Z"
+    },
+    {
+      "id": "70000000-0000-4000-8000-000000000008",
+      "key": "LOG-8",
+      "startedAt": "2026-05-09T11:00:00.000Z",
+      "durationMinutes": 30,
+      "comment": "Planning only — platform team.",
+      "target": {
+        "kind": "owner",
+        "ownerId": "10000000-0000-4000-8000-000000000003"
+      },
+      "targetEntryKey": "PLAT-3",
+      "targetEntryName": "Platform Team",
+      "createdAt": "2026-05-09T11:30:00.000Z",
+      "updatedAt": "2026-05-09T11:30:00.000Z"
+    },
+    {
+      "id": "70000000-0000-4000-8000-000000000009",
+      "key": "LOG-9",
+      "startedAt": "2026-05-08T15:00:00.000Z",
+      "durationMinutes": 45,
+      "comment": "Invoice PDF layout tweaks.",
+      "target": {
+        "kind": "project",
+        "projectId": "20000000-0000-4000-8000-000000000006"
+      },
+      "targetEntryKey": "CPORT-6",
+      "targetEntryName": "Customer portal",
+      "createdAt": "2026-05-08T15:45:00.000Z",
+      "updatedAt": "2026-05-08T15:45:00.000Z"
+    },
+    {
+      "id": "70000000-0000-4000-8000-000000000010",
+      "key": "LOG-10",
+      "startedAt": "2026-04-20T09:00:00.000Z",
+      "durationMinutes": 360,
+      "comment": "SLO multi-window implementation.",
+      "target": {
+        "kind": "task",
+        "taskId": "40000000-0000-4000-8000-000000000009"
+      },
+      "targetEntryKey": "TASK-9",
+      "targetEntryName": "SLO burn rate alerts",
+      "createdAt": "2026-04-20T15:00:00.000Z",
+      "updatedAt": "2026-04-20T15:00:00.000Z"
+    },
+    {
+      "id": "70000000-0000-4000-8000-000000000011",
+      "key": "LOG-11",
+      "startedAt": "2026-05-13T18:00:00.000Z",
+      "durationMinutes": 25,
+      "comment": "Quick triage on merge bug.",
+      "target": {
+        "kind": "task",
+        "taskId": "40000000-0000-4000-8000-000000000005"
+      },
+      "targetEntryKey": "TASK-5",
+      "targetEntryName": "Offline cart merge conflicts",
+      "createdAt": "2026-05-13T18:25:00.000Z",
+      "updatedAt": "2026-05-13T18:25:00.000Z"
+    },
+    {
+      "id": "70000000-0000-4000-8000-000000000012",
+      "key": "LOG-12",
+      "startedAt": "2026-05-07T09:00:00.000Z",
+      "durationMinutes": 40,
+      "comment": "Handoff doc update.",
+      "target": {
+        "kind": "task",
+        "taskId": "40000000-0000-4000-8000-000000000013"
+      },
+      "targetEntryKey": "TASK-13",
+      "targetEntryName": "Rotate on-call handoff template",
+      "createdAt": "2026-05-07T09:40:00.000Z",
+      "updatedAt": "2026-05-07T09:40:00.000Z"
     }
   ],
   "auditLog": [
     {
       "id": "80000000-0000-4000-8000-000000000001",
-      "at": "2026-05-13T15:00:00.000Z",
+      "at": "2026-05-14T10:00:00.000Z",
       "action": "update",
       "entity": "task",
       "entityId": "40000000-0000-4000-8000-000000000002",
       "summary": "Updated task \"Make active menu state obvious\"",
-      "detail": "{\n  \"changes\": {\n    \"status\": {\n      \"from\": \"open\",\n      \"to\": \"in_progress\"\n    },\n    \"description\": {\n      \"from\": \"Highlight the current area.\",\n      \"to\": \"Highlight the current area and keep the menu sticky while scrolling.\"\n    }\n  }\n}"
+      "detail": "{\"changes\":{\"status\":{\"from\":\"open\",\"to\":\"in_progress\"}}}"
     },
     {
       "id": "80000000-0000-4000-8000-000000000002",
-      "at": "2026-05-13T13:00:00.000Z",
+      "at": "2026-05-11T13:00:00.000Z",
       "action": "create",
       "entity": "owner_entry",
       "entityId": "60000000-0000-4000-8000-000000000002",
       "summary": "Created note \"Windows README checklist\"",
-      "detail": "{\n  \"created\": {\n    \"title\": \"Windows README checklist\",\n    \"status\": \"todo\",\n    \"priority\": \"High\"\n  }\n}"
+      "detail": "{\"created\":{\"title\":\"Windows README checklist\",\"status\":\"todo\"}}"
+    },
+    {
+      "id": "80000000-0000-4000-8000-000000000003",
+      "at": "2026-05-10T16:00:00.000Z",
+      "action": "update",
+      "entity": "task",
+      "entityId": "40000000-0000-4000-8000-000000000001",
+      "summary": "Closed task \"Add English and Romanian dictionaries\"",
+      "detail": "{\"changes\":{\"status\":{\"to\":\"done\"}}}"
+    },
+    {
+      "id": "80000000-0000-4000-8000-000000000004",
+      "at": "2026-05-08T08:00:00.000Z",
+      "action": "create",
+      "entity": "worklog",
+      "entityId": "70000000-0000-4000-8000-000000000012",
+      "summary": "Logged 40m on TASK-13"
+    },
+    {
+      "id": "80000000-0000-4000-8000-000000000005",
+      "at": "2026-05-01T18:00:00.000Z",
+      "action": "update",
+      "entity": "task",
+      "entityId": "40000000-0000-4000-8000-000000000006",
+      "summary": "Marked embeddings backfill done",
+      "detail": "{\"changes\":{\"status\":{\"to\":\"done\"}}}"
     }
   ]
 }

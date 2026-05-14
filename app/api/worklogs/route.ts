@@ -59,6 +59,12 @@ const createBody = z
     { message: "Provide durationMinutes or timeSpent" },
   );
 
+function splitCsvParam(param: string | null): string[] | null | undefined {
+  if (param == null) return undefined;
+  const arr = param.split(",").map((s) => s.trim()).filter(Boolean);
+  return arr.length ? arr : undefined;
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const store = readStore();
@@ -70,6 +76,10 @@ export async function GET(req: Request) {
     ownerId: searchParams.get("ownerId"),
     from: searchParams.get("from"),
     to: searchParams.get("to"),
+    ownerIds: splitCsvParam(searchParams.get("ownerIds")),
+    projectIds: splitCsvParam(searchParams.get("projectIds")),
+    kinds: splitCsvParam(searchParams.get("kinds")),
+    search: searchParams.get("q") ?? searchParams.get("search"),
   });
   list.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
   if (wantsPaginatedList(searchParams)) {

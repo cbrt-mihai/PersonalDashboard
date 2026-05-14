@@ -13,10 +13,9 @@ import { useDashboardLocalPager } from "@/lib/useDashboardLocalPager";
 import { HexColorPickerRow } from "@/components/OwnerStyleColorPicker";
 import { OwnerSwatch } from "@/components/OwnerSwatch";
 import {
-  dashboardIconBtnNeutralClass,
   dashboardIconBtnPrimaryClass,
 } from "@/lib/dashboardTableActionClasses";
-import { ArrowTopRightOnSquareIcon, PencilIcon, TrashIcon } from "@/components/icons";
+import { EyeIcon, PencilIcon, TrashIcon } from "@/components/icons";
 import { fileToOwnerIconDataUrl } from "@/lib/ownerIconDataUrl";
 import type { Owner, Project, Task, TaskGroup } from "@/lib/schemas";
 import { NAMED_OWNER_COLOR_PRESETS } from "@/lib/presetColors";
@@ -286,11 +285,11 @@ export function OwnersListClient() {
             <div className="mt-4 flex flex-wrap items-center gap-1 text-sm">
               <Link
                 href={`/owners/${p.id}`}
-                className={dashboardIconBtnNeutralClass}
+                className={dashboardIconBtnPrimaryClass}
                 aria-label="Open owner"
                 title="Open owner"
               >
-                <ArrowTopRightOnSquareIcon />
+                <EyeIcon />
               </Link>
               <Link
                 href={`/owners/${p.id}/edit`}

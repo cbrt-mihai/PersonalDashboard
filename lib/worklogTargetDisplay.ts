@@ -46,6 +46,20 @@ export function buildWorklogEntityMaps(
 
 export type WorklogEntityMaps = ReturnType<typeof buildWorklogEntityMaps>;
 
+/** Owner “bucket” for worklog tables and filters (includes synthetic groups). */
+export function resolveWorklogOwnerGroupKey(w: Worklog, maps: WorklogEntityMaps): string {
+  const t = w.target;
+  if (t.kind === "task") return maps.taskById.get(t.taskId)?.ownerId ?? "__orphan__";
+  if (t.kind === "epic") return maps.groupById.get(t.groupId)?.ownerId ?? "__orphan__";
+  if (t.kind === "note") {
+    const e = maps.entryById.get(t.entryId);
+    return e?.ownerId ?? "__unassigned__";
+  }
+  if (t.kind === "project") return "__project__";
+  if (t.kind === "owner") return t.ownerId;
+  return "__orphan__";
+}
+
 export function resolveWorklogTargetDisplay(w: Worklog, maps: WorklogEntityMaps): ResolvedWorklogTarget {
   const snapKey = w.targetEntryKey;
   const snapName = w.targetEntryName;

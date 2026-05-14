@@ -326,9 +326,35 @@ export function EpicViewClient({ epicId }: { epicId: string }) {
               <span>{epic.name}</span>
             </span>
           </h1>
-          <p className="mt-2 text-xs text-zinc-500">
-            Wiki link:{" "}
-            <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">{`[[epic:${epic.id}]]`}</code>
+          <p className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1 text-xs text-zinc-500">
+            <span>
+              Wiki link:{" "}
+              <code className="rounded bg-zinc-200 px-1 dark:bg-zinc-800">{`[[epic:${epic.id}]]`}</code>
+            </span>
+            <span aria-hidden className="text-zinc-400">
+              ·
+            </span>
+            <span className="inline-flex flex-wrap items-center gap-1.5">
+              <span>Owner:</span>
+              {owner ? (
+                <Link
+                  href={`/owners/${owner.id}`}
+                  className="inline-flex items-center gap-1.5 font-medium text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  <OwnerSwatch
+                    owner={owner}
+                    color={accent}
+                    className="h-4 w-4 rounded"
+                    title={owner.name}
+                  />
+                  {owner.name}
+                </Link>
+              ) : (
+                <code className="rounded bg-zinc-200 px-1 font-mono text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                  {epic.ownerId}
+                </code>
+              )}
+            </span>
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
