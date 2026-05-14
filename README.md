@@ -127,6 +127,28 @@ For developers who want to add another language, see **[Adding new localizations
 
 ---
 
+## Screenshots
+### Tasks Dashboard
+
+<img src="./screenshots/TasksDashboard.png" width="2000" />
+
+### Projects Dashboard
+
+<img src="./screenshots/ProjectsDashboard.png" width="2000" />
+
+### Worklog Dashboard
+
+<img src="./screenshots/WorklogDashboard.png" width="2000" />
+<img src="./screenshots/WorklogDashboard2.png" width="2000" />
+
+### Achievements HTML
+
+<img src="./screenshots/Achievements.png" height="1000" />
+<img src="./screenshots/Achievements2.png" height="1000" />
+<img src="./screenshots/Achievements3.png" height="1000" />
+
+---
+
 ## Adding new localizations
 
 Platform strings are **typed TypeScript objects**, not JSON bundles. **English** (`lib/i18n/locales/en.ts`) defines the full nested shape; every other locale must provide the **same keys** with translated string values.
